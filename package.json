@@ -49,6 +49,9 @@
         "install:local": "node scripts/install-local.mjs",
         "release:local": "npm run package:local && npm run install:local",
         "test:kibana": "npm run pretest && node scripts/run-kibana-tests.js",
+        "compose:up": "bash scripts/compose.sh up",
+        "compose:down": "bash scripts/compose.sh down",
+        "compose:ps": "bash scripts/compose.sh ps",
         "vscode:prepublish": "node esbuild.mjs --production"
     },
     "devDependencies": {

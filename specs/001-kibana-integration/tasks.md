@@ -91,6 +91,7 @@
 - [x] T021 [P] Add logic in `scripts/kibana.sh` to handle port collisions by automatically reporting the chosen host port when `-P` is used
 - [x] T022 [P] Validate cross-platform script functionality on Windows (Git Bash/PowerShell), macOS, and Linux; document any limitations
 - [x] T023 [P] Provide `docker-compose.yml` for WSL users and document its usage in quickstart/README
+- [x] T024 [P] Add `scripts/compose.sh` wrapper and npm scripts (`compose:up`, `compose:down`, `compose:ps`) for easy stack control
 
 **Final Phase**: After all phases complete, perform an end‑to‑end validation from a clean clone following quickstart steps and ensure CI passes
 

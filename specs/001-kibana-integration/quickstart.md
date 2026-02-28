@@ -78,17 +78,22 @@ afterwards.  It exits with zero if all versions passed, nonzero otherwise.
 
 7. **Using Docker Compose (WSL-friendly)**
 
-   You can start both Elasticsearch and Kibana with a single command:
+   You can start both Elasticsearch and Kibana with a single command via the
+   supplied wrapper:
 
    ```bash
-   docker-compose up -d
+   ./scripts/compose.sh up
    ```
 
-   This respects the `KIBANA_VERSION` and `ELASTICSEARCH_VERSION` environment
-   variables (defaults are `8.4.0`). Once services are running, you can still
-   use the helper script to interrogate the Kibana instance with
-   `./scripts/kibana.sh status` or `curl http://localhost:5601/api/status`.
-   Tear everything down with `docker-compose down`.
+   This is the same as running `docker-compose up -d` but ensures the
+   executable has the proper permissions on Windows/WSL. The script accepts
+   `down` and `ps` subcommands as well. It respects the `KIBANA_VERSION` and
+   `ELASTICSEARCH_VERSION` environment variables (defaults are `8.4.0`).
+
+   Once services are running, you can still use the helper script to
+   interrogate the Kibana instance with `./scripts/kibana.sh status` or
+   `curl http://localhost:5601/api/status`. Tear everything down with
+   `./scripts/compose.sh down`.
 
 That's it! The quickstart above gets developers and CI configured for Kibana
 integration.
