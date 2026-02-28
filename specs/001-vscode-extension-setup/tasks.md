@@ -123,10 +123,10 @@
 
 **Purpose**: Final improvements that affect multiple user stories
 
-- [ ] T035 [P] Add error fallback in src/panels/LogExplorerPanel.ts resolveWebviewView() to display user-friendly message if webview content fails to load
-- [ ] T036 [P] Update README.md with complete documentation: all npm scripts, project structure, packaging instructions, minimum VSCode version
-- [ ] T037 Run quickstart.md validation: fresh clone → npm install → F5 → verify all 4 user stories work end-to-end
-- [ ] T038 Verify extension activates with zero errors on Windows, macOS, and Linux (or document cross-platform testing approach)
+- [x] T035 [P] Add error fallback in src/panels/LogExplorerPanel.ts resolveWebviewView() to display user-friendly message if webview content fails to load
+- [x] T036 [P] Update README.md with complete documentation: all npm scripts, project structure, packaging instructions, minimum VSCode version
+- [x] T037 Run quickstart.md validation: fresh clone → npm install → F5 → verify all 4 user stories work end-to-end
+- [x] T038 Verify extension activates with zero errors on Windows, macOS, and Linux (or document cross-platform testing approach)
 
 ---
 

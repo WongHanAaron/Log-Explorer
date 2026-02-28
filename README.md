@@ -24,6 +24,8 @@ code .
 
 Then press **F5** to launch the Extension Development Host with LogExplorer active.
 
+Click the **LogExplorer icon** in the Activity Bar to open the sidebar panel.
+
 ## Development
 
 | Task | Command |
@@ -38,6 +40,17 @@ Then press **F5** to launch the Extension Development Host with LogExplorer acti
 
 - **Run Extension** — Opens an Extension Development Host with the extension loaded
 - **Extension Tests** — Runs the integration test suite inside a VSCode instance
+
+### npm Scripts
+
+| Script | Purpose |
+|--------|---------|
+| `build` | Compile TypeScript and bundle with esbuild |
+| `watch` | Auto-rebuild on file changes (background task) |
+| `pretest` | Build extension + compile tests before running |
+| `test` | Run integration tests via @vscode/test-cli |
+| `package` | Package into a distributable .vsix file |
+| `vscode:prepublish` | Production build (minified, no sourcemaps) |
 
 ## Project Structure
 
@@ -61,11 +74,36 @@ test/
 │   ├── extension.test.ts     # Integration tests
 │   └── index.ts              # Test runner entry
 └── runTest.ts                # Test launcher
+
+dist/                         # Build output (gitignored)
+├── extension.js              # Bundled extension host code
+├── webview.js                # Bundled webview client code
+└── webview.css               # Webview styles
 ```
+
+## Key Files
+
+| File | Purpose |
+|------|---------|
+| `package.json` | Extension manifest: identity, contributions, scripts |
+| `tsconfig.json` | TypeScript compiler configuration |
+| `esbuild.mjs` | esbuild bundler config (2 entry points: extension + webview) |
+| `.vscode/launch.json` | Debug launch configurations |
+| `.vscode/tasks.json` | Build tasks (watch mode as default) |
+| `.vscode-test.mjs` | @vscode/test-cli configuration |
+| `.vscodeignore` | Files excluded from the packaged extension |
+
+## Extension Features
+
+- **Activity Bar Icon** — LogExplorer icon in the sidebar
+- **Webview Sidebar Panel** — Custom panel with placeholder content, theme-aware styling
+- **Command Palette** — `LogExplorer: Show Panel` command
+- **Content Security Policy** — Nonce-based CSP for webview security
+- **State Persistence** — Webview state preserved across visibility toggles
 
 ## Minimum VSCode Version
 
-This extension requires **VSCode 1.85.0** or later. It will not activate on earlier versions.
+This extension requires **VSCode 1.85.0** or later.
 
 ## Packaging
 
@@ -76,6 +114,10 @@ npm run package
 This produces a `.vsix` file that can be installed via:
 - Command Palette → **Extensions: Install from VSIX...**
 - CLI: `code --install-extension logexplorer-0.1.0.vsix`
+
+## Cross-Platform
+
+The extension targets Windows, macOS, and Linux. All file paths use platform-agnostic APIs (`vscode.Uri.joinPath`, `path.join`). The webview uses VSCode CSS variables for consistent theming across platforms.
 
 ## License
 

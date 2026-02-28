@@ -21,7 +21,21 @@ export class LogExplorerPanel implements vscode.WebviewViewProvider {
             localResourceRoots: [this._extensionUri],
         };
 
-        webviewView.webview.html = this._getWebviewContent(webviewView.webview);
+        try {
+            webviewView.webview.html = this._getWebviewContent(webviewView.webview);
+        } catch (error) {
+            console.error('LogExplorer: Failed to load webview content', error);
+            const nonce = this._getNonce();
+            const scriptUri = webviewView.webview.asWebviewUri(
+                vscode.Uri.joinPath(this._extensionUri, 'dist', 'webview.js')
+            );
+            const stylesUri = webviewView.webview.asWebviewUri(
+                vscode.Uri.joinPath(this._extensionUri, 'dist', 'webview.css')
+            );
+            webviewView.webview.html = this._getFallbackContent(
+                nonce, scriptUri, stylesUri, webviewView.webview.cspSource
+            );
+        }
 
         // Handle messages from the webview
         webviewView.webview.onDidReceiveMessage((message) => {
