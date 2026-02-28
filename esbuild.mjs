@@ -7,8 +7,8 @@ const watch = process.argv.includes("--watch");
 
 /** Copy static assets to dist/ */
 function copyAssets() {
-  mkdirSync("dist", { recursive: true });
-  copyFileSync("src/webview/styles.css", "dist/webview.css");
+    mkdirSync("dist", { recursive: true });
+    copyFileSync("src/webview/styles.css", "dist/webview.css");
 }
 
 /** @type {import('esbuild').BuildOptions} */
