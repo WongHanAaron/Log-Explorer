@@ -23,8 +23,8 @@ verified independently.
 **Purpose**: Git/packaging hygiene — ensure the `releases/` folder is excluded from version
 control and from the packaged extension before any scripts produce output there.
 
-- [ ] T001 Add `releases/` entry to `.gitignore` (after existing `*.vsix` line)
-- [ ] T002 [P] Add `releases/**` and `scripts/**` exclusions to `.vscodeignore`
+- [x] T001 Add `releases/` entry to `.gitignore` (after existing `*.vsix` line)
+- [x] T002 [P] Add `releases/**` and `scripts/**` exclusions to `.vscodeignore`
 
 **Checkpoint**: `.gitignore` and `.vscodeignore` are updated — `releases/` output will never
 be committed or bundled into the extension.
@@ -42,9 +42,9 @@ version) exists and is a valid file.
 
 ### Implementation for User Story 1
 
-- [ ] T003 [P] [US1] Create `scripts/package-local.mjs` — Node.js ESM script that calls `fs.mkdirSync('releases', {recursive:true})` then spawns `vsce package --out releases/ --allow-missing-repository`, exits non-zero with a clear message on failure
-- [ ] T004 [P] [US1] Create `scripts/package-local.ps1` — PowerShell 7+ script that mirrors `package-local.mjs` behaviour (make/releases dir & run vsce), suitable for `pwsh` invocation
-- [ ] T005 [US1] Add `"package:local": "node scripts/package-local.mjs"` npm script to `package.json` (in the `scripts` block, after the existing `package` entry)
+- [x] T003 [P] [US1] Create `scripts/package-local.mjs` — Node.js ESM script that calls `fs.mkdirSync('releases', {recursive:true})` then spawns `vsce package --out releases/ --allow-missing-repository`, exits non-zero with a clear message on failure
+- [x] T004 [P] [US1] Create `scripts/package-local.ps1` — PowerShell 7+ script that mirrors `package-local.mjs` behaviour (make/releases dir & run vsce), suitable for `pwsh` invocation
+- [x] T005 [US1] Add `"package:local": "node scripts/package-local.mjs"` npm script to `package.json` (in the `scripts` block, after the existing `package` entry)
 
 **Checkpoint**: `npm run package:local` succeeds; `releases/logexplorer-{version}.vsix` is
 produced without credentials or internet access.
@@ -61,9 +61,9 @@ extension version in the VSCode Extensions panel matches `package.json#version`.
 
 ### Implementation for User Story 2
 
-- [ ] T006 [P] [US2] Create `scripts/install-local.mjs` — Node.js ESM script that uses `fs.readdirSync('releases').find(f => f.endsWith('.vsix'))` to locate the package, then spawns `code --install-extension releases/<file> --force`; exits code 1 with message `"No .vsix found in releases/. Run 'npm run package:local' first."` when no file is found
-- [ ] T007 [P] [US2] Create `scripts/install-local.ps1` — PowerShell 7+ script that mirrors `install-local.mjs` behaviour (find .vsix and invoke `code`), suitable for `pwsh` invocation
-- [ ] T008 [US2] Add `"install:local": "node scripts/install-local.mjs"` npm script to `package.json` (after the `package:local` entry)
+- [x] T006 [P] [US2] Create `scripts/install-local.mjs` — Node.js ESM script that uses `fs.readdirSync('releases').find(f => f.endsWith('.vsix'))` to locate the package, then spawns `code --install-extension releases/<file> --force`; exits code 1 with message `"No .vsix found in releases/. Run 'npm run package:local' first."` when no file is found
+- [x] T007 [P] [US2] Create `scripts/install-local.ps1` — PowerShell 7+ script that mirrors `install-local.mjs` behaviour (find .vsix and invoke `code`), suitable for `pwsh` invocation
+- [x] T008 [US2] Add `"install:local": "node scripts/install-local.mjs"` npm script to `package.json` (after the `package:local` entry)
 
 **Checkpoint**: `npm run install:local` installs the extension with zero manual UI steps;
 exits with descriptive error when `releases/` contains no `.vsix`.
@@ -81,7 +81,7 @@ extension is installed — all from a single terminal command.
 
 ### Implementation for User Story 3
 
-- [ ] T009 [US3] Add `"release:local": "npm run package:local && npm run install:local"` npm script to `package.json` (after the `install:local` entry)
+- [x] T009 [US3] Add `"release:local": "npm run package:local && npm run install:local"` npm script to `package.json` (after the `install:local` entry)
 
 **Checkpoint**: `npm run release:local` succeeds end-to-end from a clean state; if
 `package:local` fails the install step is NOT invoked.
@@ -92,10 +92,10 @@ extension is installed — all from a single terminal command.
 
 **Purpose**: Documentation update and manual acceptance validation.
 
-- [ ] T010 [P] Update `README.md` — add a **Local Install** section under the existing
+- [x] T010 [P] Update `README.md` — add a **Local Install** section under the existing
   Development table with the three new scripts (`package:local`, `install:local`,
   `release:local`) and a note that `releases/` is gitignored
-- [ ] T011 Run `specs/002-local-vsix-install/quickstart.md` acceptance checklist manually:
+- [x] T011 Run `specs/002-local-vsix-install/quickstart.md` acceptance checklist manually:
   verify all 9 checkbox items pass end-to-end on the current machine
 
 ---
