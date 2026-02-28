@@ -92,9 +92,13 @@ afterwards.  It exits with zero if all versions passed, nonzero otherwise.
    `down` and `ps` subcommands as well. It respects the `KIBANA_VERSION` and
    `ELASTICSEARCH_VERSION` environment variables (defaults are `8.4.0`).
 
-   Once services are running, you can still use the helper script to
-   interrogate the Kibana instance with `./scripts/kibana.sh status` or
-   `curl http://localhost:5601/api/status`. Tear everything down with
+   By default the compose file now only exposes port 5601 on the container and
+   lets Docker choose a host port, which avoids conflicts. Use
+   `docker compose port kibana 5601` or `./scripts/compose.sh ps` to discover
+   the mapped host port. You can also still interrogate Kibana via
+   `./scripts/kibana.sh status` once the stack is running.
+
+   Tear everything down with
    `./scripts/compose.sh down`.
 
 That's it! The quickstart above gets developers and CI configured for Kibana

@@ -3,8 +3,11 @@ version: '3.8'
 services:
   kibana:
     image: "docker.elastic.co/kibana/kibana:${KIBANA_VERSION:-8.4.0}"
+    # expose container port; omit host mapping to allow Docker to pick a random
+    # host port if 5601 is already in use. Use `docker compose port kibana 5601`
+    # to query the actual host port.
     ports:
-      - "5601:5601"
+      - "5601"
     environment:
       - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
     depends_on:
