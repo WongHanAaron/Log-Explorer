@@ -5,6 +5,14 @@
 **Status**: Draft  
 **Input**: User description: "Setup scripts to build this extension into a package that can be installed on any VSCode instance for local usage but not to be published on the marketplace yet"
 
+## Clarifications
+
+### Session 2026-02-28
+
+- Q: Should the PowerShell scripts target Windows-only (PowerShell 5.1) or cross-platform (PowerShell 7+)? → A: PowerShell 7+ (cross-platform, `pwsh`) — FR-007 cross-platform requirement remains intact; macOS/Linux developers must have PowerShell Core installed.
+- Q: Should the `.ps1` scripts replace the Node.js `.mjs` helper scripts or exist alongside them? → A: Keep both — `.ps1` scripts are standalone developer conveniences; `.mjs` scripts remain as the backing implementation for the npm script entries.
+- Q: Where should the `.ps1` files live in the repository? → A: `scripts/` at the project root (flat), alongside the existing `.mjs` files.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Package the Extension into a Distributable File (Priority: P1)
@@ -109,7 +117,8 @@ verify that: source is compiled, a `.vsix` is produced, and the extension is ins
   found in the output folder.
 - **FR-006**: The project MUST expose a `release:local` (or equivalent) npm script that chains
   package and install in the correct order, stopping on the first failure.
-- **FR-007**: All scripts MUST work on Windows, macOS, and Linux without modification.
+- **FR-007**: All scripts MUST work on Windows, macOS, and Linux. The Node.js `.mjs` scripts (backing npm entries) require no extra runtime beyond Node.js 18+. The PowerShell `.ps1` convenience scripts require PowerShell 7+ (`pwsh`) to be installed; they are not available as npm script entries and are documented as optional developer shortcuts.
+- **FR-011**: The project MUST include two standalone PowerShell 7+ scripts at `scripts/package-local.ps1` and `scripts/install-local.ps1` that replicate the behaviour of their `.mjs` counterparts and can be invoked directly from a `pwsh` terminal without going through npm.
 - **FR-008**: The packaging scripts MUST NOT include steps that upload, publish, or transmit the
   package to any external registry or marketplace.
 - **FR-009**: The `releases/` output folder MUST be listed in `.gitignore` and `.vscodeignore`.
@@ -125,6 +134,14 @@ verify that: source is compiled, a `.vsix` is produced, and the extension is ins
   developer before running the package script; automatic version bumping is out of scope.
 - The `releases/` folder name is a reasonable default; no preference for a different name was
   stated.
+- The `.ps1` convenience scripts require PowerShell 7+ (`pwsh`). On Windows this is a separate
+  install from the built-in PowerShell 5.1; on macOS/Linux it is installed via the official
+  PowerShell package. Developers without `pwsh` can use the npm scripts instead.
+- The `.ps1` scripts and the `.mjs` scripts coexist — they are not alternatives that replace each
+  other. The `.mjs` scripts remain as the stable backing for npm entries; the `.ps1` scripts are
+  supplemental shortcuts for developers who prefer a `pwsh` workflow.
+- Both `.ps1` and `.mjs` script files live flat under `scripts/` at the project root (not in a
+  subfolder), alongside each other.
 
 ## Success Criteria *(mandatory)*
 
