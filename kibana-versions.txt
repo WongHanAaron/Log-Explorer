@@ -1,0 +1,4 @@
+# List of Kibana versions used by integration tests
+# Lines starting with # are comments and ignored
+7.16.3
+8.4.0
