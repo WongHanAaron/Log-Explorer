@@ -145,8 +145,9 @@ spin up a Kibana server in Docker.
   (e.g. `7.16.3`, `8.4.0`) that are exercised by the integration tests. You can
   override via `KIBANA_VERSIONS` environment variable (comma-separated).
 * `scripts/kibana.sh` provides `start`, `status`, and `stop` commands for a
-  Kibana container. It supports `--version` and `--port` flags and reports the
-  host port in JSON output.
+  Kibana container (image path `docker.elastic.co/kibana/kibana:<version>`).
+  It supports `--version` and `--port` flags and reports the host port in JSON
+  output.
 * Run the tests manually with `npm run test:kibana`; the command compiles tests
   and then executes the integration suite. It loops over the configured
   versions and verifies that `GET /api/status` returns HTTP 200.

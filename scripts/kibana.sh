@@ -149,15 +149,16 @@ start_container() {
         echo "{\"host\":\"localhost\",\"port\":${hostport:-null},\"version\":\"$version\",\"containerId\":\"$existing\"}"
         return
     fi
-    # verify image exists (pull will fail early if not)
-    if ! docker pull --quiet "docker.elastic.co/kibana:$version" >/dev/null 2>&1; then
+    # verify image exists (pull will fail early if not). actual repo path includes
+    # a second "kibana" segment.
+    if ! docker pull --quiet "docker.elastic.co/kibana/kibana:$version" >/dev/null 2>&1; then
         echo "Error: unable to pull Kibana image for version '$version'. Is the version correct?" >&2
         exit 1
     fi
 
     # start new container
     local cid
-    if ! cid=$(docker run -d $port_arg "docker.elastic.co/kibana:$version"); then
+    if ! cid=$(docker run -d $port_arg "docker.elastic.co/kibana/kibana:$version"); then
         echo "Error: failed to start Kibana container. Port may be in use or Docker encountered an error." >&2
         exit 1
     fi
