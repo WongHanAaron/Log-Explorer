@@ -29,6 +29,10 @@
 
 ## Constitution Check
 
+The constitution establishes core principles and workflow rules (including branch-per-cycle and
+squash-merges). During planning, verify that your proposed design and tooling respect these
+guidelines. Any deviation must be justified below.
+
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
 [Gates determined based on constitution file]

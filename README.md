@@ -119,6 +119,16 @@ This produces a `.vsix` file that can be installed via:
 
 The extension targets Windows, macOS, and Linux. All file paths use platform-agnostic APIs (`vscode.Uri.joinPath`, `path.join`). The webview uses VSCode CSS variables for consistent theming across platforms.
 
+## Workflow & Git
+
+- Work on a dedicated feature branch for each speckit cycle (specify, plan, tasks, implement).
+  Branch names should follow the `[###-short-description]` pattern.
+- Merge back into `master` using squash‑and‑merge to maintain a clean, linear history.
+- Rebase or sync long-lived branches frequently to avoid conflicts.
+
+## License
+
+ISC
 ## License
 
 ISC

@@ -20,6 +20,12 @@ cd LogExplorer
 npm install
 ```
 
+## Workflow
+
+Follow the speckit workflow using feature branches. Each cycle (specify, plan, tasks, implement)
+should occur on its own branch named `[###-short-description]`. Merge into `master` with a
+squash merge for a linear history.
+
 ## Development
 
 ### Launch the extension
