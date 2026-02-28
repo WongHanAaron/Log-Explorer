@@ -43,7 +43,8 @@ version) exists and is a valid file.
 ### Implementation for User Story 1
 
 - [ ] T003 [P] [US1] Create `scripts/package-local.mjs` — Node.js ESM script that calls `fs.mkdirSync('releases', {recursive:true})` then spawns `vsce package --out releases/ --allow-missing-repository`, exits non-zero with a clear message on failure
-- [ ] T004 [US1] Add `"package:local": "node scripts/package-local.mjs"` npm script to `package.json` (in the `scripts` block, after the existing `package` entry)
+- [ ] T004 [P] [US1] Create `scripts/package-local.ps1` — PowerShell 7+ script that mirrors `package-local.mjs` behaviour (make/releases dir & run vsce), suitable for `pwsh` invocation
+- [ ] T005 [US1] Add `"package:local": "node scripts/package-local.mjs"` npm script to `package.json` (in the `scripts` block, after the existing `package` entry)
 
 **Checkpoint**: `npm run package:local` succeeds; `releases/logexplorer-{version}.vsix` is
 produced without credentials or internet access.
@@ -60,8 +61,9 @@ extension version in the VSCode Extensions panel matches `package.json#version`.
 
 ### Implementation for User Story 2
 
-- [ ] T005 [P] [US2] Create `scripts/install-local.mjs` — Node.js ESM script that uses `fs.readdirSync('releases').find(f => f.endsWith('.vsix'))` to locate the package, then spawns `code --install-extension releases/<file> --force`; exits code 1 with message `"No .vsix found in releases/. Run 'npm run package:local' first."` when no file is found
-- [ ] T006 [US2] Add `"install:local": "node scripts/install-local.mjs"` npm script to `package.json` (after the `package:local` entry)
+- [ ] T006 [P] [US2] Create `scripts/install-local.mjs` — Node.js ESM script that uses `fs.readdirSync('releases').find(f => f.endsWith('.vsix'))` to locate the package, then spawns `code --install-extension releases/<file> --force`; exits code 1 with message `"No .vsix found in releases/. Run 'npm run package:local' first."` when no file is found
+- [ ] T007 [P] [US2] Create `scripts/install-local.ps1` — PowerShell 7+ script that mirrors `install-local.mjs` behaviour (find .vsix and invoke `code`), suitable for `pwsh` invocation
+- [ ] T008 [US2] Add `"install:local": "node scripts/install-local.mjs"` npm script to `package.json` (after the `package:local` entry)
 
 **Checkpoint**: `npm run install:local` installs the extension with zero manual UI steps;
 exits with descriptive error when `releases/` contains no `.vsix`.
@@ -79,7 +81,7 @@ extension is installed — all from a single terminal command.
 
 ### Implementation for User Story 3
 
-- [ ] T007 [US3] Add `"release:local": "npm run package:local && npm run install:local"` npm script to `package.json` (after the `install:local` entry)
+- [ ] T009 [US3] Add `"release:local": "npm run package:local && npm run install:local"` npm script to `package.json` (after the `install:local` entry)
 
 **Checkpoint**: `npm run release:local` succeeds end-to-end from a clean state; if
 `package:local` fails the install step is NOT invoked.
@@ -90,10 +92,10 @@ extension is installed — all from a single terminal command.
 
 **Purpose**: Documentation update and manual acceptance validation.
 
-- [ ] T008 [P] Update `README.md` — add a **Local Install** section under the existing
+- [ ] T010 [P] Update `README.md` — add a **Local Install** section under the existing
   Development table with the three new scripts (`package:local`, `install:local`,
   `release:local`) and a note that `releases/` is gitignored
-- [ ] T009 Run `specs/002-local-vsix-install/quickstart.md` acceptance checklist manually:
+- [ ] T011 Run `specs/002-local-vsix-install/quickstart.md` acceptance checklist manually:
   verify all 9 checkbox items pass end-to-end on the current machine
 
 ---
@@ -116,16 +118,17 @@ extension is installed — all from a single terminal command.
 
 ### Within Each User Story
 
-- Script file (T003/T005) before npm script entry (T004/T006)
-- All three `package.json` edits (T004, T006, T007) modify the same file — perform in
-  sequence or batch in a single edit
+- US1: script files (T003 `package-local.mjs` and T004 `package-local.ps1`) before npm entry T005
+- US2: script files (T006 `install-local.mjs` and T007 `install-local.ps1`) before npm entry T008
+- All three `package.json` edits (T005, T008, T009) modify the same file — perform in sequence or batch in a single edit
 
 ### Parallel Opportunities
 
 - T001 and T002 can run in parallel (different files: `.gitignore` vs `.vscodeignore`)
-- T003 and T005 can run in parallel (different files: `package-local.mjs` vs `install-local.mjs`)
-- T004, T006, T007 all edit `package.json` — perform sequentially or batch together
-- T008 (README) can run in parallel with any of T003–T007
+- T003 and T006 can run in parallel (different files: `package-local.mjs` vs `install-local.mjs`)
+- T004 and T007 can run in parallel (PowerShell scripts for each story)
+- T005, T008, T009 all edit `package.json` — perform sequentially or batch together
+- T010 (README) can run in parallel with any of T003–T009
 
 ---
 
