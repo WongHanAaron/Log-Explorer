@@ -8,6 +8,9 @@ out/
 # Extension package
 *.vsix
 
+# Local package output
+releases/
+
 # Test artifacts
 .vscode-test/
 

@@ -45,6 +45,9 @@
         "pretest": "npm run build && tsc -p test/tsconfig.json",
         "test": "vscode-test",
         "package": "vsce package --allow-missing-repository",
+        "package:local": "node scripts/package-local.mjs",
+        "install:local": "node scripts/install-local.mjs",
+        "release:local": "npm run package:local && npm run install:local",
         "vscode:prepublish": "node esbuild.mjs --production"
     },
     "devDependencies": {

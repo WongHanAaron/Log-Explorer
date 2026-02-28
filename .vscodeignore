@@ -16,3 +16,7 @@ test/tsconfig.json
 **/*.map
 *.vsix
 node_modules/**
+
+# Exclude local release artefacts and scripts
+releases/**
+scripts/**

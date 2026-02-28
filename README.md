@@ -115,6 +115,23 @@ This produces a `.vsix` file that can be installed via:
 - Command Palette → **Extensions: Install from VSIX...**
 - CLI: `code --install-extension logexplorer-0.1.0.vsix`
 
+## Local Install
+
+Three helper scripts are provided for creating and installing a local `.vsix` package:
+
+| Command | Description |
+|---------|-------------|
+| `npm run package:local` | Build & package extension into `releases/logexplorer-<version>.vsix` |
+| `npm run install:local` | Install the latest `.vsix` into the active VSCode using the `code` CLI |
+| `npm run release:local` | Do both of the above in sequence (build → install) |
+
+Additionally, for developers with PowerShell 7+ installed (`pwsh`), the same
+behaviour is exposed via standalone scripts. These are optional shortcuts and are run
+with `pwsh -NoProfile -File scripts/package-local.ps1` or
+`scripts/install-local.ps1`. They do not modify `package.json`.
+
+(See `specs/002-local-vsix-install/quickstart.md` for usage examples and acceptance tests.)
+
 ## Cross-Platform
 
 The extension targets Windows, macOS, and Linux. All file paths use platform-agnostic APIs (`vscode.Uri.joinPath`, `path.join`). The webview uses VSCode CSS variables for consistent theming across platforms.
