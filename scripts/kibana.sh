@@ -6,7 +6,7 @@ set -euo pipefail
 
 # Variables that may be overridden by flags
 KIBANA_VERSION=""
-HOST_PORT=""
+CLI_PORT=""   # port provided via --port (avoid clobbering $HOST_PORT env var)
 CONTAINER_ID_FILE=".kibana_container"
 
 show_help() {
@@ -38,19 +38,12 @@ check_docker() {
 }
 
 choose_host_port() {
-    # if user supplied a port, use it
-    if [ -n "$HOST_PORT" ]; then
-        echo "$HOST_PORT"
-        return
-    fi
-    # default port
-    local default=5601
-    # check using bash TCP redirection (works on most Unix shells)
-    if (echo > /dev/tcp/localhost/$default) >/dev/null 2>&1; then
-        # port busy; let docker assign random port later
-        echo ""
+    # if user supplied a port via --port, use it; otherwise return empty to
+default to random
+    if [ -n "$CLI_PORT" ]; then
+        echo "$CLI_PORT"
     else
-        echo "$default"
+        echo ""
     fi
 }
 
@@ -65,7 +58,7 @@ parse_global_flags() {
                 ;;
             --port)
                 shift
-                HOST_PORT="$1"
+                CLI_PORT="$1"
                 ;;
             start|stop|status|help|-h|--help)
                 args+=("$1")
@@ -131,12 +124,12 @@ start_container() {
         echo "Error: No Kibana version specified and no default found." >&2
         exit 1
     fi
-    # choose host port
+    # determine desired host port (empty = random)
     local hostport="$(choose_host_port)"
     local port_arg=""
-    if [ -n "$HOST_PORT" ]; then
-        port_arg="-p $HOST_PORT:5601"
-        hostport="$HOST_PORT"
+    if [ -n "$CLI_PORT" ]; then
+        port_arg="-p $CLI_PORT:5601"
+        hostport="$CLI_PORT"
     elif [ -n "$hostport" ]; then
         port_arg="-p $hostport:5601"
     else
