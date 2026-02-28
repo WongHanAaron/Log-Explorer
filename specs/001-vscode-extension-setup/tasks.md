@@ -69,16 +69,16 @@
 
 ### Implementation for User Story 2
 
-- [ ] T016 [US2] Add viewsContainers and views contributions to package.json per extension-manifest contract (logexplorer-container in activitybar, logexplorer.panel as webview type)
-- [ ] T017 [US2] Add commands contribution to package.json per commands contract (logexplorer.showPanel with category LogExplorer)
-- [ ] T018 [US2] Create WebviewViewProvider class in src/panels/LogExplorerPanel.ts implementing vscode.WebviewViewProvider with resolveWebviewView() method
-- [ ] T019 [P] [US2] Create webview HTML template in src/webview/index.html with Content Security Policy meta tag, nonce-based script loading, and placeholder content
-- [ ] T020 [P] [US2] Create webview client-side script in src/webview/main.ts with acquireVsCodeApi(), ready message, state persistence via getState/setState, and update message handler per messaging-protocol contract
-- [ ] T021 [P] [US2] Create webview styles in src/webview/styles.css using VSCode CSS variables for theme-aware styling
-- [ ] T022 [US2] Implement getWebviewContent() in src/panels/LogExplorerPanel.ts to load index.html with webview.asWebviewUri() for resource paths and nonce generation for CSP
-- [ ] T023 [US2] Register WebviewViewProvider in src/extension.ts activate() via vscode.window.registerWebviewViewProvider('logexplorer.panel', provider) and push to disposables
-- [ ] T024 [US2] Register logexplorer.showPanel command in src/commands/index.ts that focuses the LogExplorer panel via vscode.commands.executeCommand('logexplorer.panel.focus')
-- [ ] T025 [US2] Wire command registration from src/commands/index.ts into src/extension.ts activate() and push to disposables
+- [x] T016 [US2] Add viewsContainers and views contributions to package.json per extension-manifest contract (logexplorer-container in activitybar, logexplorer.panel as webview type)
+- [x] T017 [US2] Add commands contribution to package.json per commands contract (logexplorer.showPanel with category LogExplorer)
+- [x] T018 [US2] Create WebviewViewProvider class in src/panels/LogExplorerPanel.ts implementing vscode.WebviewViewProvider with resolveWebviewView() method
+- [x] T019 [P] [US2] Create webview HTML template in src/webview/index.html with Content Security Policy meta tag, nonce-based script loading, and placeholder content
+- [x] T020 [P] [US2] Create webview client-side script in src/webview/main.ts with acquireVsCodeApi(), ready message, state persistence via getState/setState, and update message handler per messaging-protocol contract
+- [x] T021 [P] [US2] Create webview styles in src/webview/styles.css using VSCode CSS variables for theme-aware styling
+- [x] T022 [US2] Implement getWebviewContent() in src/panels/LogExplorerPanel.ts to load index.html with webview.asWebviewUri() for resource paths and nonce generation for CSP
+- [x] T023 [US2] Register WebviewViewProvider in src/extension.ts activate() via vscode.window.registerWebviewViewProvider('logexplorer.panel', provider) and push to disposables
+- [x] T024 [US2] Register logexplorer.showPanel command in src/commands/index.ts that focuses the LogExplorer panel via vscode.commands.executeCommand('logexplorer.panel.focus')
+- [x] T025 [US2] Wire command registration from src/commands/index.ts into src/extension.ts activate() and push to disposables
 
 **Checkpoint**: User Story 2 complete — LogExplorer icon visible in Activity Bar, clicking opens webview sidebar panel with placeholder content, state preserved across visibility toggles
 

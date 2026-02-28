@@ -1,0 +1,54 @@
+:root {
+    --container-padding: 16px;
+}
+
+body {
+    padding: 0;
+    margin: 0;
+    color: var(--vscode-foreground);
+    background-color: var(--vscode-sideBar-background);
+    font-family: var(--vscode-font-family);
+    font-size: var(--vscode-font-size);
+    font-weight: var(--vscode-font-weight);
+}
+
+.container {
+    padding: var(--container-padding);
+}
+
+h2 {
+    margin: 0 0 8px 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--vscode-foreground);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.subtitle {
+    margin: 0 0 16px 0;
+    font-size: 12px;
+    color: var(--vscode-descriptionForeground);
+}
+
+.placeholder {
+    padding: 12px;
+    border-radius: 4px;
+    background-color: var(--vscode-editor-background);
+    border: 1px solid var(--vscode-panel-border);
+}
+
+.placeholder p {
+    margin: 0 0 8px 0;
+    line-height: 1.5;
+}
+
+.placeholder p:last-child {
+    margin-bottom: 0;
+}
+
+.hint {
+    font-style: italic;
+    color: var(--vscode-descriptionForeground);
+    font-size: 12px;
+}

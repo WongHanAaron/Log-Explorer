@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy"
+        content="default-src 'none'; style-src {{cspSource}} 'unsafe-inline'; script-src 'nonce-{{nonce}}';">
+    <link rel="stylesheet" href="{{stylesUri}}">
+    <title>Log Explorer</title>
+</head>
+
+<body>
+    <div class="container">
+        <h2>LogExplorer</h2>
+        <p class="subtitle">Log analysis and exploration tool</p>
+        <div class="placeholder">
+            <p>Welcome to LogExplorer! This panel will display log analysis tools and visualizations.</p>
+            <p class="hint">Open a log file to get started.</p>
+        </div>
+    </div>
+    <script nonce="{{nonce}}" src="{{scriptUri}}"></script>
+</body>
+
+</html>
