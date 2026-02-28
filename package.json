@@ -48,7 +48,7 @@
         "package:local": "node scripts/package-local.mjs",
         "install:local": "node scripts/install-local.mjs",
         "release:local": "npm run package:local && npm run install:local",
-        "test:kibana": "echo \"Kibana integration tests not yet implemented\"",
+        "test:kibana": "npm run pretest && node scripts/run-kibana-tests.js",
         "vscode:prepublish": "node esbuild.mjs --production"
     },
     "devDependencies": {

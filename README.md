@@ -132,6 +132,27 @@ with `pwsh -NoProfile -File scripts/package-local.ps1` or
 
 (See `specs/002-local-vsix-install/quickstart.md` for usage examples and acceptance tests.)
 
+
+## Kibana Integration (for extension testing)
+
+To assist with development of the LogExplorer extension against a live backend,
+this repository includes a small helper script and integration tests that
+spin up a Kibana server in Docker.
+
+* **Prerequisite**: Docker must be installed and running. The script will
+  abort early with a clear message if Docker is unavailable.
+* `kibana-versions.txt` at the repo root lists one or more Kibana versions
+  (e.g. `7.16.3`, `8.4.0`) that are exercised by the integration tests. You can
+  override via `KIBANA_VERSIONS` environment variable (comma-separated).
+* `scripts/kibana.sh` provides `start`, `status`, and `stop` commands for a
+  Kibana container. It supports `--version` and `--port` flags and reports the
+  host port in JSON output.
+* Run the tests manually with `npm run test:kibana`; the command compiles tests
+  and then executes the integration suite. It loops over the configured
+  versions and verifies that `GET /api/status` returns HTTP 200.
+
+These tests also execute on CI (see `.github/workflows/ci.yml`).
+
 ## Cross-Platform
 
 The extension targets Windows, macOS, and Linux. All file paths use platform-agnostic APIs (`vscode.Uri.joinPath`, `path.join`). The webview uses VSCode CSS variables for consistent theming across platforms.

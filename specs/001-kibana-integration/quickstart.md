@@ -5,7 +5,8 @@ These steps get you up and running with a local Kibana instance for testing.
 1. **Ensure prerequisites**
    * Docker Desktop or Docker Engine installed and running.
    * Node.js (already required by the project) for running test scripts.
-   * (Optional) Bash shell on Windows via Git for Windows or WSL.
+   * A POSIX‑style shell (`bash`) is required to run `scripts/kibana.sh`.
+     On Windows this typically means using Git Bash, WSL, or similar.
 
 2. **Start a Kibana container**
 

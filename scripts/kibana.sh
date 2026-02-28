@@ -99,6 +99,8 @@ read_default_version() {
     # read first non-comment non-empty line of kibana-versions.txt
     if [ -f kibana-versions.txt ]; then
         while IFS= read -r line; do
+            # remove CR (in case file has Windows endings)
+            line="${line//$'\r'/}"
             line="${line%%#*}"    # strip comments
             line="$(echo -n "$line" | xargs)"  # trim whitespace
             if [ -n "$line" ]; then
@@ -147,9 +149,18 @@ start_container() {
         echo "{\"host\":\"localhost\",\"port\":${hostport:-null},\"version\":\"$version\",\"containerId\":\"$existing\"}"
         return
     fi
+    # verify image exists (pull will fail early if not)
+    if ! docker pull --quiet "docker.elastic.co/kibana:$version" >/dev/null 2>&1; then
+        echo "Error: unable to pull Kibana image for version '$version'. Is the version correct?" >&2
+        exit 1
+    fi
+
     # start new container
     local cid
-    cid=$(docker run -d $port_arg "docker.elastic.co/kibana:$version")
+    if ! cid=$(docker run -d $port_arg "docker.elastic.co/kibana:$version"); then
+        echo "Error: failed to start Kibana container. Port may be in use or Docker encountered an error." >&2
+        exit 1
+    fi
     save_container_id "$cid"
     # if we let docker choose port, query it
     if [ -z "$hostport" ]; then
