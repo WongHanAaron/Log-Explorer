@@ -9,14 +9,27 @@ cmd="${1:-up}"
 case "$cmd" in
     up)
         echo "Starting Elasticsearch + Kibana via docker-compose..."
-        docker-compose up -d
+        if command -v docker-compose >/dev/null 2>&1; then
+            docker-compose up -d
+        else
+            echo "warning: docker-compose not found, trying 'docker compose' plugin"
+            docker compose up -d
+        fi
         ;;
     down)
         echo "Stopping and removing the compose stack..."
-        docker-compose down
+        if command -v docker-compose >/dev/null 2>&1; then
+            docker-compose down
+        else
+            docker compose down
+        fi
         ;;
     ps)
-        docker-compose ps
+        if command -v docker-compose >/dev/null 2>&1; then
+            docker-compose ps
+        else
+            docker compose ps
+        fi
         ;;
     help|--help|-h)
         cat <<'EOF'

@@ -7,8 +7,10 @@ These steps get you up and running with a local Kibana instance for testing.
    * Node.js (already required by the project) for running test scripts.
    * A POSIX‑style shell (`bash`) is required to run `scripts/kibana.sh`.
      On Windows this typically means using Git Bash, WSL, or similar.
-   * (Optional) Docker Compose if you prefer to spin up Elasticsearch + Kibana
-     together; a `docker-compose.yml` is provided in the repo root.
+   * (Optional) Docker Compose/final plugin if you prefer to spin up Elasticsearch
+     + Kibana together; install either the standalone `docker-compose` binary or
+     the newer `docker compose` plugin. `scripts/compose.sh` will try whichever
+     command is available.
 
 2. **Start a Kibana container**
 
