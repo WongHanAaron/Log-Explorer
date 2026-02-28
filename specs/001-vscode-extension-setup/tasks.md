@@ -92,11 +92,11 @@
 
 ### Implementation for User Story 3
 
-- [ ] T026 [US3] Create test runner configuration in .vscode-test.mjs with VSCode version, test file globs, and launch args
-- [ ] T027 [US3] Create test suite entry point in test/suite/index.ts that configures Mocha and discovers test files
-- [ ] T028 [US3] Create sample integration test in test/suite/extension.test.ts that verifies: extension is present in vscode.extensions.all, extension activates successfully, logexplorer.showPanel command is registered
-- [ ] T029 [US3] Create test launcher in test/runTest.ts that invokes @vscode/test-electron programmatically (fallback for non-CLI usage)
-- [ ] T030 [US3] Verify npm test runs successfully: all sample tests pass with clear output
+- [x] T026 [US3] Create test runner configuration in .vscode-test.mjs with VSCode version, test file globs, and launch args
+- [x] T027 [US3] Create test suite entry point in test/suite/index.ts that configures Mocha and discovers test files
+- [x] T028 [US3] Create sample integration test in test/suite/extension.test.ts that verifies: extension is present in vscode.extensions.all, extension activates successfully, logexplorer.showPanel command is registered
+- [x] T029 [US3] Create test launcher in test/runTest.ts that invokes @vscode/test-electron programmatically (fallback for non-CLI usage)
+- [x] T030 [US3] Verify npm test runs successfully: all sample tests pass with clear output
 
 **Checkpoint**: User Story 3 complete — `npm test` launches VSCode, runs integration tests, all pass
 

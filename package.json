@@ -42,18 +42,20 @@
     "scripts": {
         "build": "node esbuild.mjs",
         "watch": "node esbuild.mjs --watch",
-        "pretest": "npm run build",
+        "pretest": "npm run build && tsc -p test/tsconfig.json",
         "test": "vscode-test",
         "package": "vsce package",
         "vscode:prepublish": "node esbuild.mjs --production"
     },
     "devDependencies": {
+        "@types/glob": "^8.1.0",
         "@types/mocha": "^10.0.10",
         "@types/node": "^25.3.2",
         "@types/vscode": "^1.109.0",
         "@vscode/test-cli": "^0.0.12",
         "@vscode/test-electron": "^2.5.2",
         "esbuild": "^0.27.3",
+        "glob": "^13.0.6",
         "mocha": "^11.7.5",
         "typescript": "^5.9.3"
     }
