@@ -62,6 +62,33 @@ terminal session.
 
 **Verify**: Same as US1 + US2 combined.
 
+## PowerShell 7+ Convenience Scripts
+
+For developers who prefer a `pwsh` terminal, equivalent standalone scripts are provided.
+These require [PowerShell 7+](https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell) (`pwsh` on PATH) and do **not** go through npm.
+
+### Package only
+
+```powershell
+pwsh -NoProfile -File scripts/package-local.ps1
+```
+
+**Expected output**: Same as `npm run package:local` — `releases/logexplorer-{version}.vsix` is produced.
+
+### Install only
+
+```powershell
+pwsh -NoProfile -File scripts/install-local.ps1
+```
+
+**Expected output**: Same as `npm run install:local` — extension installed into VSCode.
+
+### Combined (package + install)
+
+```powershell
+pwsh -NoProfile -File scripts/package-local.ps1; if ($LASTEXITCODE -eq 0) { pwsh -NoProfile -File scripts/install-local.ps1 }
+```
+
 ---
 
 ## Acceptance Checklist
@@ -77,6 +104,10 @@ Run these checks after executing the commands above:
 - [ ] **US2**: Running `install:local` when the extension is already installed replaces it
 - [ ] **US3**: `release:local` succeeds end-to-end from a clean state
 - [ ] **US3**: If `package:local` fails, `install:local` is NOT invoked
+
+- [ ] **PS1**: `pwsh -NoProfile -File scripts/package-local.ps1` produces the same `.vsix` as `npm run package:local`
+- [ ] **PS1**: `pwsh -NoProfile -File scripts/install-local.ps1` installs the extension without going through npm
+- [ ] **PS1**: Both `.ps1` scripts exit with a clear error message when pre-conditions are not met
 
 ---
 

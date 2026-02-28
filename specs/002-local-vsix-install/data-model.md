@@ -44,15 +44,18 @@ locations, and the constraints that govern them.
 
 ## Script Files
 
-These are the new source files introduced by this feature:
+New source files introduced by this feature:
 
 | File | Type | Purpose |
-|------|------|---------|
-| `scripts/package-local.mjs` | Node.js ESM script | Creates `releases/` dir, invokes `vsce package` |
-| `scripts/install-local.mjs` | Node.js ESM script | Finds `.vsix` in `releases/`, invokes `code --install-extension` |
+|------|------|--------|
+| `scripts/package-local.mjs` | Node.js ESM script | Creates `releases/` dir, invokes `vsce package`; backs `npm run package:local` |
+| `scripts/install-local.mjs` | Node.js ESM script | Finds `releases/*.vsix`, invokes `code --install-extension`; backs `npm run install:local` |
+| `scripts/package-local.ps1` | PowerShell 7+ script | Same behaviour as `.mjs` counterpart; standalone `pwsh` convenience |
+| `scripts/install-local.ps1` | PowerShell 7+ script | Same behaviour as `.mjs` counterpart; standalone `pwsh` convenience |
 
-**Script constraints**:
-- MUST run under Node.js 18+ (`child_process.execSync`, `fs` are standard).
+**Script constraints (applies to all four scripts)**:
+- MUST run under Node.js 18+ (`.mjs`) or PowerShell 7+ (`pwsh`) as appropriate.
+- `.ps1` scripts MUST be invoked with `pwsh -NoProfile -File scripts/<name>.ps1`.
 - MUST be cross-platform (no OS-specific shell commands).
 - MUST exit with code 0 on success and non-zero on failure.
 - MUST print a human-readable error message to stderr/stdout on failure.

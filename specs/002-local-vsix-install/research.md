@@ -113,6 +113,30 @@ first `*.vsix` in `releases/`, then passes it to `code --install-extension <path
 
 ---
 
+## Decision 6: PowerShell Script Implementation Pattern
+
+**Decision**: Use PowerShell 7+ (`pwsh`) with `$ErrorActionPreference = 'Stop'`,
+`New-Item -ItemType Directory -Force`, and `Invoke-Expression` / `Start-Process` to invoke `vsce`
+and `code`, mirroring the Node.js `.mjs` script logic.
+
+**Rationale**:
+- `$ErrorActionPreference = 'Stop'` ensures any non-zero exit from child processes throws a
+  terminating error, providing fail-fast behaviour equivalent to `process.exit(1)` in Node.js.
+- `New-Item -ItemType Directory -Force` is the idiomatic PowerShell equivalent of
+  `fs.mkdirSync(..., {recursive: true})` — safe to call even when the directory already exists.
+- `Get-ChildItem releases -Filter *.vsix | Select-Object -First 1` provides the same `.vsix`
+  discovery as `fs.readdirSync('releases').find(f => f.endsWith('.vsix'))`.
+- PowerShell 7+ runs on Windows, macOS, and Linux, satisfying FR-007.
+- Scripts are invoked directly as `pwsh -NoProfile -File scripts/package-local.ps1` —
+  `‑NoProfile` avoids slow profile loading; `‑File` is preferred over `‑Command` for scripts.
+
+**Alternatives considered**:
+- *PowerShell 5.1 (Windows built-in)*: Rejected — not cross-platform (Q1 clarification answer B).
+- *Replace `.mjs` files with `.ps1`*: Rejected — would break npm script backing for macOS/Linux
+  developers without `pwsh` (Q2 clarification answer B — keep both).
+
+---
+
 ## Summary Table
 
 | Question | Resolution |
@@ -120,7 +144,10 @@ first `*.vsix` in `releases/`, then passes it to `code --install-extension <path
 | How to write cross-platform scripts? | Node.js ESM `.mjs` helper scripts (mirrors `esbuild.mjs` pattern) |
 | Where does the `.vsix` go? | `releases/` folder at project root, auto-created |
 | How does vsce output to `releases/`? | `vsce package --out releases/` (directory mode) |
-| How does the install script find the `.vsix`? | `fs.readdirSync('releases').find(*.vsix)` |
+| How does the install script find the `.vsix`? | `fs.readdirSync('releases').find(*.vsix)` / `Get-ChildItem releases -Filter *.vsix \| Select-Object -First 1` |
 | What are the npm script names? | `package:local`, `install:local`, `release:local` |
 | Does the existing `package` script change? | No — preserved as-is; `package:local` is additive |
 | Any new npm dependencies needed? | None — `@vscode/vsce` already installed |
+| PowerShell script runtime? | PowerShell 7+ (`pwsh`) — cross-platform, `$ErrorActionPreference = 'Stop'` for fail-fast |
+| PS1 script location? | `scripts/` at project root, flat (alongside `.mjs` files) |
+| Do `.ps1` scripts replace `.mjs`? | No — coexist; `.mjs` back npm entries, `.ps1` are standalone `pwsh` shortcuts |
