@@ -110,10 +110,10 @@
 
 ### Implementation for User Story 4
 
-- [ ] T031 [US4] Install @vscode/vsce as dev dependency for extension packaging
-- [ ] T032 [US4] Configure vscode:prepublish script in package.json to run production esbuild build (minified, no sourcemaps)
-- [ ] T033 [US4] Add .vscodeignore file to exclude test/, src/, .vscode-test/, .specify/, specs/, .github/ from the packaged extension
-- [ ] T034 [US4] Verify npm run package produces a valid logexplorer-0.1.0.vsix file
+- [x] T031 [US4] Install @vscode/vsce as dev dependency for extension packaging
+- [x] T032 [US4] Configure vscode:prepublish script in package.json to run production esbuild build (minified, no sourcemaps)
+- [x] T033 [US4] Add .vscodeignore file to exclude test/, src/, .vscode-test/, .specify/, specs/, .github/ from the packaged extension
+- [x] T034 [US4] Verify npm run package produces a valid logexplorer-0.1.0.vsix file
 
 **Checkpoint**: User Story 4 complete — distributable .vsix file can be generated and installed
 
