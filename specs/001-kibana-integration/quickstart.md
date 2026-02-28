@@ -7,6 +7,8 @@ These steps get you up and running with a local Kibana instance for testing.
    * Node.js (already required by the project) for running test scripts.
    * A POSIX‑style shell (`bash`) is required to run `scripts/kibana.sh`.
      On Windows this typically means using Git Bash, WSL, or similar.
+   * (Optional) Docker Compose if you prefer to spin up Elasticsearch + Kibana
+     together; a `docker-compose.yml` is provided in the repo root.
 
 2. **Start a Kibana container**
 
@@ -73,6 +75,20 @@ afterwards.  It exits with zero if all versions passed, nonzero otherwise.
    Edit `kibana-versions.txt` in the repo root to change which major versions are
    exercised. Use `#` for comments. Alternatively, set environment variable
    `KIBANA_VERSIONS="7.16.3,8.4.0"` before running the tests.
+
+7. **Using Docker Compose (WSL-friendly)**
+
+   You can start both Elasticsearch and Kibana with a single command:
+
+   ```bash
+   docker-compose up -d
+   ```
+
+   This respects the `KIBANA_VERSION` and `ELASTICSEARCH_VERSION` environment
+   variables (defaults are `8.4.0`). Once services are running, you can still
+   use the helper script to interrogate the Kibana instance with
+   `./scripts/kibana.sh status` or `curl http://localhost:5601/api/status`.
+   Tear everything down with `docker-compose down`.
 
 That's it! The quickstart above gets developers and CI configured for Kibana
 integration.

@@ -147,7 +147,9 @@ spin up a Kibana server in Docker.
 * `scripts/kibana.sh` provides `start`, `status`, and `stop` commands for a
   Kibana container (image path `docker.elastic.co/kibana/kibana:<version>`).
   It supports `--version` and `--port` flags and reports the host port in JSON
-  output.
+  output. Alternatively, a `docker-compose.yml` is supplied to bring up both
+  Elasticsearch and Kibana together (useful when running under WSL or if you
+  need Elasticsearch as well).
 * Run the tests manually with `npm run test:kibana`; the command compiles tests
   and then executes the integration suite. It loops over the configured
   versions and verifies that `GET /api/status` returns HTTP 200.
