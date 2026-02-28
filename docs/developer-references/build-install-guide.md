@@ -8,7 +8,7 @@ local machine. It covers both npm‑based scripts and PowerShell convenience scr
 * Node.js 18+ is required for building the extension and running the helper scripts.
 * VSCode 1.85+ with the `code` command‑line launcher on your `PATH`.
 * Git (any recent version).
-* Optional: PowerShell 7+ (`pwsh`) if you want to use the `.ps1` shortcuts.
+* Optional: PowerShell 7+ (`pwsh`) if you want to use the `.ps1` shortcuts (the scripts will now check for `pwsh` and fail fast with a helpful message if it's missing).
 
 ## Build & Package (npm)
 
@@ -77,9 +77,12 @@ pwsh -NoProfile -File scripts/package-local.ps1; \
   if ($LASTEXITCODE -eq 0) { pwsh -NoProfile -File scripts/install-local.ps1 }
 ```
 
-Note that `pwsh` must be on your PATH for these to work; the built‑in Windows
-PowerShell 5.1 will not satisfy this requirement and will error.
-
+Note that `pwsh` must be on your PATH if you want to run the helper scripts
+in a separate PowerShell 7 process.  If you launch the `.ps1` files from the
+built‑in Windows PowerShell 5.1 the scripts will now fall back to the current
+shell and simply emit a warning; they still perform the build/package or
+install steps just fine.  The npm commands (`npm run package:local` /
+`npm run install:local`) always work regardless of which shell you use.
 ## Troubleshooting
 
 * **`code: command not found`** – ensure VSCode is installed and the CLI added to PATH.
