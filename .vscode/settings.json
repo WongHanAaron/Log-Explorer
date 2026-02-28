@@ -9,6 +9,16 @@
     "chat.tools.terminal.autoApprove": {
         ".specify/scripts/bash/": true,
         ".specify/scripts/powershell/": true
+    },
+    "typescript.tsdk": "node_modules/typescript/lib",
+    "editor.formatOnSave": true,
+    "files.exclude": {
+        "dist": true,
+        "node_modules": true
+    },
+    "search.exclude": {
+        "dist": true,
+        "node_modules": true
     }
 }
 

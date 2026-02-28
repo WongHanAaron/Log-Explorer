@@ -17,13 +17,13 @@
 
 **Purpose**: Project initialization, manifest, TypeScript/esbuild configuration
 
-- [ ] T001 Initialize npm project and create extension manifest in package.json with identity fields (name: logexplorer, displayName: LogExplorer, version: 0.1.0, engines.vscode: ^1.85.0, main: ./dist/extension.js)
-- [ ] T002 [P] Create TypeScript configuration in tsconfig.json targeting ES2020/CommonJS with strict mode, rootDir: src, outDir: dist
-- [ ] T003 [P] Create esbuild bundler configuration in esbuild.mjs with two entry points (src/extension.ts → dist/extension.js as CJS/Node, src/webview/main.ts → dist/webview.js as IIFE/browser)
-- [ ] T004 [P] Create monochrome SVG Activity Bar icon in resources/icons/logexplorer.svg
-- [ ] T005 [P] Create .gitignore with dist/, node_modules/, *.vsix, .vscode-test/ exclusions
-- [ ] T006 Add npm scripts to package.json: build, watch, pretest, test, package, vscode:prepublish
-- [ ] T007 [P] Create VSCode workspace settings in .vscode/settings.json with recommended TypeScript and extension development defaults
+- [x] T001 Initialize npm project and create extension manifest in package.json with identity fields (name: logexplorer, displayName: LogExplorer, version: 0.1.0, engines.vscode: ^1.85.0, main: ./dist/extension.js)
+- [x] T002 [P] Create TypeScript configuration in tsconfig.json targeting ES2020/CommonJS with strict mode, rootDir: src, outDir: dist
+- [x] T003 [P] Create esbuild bundler configuration in esbuild.mjs with two entry points (src/extension.ts → dist/extension.js as CJS/Node, src/webview/main.ts → dist/webview.js as IIFE/browser)
+- [x] T004 [P] Create monochrome SVG Activity Bar icon in resources/icons/logexplorer.svg
+- [x] T005 [P] Create .gitignore with dist/, node_modules/, *.vsix, .vscode-test/ exclusions
+- [x] T006 Add npm scripts to package.json: build, watch, pretest, test, package, vscode:prepublish
+- [x] T007 [P] Create VSCode workspace settings in .vscode/settings.json with recommended TypeScript and extension development defaults
 
 **Checkpoint**: Project skeleton ready — `npm install` and `npm run build` should succeed
 
@@ -35,10 +35,10 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T008 Create extension entry point in src/extension.ts with activate() and deactivate() functions, register disposables on context.subscriptions
-- [ ] T009 Add activation events to package.json contributes (implicit onView:logexplorer.panel via views contribution)
-- [ ] T010 Install all dev dependencies: typescript, @types/vscode, @types/node, esbuild, @vscode/test-cli, @vscode/test-electron, mocha, @types/mocha
-- [ ] T011 Verify extension compiles and activates in Extension Development Host with zero errors in Output panel
+- [x] T008 Create extension entry point in src/extension.ts with activate() and deactivate() functions, register disposables on context.subscriptions
+- [x] T009 Add activation events to package.json contributes (implicit onView:logexplorer.panel via views contribution)
+- [x] T010 Install all dev dependencies: typescript, @types/vscode, @types/node, esbuild, @vscode/test-cli, @vscode/test-electron, mocha, @types/mocha
+- [x] T011 Verify extension compiles and activates in Extension Development Host with zero errors in Output panel
 
 **Checkpoint**: Foundation ready — extension activates cleanly in dev host, user story implementation can begin
 
@@ -52,10 +52,10 @@
 
 ### Implementation for User Story 1
 
-- [ ] T012 [P] [US1] Create debug launch configuration in .vscode/launch.json with "Run Extension" and "Extension Tests" profiles
-- [ ] T013 [P] [US1] Create build tasks in .vscode/tasks.json with npm:watch as default build task
-- [ ] T014 [US1] Add console output in src/extension.ts activate() to confirm activation in Output panel (e.g., "LogExplorer extension is now active!")
-- [ ] T015 [US1] Create README.md with setup instructions: prerequisites, npm install, F5 to launch, matching quickstart.md content
+- [x] T012 [P] [US1] Create debug launch configuration in .vscode/launch.json with "Run Extension" and "Extension Tests" profiles
+- [x] T013 [P] [US1] Create build tasks in .vscode/tasks.json with npm:watch as default build task
+- [x] T014 [US1] Add console output in src/extension.ts activate() to confirm activation in Output panel (e.g., "LogExplorer extension is now active!")
+- [x] T015 [US1] Create README.md with setup instructions: prerequisites, npm install, F5 to launch, matching quickstart.md content
 
 **Checkpoint**: User Story 1 complete — developer can go from fresh clone to running Extension Development Host in under 5 minutes
 
