@@ -8,7 +8,9 @@ const watch = process.argv.includes("--watch");
 /** Copy static assets to dist/ */
 function copyAssets() {
     mkdirSync("dist", { recursive: true });
+    mkdirSync("dist/webview", { recursive: true });
     copyFileSync("src/webview/styles.css", "dist/webview.css");
+    copyFileSync("src/webview/new-session/styles.css", "dist/webview/new-session.css");
 }
 
 /** @type {import('esbuild').BuildOptions} */
@@ -36,20 +38,34 @@ const webviewConfig = {
     minify: production,
 };
 
+/** @type {import('esbuild').BuildOptions} */
+const newSessionWebviewConfig = {
+    entryPoints: ["src/webview/new-session/main.ts"],
+    bundle: true,
+    outfile: "dist/webview/new-session.js",
+    format: "iife",
+    platform: "browser",
+    target: "ES2020",
+    sourcemap: !production,
+    minify: production,
+};
+
 async function main() {
     copyAssets();
 
     if (watch) {
-        const [extCtx, webCtx] = await Promise.all([
+        const [extCtx, webCtx, newSessionCtx] = await Promise.all([
             esbuild.context(extensionConfig),
             esbuild.context(webviewConfig),
+            esbuild.context(newSessionWebviewConfig),
         ]);
-        await Promise.all([extCtx.watch(), webCtx.watch()]);
+        await Promise.all([extCtx.watch(), webCtx.watch(), newSessionCtx.watch()]);
         console.log("[watch] Build started...");
     } else {
         await Promise.all([
             esbuild.build(extensionConfig),
             esbuild.build(webviewConfig),
+            esbuild.build(newSessionWebviewConfig),
         ]);
         console.log("[build] Build complete.");
     }
