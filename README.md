@@ -132,6 +132,40 @@ with `pwsh -NoProfile -File scripts/package-local.ps1` or
 
 (See `specs/002-local-vsix-install/quickstart.md` for usage examples and acceptance tests.)
 
+## E2E Data Tool
+
+As part of end-to-end testing we include a small Node.js utility that can
+generate synthetic log files and optionally deploy them into a running Docker
+container. This allows tests to populate an environment (e.g. Kibana with
+Elasticsearch) with sample data without needing external dependencies.
+
+The tool lives in `tools/loggen.js` (TypeScript source) and is invoked via the
+npm helper script:
+
+```bash
+# generate two text log files using the bundled sample config
+npm run loggen -- generate --config tools/samples/sample-log-config.json \
+    --output /tmp/logs --count 2
+
+# filename pattern example (creates `sub/roll-0-123456789.log`, etc.)
+npm run loggen -- generate --config tools/samples/sample-log-config.json \
+    --output /tmp/logs --count 3 --filename "sub/roll-{i}-{random}.log"
+
+# push the files into a container path
+npm run loggen -- deploy --target mycontainer:/var/logs --source /tmp/logs
+
+# remove the files from the container again
+npm run loggen -- cleanup --target mycontainer:/var/logs
+```
+
+You can also customise the timestamp produced for `iso` fields by specifying a
+`format` string (e.g. `yyyyMMdd-HHmmss`) in the log configuration file.  The
+included sample config already shows a verbose ISO pattern.
+
+Unit tests for the generator and deploy/cleanup logic are run with
+`npm run test:e2e-data`. An end-to-end test (skipped when Docker is not
+available) starts a temporary Alpine container, runs the full workflow, and
+then tears down the container.
 
 ## Kibana Integration (for extension testing)
 

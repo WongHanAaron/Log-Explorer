@@ -1,0 +1,25 @@
+{
+    "format": "text",
+    "entries": 5,
+    "fields": [
+        {
+            "name": "timestamp",
+            "type": "iso",
+            "format": "yyyy-MM-ddTHH:mm:ss.SSSZ"
+        },
+        {
+            "name": "level",
+            "type": "enum",
+            "values": [
+                "info",
+                "error",
+                "debug"
+            ]
+        },
+        {
+            "name": "message",
+            "type": "sentence"
+        }
+    ],
+    "outputFormat": "text"
+}
