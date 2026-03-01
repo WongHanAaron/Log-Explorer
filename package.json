@@ -2,7 +2,7 @@
     "name": "logexplorer",
     "displayName": "LogExplorer",
     "description": "A VSCode extension for exploring and analyzing log files",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "publisher": "logexplorer",
     "engines": {
         "vscode": "^1.85.0"
@@ -20,6 +20,13 @@
                     "title": "LogExplorer",
                     "icon": "resources/icons/logexplorer.svg"
                 }
+            ],
+            "panel": [
+                {
+                    "id": "logexplorer-bottom",
+                    "title": "Log Explorer",
+                    "icon": "resources/icons/logexplorer.svg"
+                }
             ]
         },
         "views": {
@@ -28,6 +35,23 @@
                     "type": "webview",
                     "id": "logexplorer.panel",
                     "name": "Log Explorer"
+                },
+                {
+                    "type": "webview",
+                    "id": "logexplorer.sessionTools",
+                    "name": "Session Tools"
+                },
+                {
+                    "type": "webview",
+                    "id": "logexplorer.logDetails",
+                    "name": "Log Details"
+                }
+            ],
+            "logexplorer-bottom": [
+                {
+                    "type": "webview",
+                    "id": "logexplorer.searchResults",
+                    "name": "Search Results"
                 }
             ]
         },
@@ -36,8 +60,66 @@
                 "command": "logexplorer.showPanel",
                 "title": "Show Panel",
                 "category": "LogExplorer"
+            },
+            {
+                "command": "logexplorer.newSession",
+                "title": "New Session",
+                "category": "Log Explorer"
+            },
+            {
+                "command": "logexplorer.editLogFileSourceConfig",
+                "title": "Edit Log File Source Config",
+                "category": "Log Explorer"
+            },
+            {
+                "command": "logexplorer.editFileLogLineConfig",
+                "title": "Edit File Log Line Config",
+                "category": "Log Explorer"
+            },
+            {
+                "command": "logexplorer.editSessionTemplates",
+                "title": "Edit Session Templates",
+                "category": "Log Explorer"
+            },
+            {
+                "command": "logexplorer.setupWorkspace",
+                "title": "Setup New Workspace",
+                "category": "Log Explorer"
+            },
+            {
+                "command": "logexplorer.gettingStarted",
+                "title": "Getting Started",
+                "category": "Log Explorer"
             }
-        ]
+        ],
+        "menus": {
+            "commandPalette": [
+                {
+                    "command": "logexplorer.showPanel",
+                    "when": "workspaceFolderCount > 0 && logexplorer.workspaceInitialized"
+                },
+                {
+                    "command": "logexplorer.newSession",
+                    "when": "workspaceFolderCount > 0 && logexplorer.workspaceInitialized"
+                },
+                {
+                    "command": "logexplorer.editLogFileSourceConfig",
+                    "when": "workspaceFolderCount > 0 && logexplorer.workspaceInitialized"
+                },
+                {
+                    "command": "logexplorer.editFileLogLineConfig",
+                    "when": "workspaceFolderCount > 0 && logexplorer.workspaceInitialized"
+                },
+                {
+                    "command": "logexplorer.editSessionTemplates",
+                    "when": "workspaceFolderCount > 0 && logexplorer.workspaceInitialized"
+                },
+                {
+                    "command": "logexplorer.setupWorkspace",
+                    "when": "workspaceFolderCount > 0 && !logexplorer.workspaceInitialized"
+                }
+            ]
+        }
     },
     "scripts": {
         "build": "node esbuild.mjs",

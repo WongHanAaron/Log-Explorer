@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
+import { getNonce } from '../utils/nonce';
 
 export class LogExplorerPanel implements vscode.WebviewViewProvider {
     public static readonly viewType = 'logexplorer.panel';
@@ -25,7 +26,7 @@ export class LogExplorerPanel implements vscode.WebviewViewProvider {
             webviewView.webview.html = this._getWebviewContent(webviewView.webview);
         } catch (error) {
             console.error('LogExplorer: Failed to load webview content', error);
-            const nonce = this._getNonce();
+            const nonce = getNonce();
             const scriptUri = webviewView.webview.asWebviewUri(
                 vscode.Uri.joinPath(this._extensionUri, 'dist', 'webview.js')
             );
@@ -49,7 +50,7 @@ export class LogExplorerPanel implements vscode.WebviewViewProvider {
     }
 
     private _getWebviewContent(webview: vscode.Webview): string {
-        const nonce = this._getNonce();
+        const nonce = getNonce();
 
         const scriptUri = webview.asWebviewUri(
             vscode.Uri.joinPath(this._extensionUri, 'dist', 'webview.js')
@@ -105,14 +106,5 @@ export class LogExplorerPanel implements vscode.WebviewViewProvider {
     <script nonce="${nonce}" src="${scriptUri}"></script>
 </body>
 </html>`;
-    }
-
-    private _getNonce(): string {
-        let text = '';
-        const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-        for (let i = 0; i < 32; i++) {
-            text += possible.charAt(Math.floor(Math.random() * possible.length));
-        }
-        return text;
     }
 }
