@@ -119,6 +119,20 @@
     }
 
     // -------------------------------------------------------------------------
+    // Page navigation
+    // -------------------------------------------------------------------------
+
+    function showPage(page: 'discovery' | 'form'): void {
+        document.getElementById('page-discovery')!.classList.toggle('active', page === 'discovery');
+        document.getElementById('page-form')!.classList.toggle('active', page === 'form');
+    }
+
+    document.getElementById('back-to-discovery')?.addEventListener('click', () => {
+        showPage('discovery');
+        showUnselectedState();
+    });
+
+    // -------------------------------------------------------------------------
     // Template selection
     // -------------------------------------------------------------------------
 
@@ -130,38 +144,27 @@
         const el = document.querySelector(`.template-item[data-id="${CSS.escape(tpl.id)}"]`);
         el?.classList.add('selected');
 
-        // Update header
-        const headerName = document.getElementById('template-header-name')!;
-        const headerDesc = document.getElementById('template-header-desc')!;
-        const placeholder = document.getElementById('template-unselected-placeholder');
-        if (placeholder) { placeholder.remove(); }
-        headerName.textContent = tpl.name;
-        headerDesc.textContent = tpl.description;
-        headerName.style.display = '';
-        headerDesc.style.display = '';
+        // Set form-page header
+        document.getElementById('template-header-name')!.textContent = tpl.name;
+        document.getElementById('template-header-desc')!.textContent = tpl.description;
 
         // Render dynamic parameter fields
         renderParameters(tpl.parameters);
 
         // Pre-populate sources
         setSources(tpl.sources);
+
+        // Navigate to form page
+        showPage('form');
     }
 
     function showUnselectedState(): void {
         selectedTemplate = null;
-        const headerName = document.getElementById('template-header-name')!;
-        const headerDesc = document.getElementById('template-header-desc')!;
-        headerName.style.display = 'none';
-        headerDesc.style.display = 'none';
-
-        if (!document.getElementById('template-unselected-placeholder')) {
-            const p = document.createElement('p');
-            p.id = 'template-unselected-placeholder';
-            p.className = 'empty-state';
-            p.textContent = 'Select a template to begin, or fill in the fields manually.';
-            document.getElementById('template-header')!.appendChild(p);
-        }
-
+        // Reset form page header to generic title
+        const nameEl = document.getElementById('template-header-name');
+        const descEl = document.getElementById('template-header-desc');
+        if (nameEl) { nameEl.textContent = 'New Session'; }
+        if (descEl) { descEl.textContent = ''; }
         renderParameters([]);
         setSources([]);
     }
@@ -305,8 +308,6 @@
     // -------------------------------------------------------------------------
 
     function handleSessionCreated(session: SessionSummary): void {
-        showSuccess('Session created successfully.');
-
         const list = document.getElementById('recent-sessions-list')!;
         // Remove empty-state message if present
         const empty = list.querySelector('.empty-state');
@@ -320,6 +321,10 @@
         (document.getElementById('time-start') as HTMLInputElement).value = '';
         document.getElementById('parameters-section')!.innerHTML = '';
         document.getElementById('sources-tbody')!.innerHTML = '';
+
+        // Return to discovery — new session is visible in Recent Sessions
+        showPage('discovery');
+        showUnselectedState();
     }
 
     // -------------------------------------------------------------------------
@@ -363,8 +368,14 @@
                         input.value = session.parameters[key];
                     }
                 });
+                return; // selectTemplate already called showPage('form')
             }
         }
+
+        // No matching template — show form page with generic header
+        document.getElementById('template-header-name')!.textContent = session.name || 'Edit Session';
+        document.getElementById('template-header-desc')!.textContent = '';
+        showPage('form');
     }
 
     // -------------------------------------------------------------------------

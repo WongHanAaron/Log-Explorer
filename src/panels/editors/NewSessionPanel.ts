@@ -50,7 +50,7 @@ export class NewSessionPanel {
     // Message handling
     // -------------------------------------------------------------------------
 
-    private async _handleMessage(message: { type: string; [key: string]: unknown }): Promise<void> {
+    private async _handleMessage(message: { type: string;[key: string]: unknown }): Promise<void> {
         const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri;
 
         switch (message.type) {
@@ -138,102 +138,116 @@ export class NewSessionPanel {
     <title>New Session</title>
 </head>
 <body>
-<div class="ns-root">
 
-    <!-- =====================================================================
-         LEFT: Discovery panel (4 quadrants)
-         ===================================================================== -->
-    <div class="ns-discovery">
+    <!-- =========================================================================
+         PAGE 1: Discovery
+         ========================================================================= -->
+    <div id="page-discovery" class="ns-page active">
+        <div class="ns-page-inner">
 
-        <!-- Top-left: New Session Templates -->
-        <div class="ns-quadrant" id="templates-panel">
-            <p class="ns-quadrant-title">New Session Templates</p>
-            <input id="template-search" type="text" placeholder="Search templates\u2026" />
-            <div id="templates-list" class="ns-list"></div>
-        </div>
+            <h1 class="ns-page-title">New Session</h1>
+            <p class="ns-page-subtitle">Choose a template or open a recent session to get started.</p>
 
-        <!-- Top-right: Getting Started (stub) -->
-        <div class="ns-quadrant" id="getting-started-panel">
-            <p class="ns-quadrant-title">Getting Started</p>
-            <p class="empty-state">Coming soon.</p>
-        </div>
+            <div class="ns-discovery">
 
-        <!-- Bottom-left: Recent Sessions -->
-        <div class="ns-quadrant" id="recent-sessions-panel">
-            <p class="ns-quadrant-title">Recent Sessions</p>
-            <div id="recent-sessions-list" class="ns-list"></div>
-        </div>
+                <!-- Top-left: New Session Templates -->
+                <div class="ns-quadrant" id="templates-panel">
+                    <p class="ns-quadrant-title">New Session Templates</p>
+                    <input id="template-search" type="text" placeholder="Search templates\u2026" />
+                    <div id="templates-list" class="ns-list"></div>
+                </div>
 
-        <!-- Bottom-right: Local Logs (stub) -->
-        <div class="ns-quadrant" id="local-logs-panel">
-            <p class="ns-quadrant-title">Local Logs</p>
-            <p class="empty-state">Coming soon.</p>
-        </div>
+                <!-- Top-right: Getting Started (stub) -->
+                <div class="ns-quadrant" id="getting-started-panel">
+                    <p class="ns-quadrant-title">Getting Started</p>
+                    <p class="empty-state">Coming soon.</p>
+                </div>
 
-    </div>
+                <!-- Bottom-left: Recent Sessions -->
+                <div class="ns-quadrant" id="recent-sessions-panel">
+                    <p class="ns-quadrant-title">Recent Sessions</p>
+                    <div id="recent-sessions-list" class="ns-list"></div>
+                </div>
 
-    <!-- =====================================================================
-         RIGHT: Creation form
-         ===================================================================== -->
-    <div class="ns-form-column">
+                <!-- Bottom-right: Local Logs (stub) -->
+                <div class="ns-quadrant" id="local-logs-panel">
+                    <p class="ns-quadrant-title">Local Logs</p>
+                    <p class="empty-state">Coming soon.</p>
+                </div>
 
-        <!-- Template header -->
-        <div id="template-header">
-            <h2 id="template-header-name" style="display:none"></h2>
-            <p  id="template-header-desc" style="display:none"></p>
-        </div>
-
-        <!-- Session Name (required) -->
-        <div class="form-group">
-            <label class="form-label" for="session-name">
-                Session Name<span class="required-mark">*</span>
-            </label>
-            <input id="session-name" class="form-input" type="text" placeholder="e.g. prod-incident-2026-02-28" />
-        </div>
-
-        <!-- Description (optional) -->
-        <div class="form-group">
-            <label class="form-label" for="session-description">Description</label>
-            <input id="session-description" class="form-input" type="text" placeholder="Optional description" />
-        </div>
-
-        <!-- Time Start -->
-        <div class="form-group">
-            <label class="form-label" for="time-start">Time Start</label>
-            <input id="time-start" class="form-input" type="datetime-local" />
-        </div>
-
-        <!-- Dynamic template parameters -->
-        <div id="parameters-section"></div>
-
-        <!-- Sources -->
-        <div id="sources-section">
-            <div class="sources-section-header">
-                <span class="sources-label">Sources</span>
-                <button id="add-source-btn" class="btn btn-secondary">+ Add Source</button>
             </div>
-            <table class="sources-table">
-                <thead>
-                    <tr>
-                        <th class="col-type">Type</th>
-                        <th class="col-source">Source Config</th>
-                        <th class="col-log">Log Config</th>
-                        <th class="col-remove"></th>
-                    </tr>
-                </thead>
-                <tbody id="sources-tbody"></tbody>
-            </table>
         </div>
-
-        <!-- Actions -->
-        <div class="form-actions">
-            <button id="create-session-btn" class="btn btn-primary">Create Session</button>
-            <span id="form-error"></span>
-            <span id="form-success"></span>
-        </div>
-
     </div>
-</div>
+
+    <!-- =========================================================================
+         PAGE 2: Creation form
+         ========================================================================= -->
+    <div id="page-form" class="ns-page">
+        <div class="ns-page-inner">
+
+            <!-- Back navigation -->
+            <button id="back-to-discovery" class="btn-back">&#8592; New Session</button>
+
+            <!-- Template / page header -->
+            <div class="ns-form-header">
+                <h1 id="template-header-name" class="ns-page-title">New Session</h1>
+                <p  id="template-header-desc" class="ns-page-subtitle"></p>
+            </div>
+
+            <div class="ns-form-body">
+
+                <!-- Session Name (required) -->
+                <div class="form-group">
+                    <label class="form-label" for="session-name">
+                        Session Name<span class="required-mark">*</span>
+                    </label>
+                    <input id="session-name" class="form-input" type="text" placeholder="e.g. prod-incident-2026-02-28" />
+                </div>
+
+                <!-- Description (optional) -->
+                <div class="form-group">
+                    <label class="form-label" for="session-description">Description</label>
+                    <input id="session-description" class="form-input" type="text" placeholder="Optional description" />
+                </div>
+
+                <!-- Time Start -->
+                <div class="form-group">
+                    <label class="form-label" for="time-start">Time Start</label>
+                    <input id="time-start" class="form-input" type="datetime-local" />
+                </div>
+
+                <!-- Dynamic template parameters -->
+                <div id="parameters-section"></div>
+
+                <!-- Sources -->
+                <div id="sources-section">
+                    <div class="sources-section-header">
+                        <span class="sources-label">Sources</span>
+                        <button id="add-source-btn" class="btn btn-secondary">+ Add Source</button>
+                    </div>
+                    <table class="sources-table">
+                        <thead>
+                            <tr>
+                                <th class="col-type">Type</th>
+                                <th class="col-source">Source Config</th>
+                                <th class="col-log">Log Config</th>
+                                <th class="col-remove"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="sources-tbody"></tbody>
+                    </table>
+                </div>
+
+                <!-- Actions -->
+                <div class="form-actions">
+                    <button id="create-session-btn" class="btn btn-primary">Create Session</button>
+                    <span id="form-error"></span>
+                    <span id="form-success"></span>
+                </div>
+
+            </div>
+        </div>
+    </div>
 
 <script nonce="${nonce}" src="${scriptUri}"></script>
 </body>
