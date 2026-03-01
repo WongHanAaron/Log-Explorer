@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { getStubWebviewHtml } from '../../utils/stubHtml';
+import { getReactWebviewHtml } from '../../utils/reactWebview';
 
 export class LogFileLinesPanel {
     public static readonly viewType = 'logexplorer.logFileLines';
@@ -8,12 +8,10 @@ export class LogFileLinesPanel {
     private readonly _panel: vscode.WebviewPanel;
     private _disposables: vscode.Disposable[] = [];
 
-    private constructor(panel: vscode.WebviewPanel) {
+    private constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri) {
         this._panel = panel;
-        this._panel.webview.html = getStubWebviewHtml(
-            'Log File Lines',
-            'Log line parsing configuration will appear here.',
-            this._panel.webview.cspSource
+        this._panel.webview.html = getReactWebviewHtml(
+            this._panel.webview, extensionUri, 'log-file-lines.js', 'Log File Lines'
         );
         this._panel.onDidDispose(() => this.dispose(), null, this._disposables);
     }
@@ -31,7 +29,7 @@ export class LogFileLinesPanel {
             { enableScripts: true, localResourceRoots: [extensionUri] }
         );
 
-        LogFileLinesPanel.currentPanel = new LogFileLinesPanel(panel);
+        LogFileLinesPanel.currentPanel = new LogFileLinesPanel(panel, extensionUri);
     }
 
     public dispose(): void {

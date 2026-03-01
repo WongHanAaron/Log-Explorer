@@ -6,6 +6,7 @@
             "ES2020",
             "dom"
         ],
+        "jsx": "react-jsx",
         "outDir": "dist",
         "rootDir": "src",
         "sourceMap": true,
