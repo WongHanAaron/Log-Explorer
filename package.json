@@ -133,7 +133,7 @@
         "test:kibana": "npm run pretest && node scripts/run-kibana-tests.js",
         "loggen": "ts-node tools/loggen.ts",
         "build:tools": "echo \"no build needed\"",
-        "test:e2e-data": "mocha -r ts-node/register test/unit/**/*.ts test/e2e/**/*.ts",
+        "test:e2e-data": "set \"NODE_OPTIONS=--loader ts-node/esm\" && mocha test/unit/**/*.ts test/e2e/**/*.ts",
         "compose:up": "bash scripts/compose.sh up",
         "compose:down": "bash scripts/compose.sh down",
         "compose:ps": "bash scripts/compose.sh ps",

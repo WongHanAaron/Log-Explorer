@@ -1,0 +1,131 @@
+/* Filepath Config Editor styles */
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+body {
+    padding: 20px 24px;
+    color: var(--vscode-foreground);
+    font-family: var(--vscode-font-family);
+    font-size: var(--vscode-font-size);
+    max-width: 640px;
+}
+
+h2 {
+    margin: 0 0 20px;
+    font-weight: 600;
+    font-size: 1.1em;
+    border-bottom: 1px solid var(--vscode-panel-border);
+    padding-bottom: 8px;
+}
+
+.field-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 16px;
+}
+
+label {
+    font-size: 0.9em;
+    color: var(--vscode-foreground);
+}
+
+.required {
+    color: var(--vscode-inputValidation-errorBorder);
+}
+
+input[type="text"],
+textarea {
+    background: var(--vscode-input-background);
+    color: var(--vscode-input-foreground);
+    border: 1px solid var(--vscode-input-border, transparent);
+    padding: 5px 8px;
+    border-radius: 2px;
+    font-family: var(--vscode-font-family);
+    font-size: var(--vscode-font-size);
+    width: 100%;
+    outline: none;
+}
+
+input[type="text"]:focus,
+textarea:focus {
+    border-color: var(--vscode-focusBorder);
+}
+
+input[readonly] {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+textarea {
+    resize: vertical;
+    min-height: 60px;
+}
+
+.hint {
+    font-size: 0.8em;
+    color: var(--vscode-descriptionForeground);
+}
+
+.error {
+    font-size: 0.8em;
+    color: var(--vscode-inputValidation-errorForeground, #f44747);
+    min-height: 1em;
+}
+
+.actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+button {
+    background: var(--vscode-button-background);
+    color: var(--vscode-button-foreground);
+    border: none;
+    padding: 6px 14px;
+    border-radius: 2px;
+    cursor: pointer;
+    font-family: var(--vscode-font-family);
+    font-size: var(--vscode-font-size);
+}
+
+button:hover:not(:disabled) {
+    background: var(--vscode-button-hoverBackground);
+}
+
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+button.secondary {
+    background: var(--vscode-button-secondaryBackground);
+    color: var(--vscode-button-secondaryForeground);
+}
+
+button.secondary:hover:not(:disabled) {
+    background: var(--vscode-button-secondaryHoverBackground);
+}
+
+.status {
+    margin-top: 12px;
+    font-size: 0.85em;
+    min-height: 1.2em;
+}
+
+.status.success {
+    color: var(--vscode-terminal-ansiGreen, #23d18b);
+}
+
+.status.error {
+    color: var(--vscode-inputValidation-errorForeground, #f44747);
+}
+
+.status.info {
+    color: var(--vscode-descriptionForeground);
+}

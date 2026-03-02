@@ -1,0 +1,274 @@
+/* File Log Line Config Editor styles */
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+body {
+    padding: 20px 24px;
+    color: var(--vscode-foreground);
+    font-family: var(--vscode-font-family);
+    font-size: var(--vscode-font-size);
+    max-width: 720px;
+}
+
+h2 {
+    margin: 0 0 20px;
+    font-weight: 600;
+    font-size: 1.1em;
+    border-bottom: 1px solid var(--vscode-panel-border);
+    padding-bottom: 8px;
+}
+
+.field-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 16px;
+}
+
+label {
+    font-size: 0.9em;
+}
+
+.required {
+    color: var(--vscode-inputValidation-errorBorder);
+}
+
+input[type="text"],
+select,
+textarea {
+    background: var(--vscode-input-background);
+    color: var(--vscode-input-foreground);
+    border: 1px solid var(--vscode-input-border, transparent);
+    padding: 5px 8px;
+    border-radius: 2px;
+    font-family: var(--vscode-font-family);
+    font-size: var(--vscode-font-size);
+    width: 100%;
+    outline: none;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+    border-color: var(--vscode-focusBorder);
+}
+
+input[readonly] {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+textarea {
+    resize: vertical;
+    min-height: 48px;
+}
+
+.hint {
+    font-size: 0.8em;
+    color: var(--vscode-descriptionForeground);
+}
+
+.error {
+    font-size: 0.8em;
+    color: var(--vscode-inputValidation-errorForeground, #f44747);
+    min-height: 1em;
+}
+
+/* ── Section / field list ──────────────────────── */
+
+.type-section {
+    border: 1px solid var(--vscode-panel-border);
+    border-radius: 4px;
+    padding: 12px;
+    margin-bottom: 16px;
+}
+
+.type-section.hidden {
+    display: none;
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    font-weight: 600;
+    font-size: 0.9em;
+}
+
+/* ── Field row cards ───────────────────────────── */
+
+.field-row {
+    background: var(--vscode-editor-background);
+    border: 1px solid var(--vscode-panel-border);
+    border-radius: 3px;
+    padding: 10px;
+    margin-bottom: 8px;
+}
+
+.field-row-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.field-row-header label {
+    flex: 0 0 auto;
+}
+
+.field-row-header input {
+    flex: 1;
+}
+
+.field-row-header .remove-btn {
+    flex: 0 0 auto;
+    background: var(--vscode-inputValidation-errorBackground, #5a1d1d);
+    color: var(--vscode-inputValidation-errorForeground, #f44747);
+    border: none;
+    padding: 3px 8px;
+    border-radius: 2px;
+    cursor: pointer;
+    font-size: 0.8em;
+}
+
+.field-row-header .remove-btn:hover {
+    opacity: 0.8;
+}
+
+.field-sub-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+
+.field-sub-group.single {
+    grid-template-columns: 1fr;
+}
+
+.field-sub-label {
+    font-size: 0.8em;
+    color: var(--vscode-descriptionForeground);
+    margin-bottom: 3px;
+}
+
+/* ── Regex test row ──────────────────────────── */
+
+.regex-test-row {
+    display: flex;
+    gap: 6px;
+    margin-top: 6px;
+    align-items: flex-start;
+}
+
+.regex-test-row input {
+    flex: 1;
+}
+
+.regex-result {
+    font-size: 0.8em;
+    margin-top: 4px;
+    padding: 4px 6px;
+    border-radius: 2px;
+    min-height: 1.4em;
+}
+
+.regex-result.match {
+    color: var(--vscode-terminal-ansiGreen, #23d18b);
+}
+
+.regex-result.no-match {
+    color: var(--vscode-descriptionForeground);
+}
+
+.regex-result.error {
+    color: var(--vscode-inputValidation-errorForeground, #f44747);
+}
+
+/* ── Datetime sub-section ───────────────────── */
+
+.datetime-toggle {
+    font-size: 0.8em;
+    color: var(--vscode-textLink-foreground);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 2px 0;
+    text-decoration: underline;
+}
+
+.datetime-sub {
+    margin-top: 6px;
+    padding: 6px 8px;
+    border: 1px dashed var(--vscode-panel-border);
+    border-radius: 3px;
+}
+
+.datetime-sub.hidden {
+    display: none;
+}
+
+/* ── Actions ─────────────────────────────────── */
+
+.actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+button {
+    background: var(--vscode-button-background);
+    color: var(--vscode-button-foreground);
+    border: none;
+    padding: 6px 14px;
+    border-radius: 2px;
+    cursor: pointer;
+    font-family: var(--vscode-font-family);
+    font-size: var(--vscode-font-size);
+}
+
+button:hover:not(:disabled) {
+    background: var(--vscode-button-hoverBackground);
+}
+
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+button.secondary {
+    background: var(--vscode-button-secondaryBackground);
+    color: var(--vscode-button-secondaryForeground);
+}
+
+button.secondary:hover:not(:disabled) {
+    background: var(--vscode-button-secondaryHoverBackground);
+}
+
+.small-btn {
+    padding: 3px 8px;
+    font-size: 0.85em;
+}
+
+.status {
+    margin-top: 12px;
+    font-size: 0.85em;
+    min-height: 1.2em;
+}
+
+.status.success {
+    color: var(--vscode-terminal-ansiGreen, #23d18b);
+}
+
+.status.error {
+    color: var(--vscode-inputValidation-errorForeground, #f44747);
+}
+
+.status.info {
+    color: var(--vscode-descriptionForeground);
+}

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy"
+        content="default-src 'none'; style-src {{cspSource}} 'unsafe-inline'; script-src 'nonce-{{nonce}}';">
+    <title>Log Filepath Config</title>
+</head>
+
+<body>
+    <h2 id="page-title">Log Filepath Config</h2>
+
+    <form id="config-form" novalidate>
+        <div class="field-group">
+            <label for="shortName">Short Name <span class="required">*</span></label>
+            <input type="text" id="shortName" name="shortName" autocomplete="off" placeholder="e.g. nginx-access" />
+            <span class="error" id="shortName-error"></span>
+            <span class="hint">Kebab-case identifier — used as the filename</span>
+        </div>
+
+        <div class="field-group">
+            <label for="label">Label <span class="required">*</span></label>
+            <input type="text" id="label" name="label" autocomplete="off" placeholder="e.g. Nginx Access Log" />
+            <span class="error" id="label-error"></span>
+        </div>
+
+        <div class="field-group">
+            <label for="pathPattern">Path / Glob Pattern <span class="required">*</span></label>
+            <input type="text" id="pathPattern" name="pathPattern" autocomplete="off"
+                placeholder="e.g. /var/log/nginx/access.log or logs/**/*.log" />
+            <span class="error" id="pathPattern-error"></span>
+        </div>
+
+        <div class="field-group">
+            <label for="description">Description</label>
+            <textarea id="description" name="description" rows="3"
+                placeholder="Optional notes about this log source"></textarea>
+        </div>
+
+        <div class="actions">
+            <button type="submit" id="save-btn">Save</button>
+            <button type="button" id="cancel-btn" class="secondary">Cancel</button>
+        </div>
+
+        <div class="status" id="status-bar"></div>
+    </form>
+
+    <script nonce="{{nonce}}" src="{{scriptUri}}"></script>
+</body>
+
+</html>

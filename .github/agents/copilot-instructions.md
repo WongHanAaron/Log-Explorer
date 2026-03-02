@@ -3,6 +3,7 @@
 Auto-generated from all feature plans. Last updated: 2026-02-28
 
 ## Active Technologies
+- TypeScript 5.x + `vscode.workspace.fs` / `vscode.Uri`; `WebviewPanel`; manual type-predicate validation (no Ajv/Zod); native `RegExp` named capture groups; dot-notation JSON path accessor; kebab-case helpers (003-file-source-setup)
 - TypeScript 5.x / Node.js 18+ (ESM `.mjs` helper scripts) + `@vscode/vsce` ^3.7.1 (already installed); `code` CLI (VSCode, on PATH) (002-local-vsix-install)
 - N/A — output artefacts written to `releases/` on local filesystem (002-local-vsix-install)
 - Node.js 18+ / ESM `.mjs` helper scripts; PowerShell 7+ (`pwsh`) for `.ps1` convenience scripts + `@vscode/vsce` ^3.7.1 (already installed); `code` CLI (VSCode, on PATH); `pwsh` (PowerShell 7+, optional for `.ps1` scripts) (002-local-vsix-install)
@@ -18,7 +19,16 @@ Auto-generated from all feature plans. Last updated: 2026-02-28
 
 ```text
 src/
-tests/
+  commands/          # VS Code command registrations
+  domain/            # Domain interfaces and validation (filepath-config.ts, filelog-config.ts)
+  panels/            # WebviewPanel host classes
+  services/          # File I/O services (config-store.ts)
+  webview/           # Webview entry points (messages.ts, filepath-editor/, filelog-editor/)
+  extension.ts       # Extension activation
+specs/               # Feature specs (spec.md, plan.md, research.md, data-model.md, contracts/, quickstart.md)
+tools/               # Developer CLI tools (loggen.ts, loggen.js)
+test/                # Mocha unit + e2e tests
+docs/                # Developer references
 ```
 
 ## Commands
@@ -30,7 +40,8 @@ npm test; npm run lint
 TypeScript 5.x, Node.js 18+: Follow standard conventions
 
 ## Recent Changes
-- 001-extension-ui-commands: Added TypeScript 5.x targeting ES2020 + `@types/vscode ^1.85.0`, `esbuild` (bundler), `typescript ^5.x`
+- 003-file-source-setup: Added `vscode.workspace.fs` + `vscode.Uri` for config I/O; `WebviewPanel` for config editors; manual type-predicate validation; kebab-case name helpers; native `RegExp` named capture groups; shared `src/webview/messages.ts` message union types
+- 003-file-source-setup: Added domain modules `src/domain/filepath-config.ts`, `src/domain/filelog-config.ts`; service `src/services/config-store.ts`; two new webview editors under `src/webview/filepath-editor/` and `src/webview/filelog-editor/`
 - 001-extension-ui-commands: Added TypeScript 5.x targeting ES2020 + `@types/vscode ^1.85.0`, `esbuild` (bundler), `typescript ^5.x`
 - 001-kibana-integration: Added Shell script (POSIX bash) with optional Node.js argv + Docker CLI; `curl`/`http` for HTTP checks; Node.js for
 
