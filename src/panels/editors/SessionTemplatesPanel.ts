@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { getStubWebviewHtml } from '../../utils/stubHtml';
+import { getReactWebviewHtml } from '../../utils/reactWebview';
 
 export class SessionTemplatesPanel {
     public static readonly viewType = 'logexplorer.sessionTemplates';
@@ -8,12 +8,10 @@ export class SessionTemplatesPanel {
     private readonly _panel: vscode.WebviewPanel;
     private _disposables: vscode.Disposable[] = [];
 
-    private constructor(panel: vscode.WebviewPanel) {
+    private constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri) {
         this._panel = panel;
-        this._panel.webview.html = getStubWebviewHtml(
-            'Session Templates',
-            'Session template management will appear here.',
-            this._panel.webview.cspSource
+        this._panel.webview.html = getReactWebviewHtml(
+            this._panel.webview, extensionUri, 'session-templates.js', 'Session Templates'
         );
         this._panel.onDidDispose(() => this.dispose(), null, this._disposables);
     }
@@ -31,7 +29,7 @@ export class SessionTemplatesPanel {
             { enableScripts: true, localResourceRoots: [extensionUri] }
         );
 
-        SessionTemplatesPanel.currentPanel = new SessionTemplatesPanel(panel);
+        SessionTemplatesPanel.currentPanel = new SessionTemplatesPanel(panel, extensionUri);
     }
 
     public dispose(): void {

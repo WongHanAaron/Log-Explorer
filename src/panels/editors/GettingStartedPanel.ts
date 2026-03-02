@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { getStubWebviewHtml } from '../../utils/stubHtml';
+import { getReactWebviewHtml } from '../../utils/reactWebview';
 
 export class GettingStartedPanel {
     public static readonly viewType = 'logexplorer.gettingStarted';
@@ -8,12 +8,10 @@ export class GettingStartedPanel {
     private readonly _panel: vscode.WebviewPanel;
     private _disposables: vscode.Disposable[] = [];
 
-    private constructor(panel: vscode.WebviewPanel) {
+    private constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri) {
         this._panel = panel;
-        this._panel.webview.html = getStubWebviewHtml(
-            'Getting Started with Log Explorer',
-            'The Getting Started wizard will guide you through setting up and using Log Explorer.',
-            this._panel.webview.cspSource
+        this._panel.webview.html = getReactWebviewHtml(
+            this._panel.webview, extensionUri, 'getting-started.js', 'Getting Started'
         );
         this._panel.onDidDispose(() => this.dispose(), null, this._disposables);
     }
@@ -31,7 +29,7 @@ export class GettingStartedPanel {
             { enableScripts: true, localResourceRoots: [extensionUri] }
         );
 
-        GettingStartedPanel.currentPanel = new GettingStartedPanel(panel);
+        GettingStartedPanel.currentPanel = new GettingStartedPanel(panel, extensionUri);
     }
 
     public dispose(): void {

@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { getStubWebviewHtml } from '../../utils/stubHtml';
+import { getReactWebviewHtml } from '../../utils/reactWebview';
 
 export class LogDetailsViewProvider implements vscode.WebviewViewProvider {
     public static readonly viewType = 'logexplorer.logDetails';
@@ -16,10 +16,8 @@ export class LogDetailsViewProvider implements vscode.WebviewViewProvider {
             localResourceRoots: [this._extensionUri],
         };
 
-        webviewView.webview.html = getStubWebviewHtml(
-            'Log Details',
-            'Log entry details will appear here.',
-            webviewView.webview.cspSource
+        webviewView.webview.html = getReactWebviewHtml(
+            webviewView.webview, this._extensionUri, 'log-details.js', 'Log Details'
         );
     }
 }

@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { getStubWebviewHtml } from '../../utils/stubHtml';
+import { getReactWebviewHtml } from '../../utils/reactWebview';
 
 export class SearchResultsViewProvider implements vscode.WebviewViewProvider {
     public static readonly viewType = 'logexplorer.searchResults';
@@ -16,10 +16,8 @@ export class SearchResultsViewProvider implements vscode.WebviewViewProvider {
             localResourceRoots: [this._extensionUri],
         };
 
-        webviewView.webview.html = getStubWebviewHtml(
-            'Search Results',
-            'Log search results will appear here.',
-            webviewView.webview.cspSource
+        webviewView.webview.html = getReactWebviewHtml(
+            webviewView.webview, this._extensionUri, 'search-results.js', 'Search Results'
         );
     }
 }

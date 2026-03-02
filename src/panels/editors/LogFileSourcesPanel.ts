@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { getStubWebviewHtml } from '../../utils/stubHtml';
+import { getReactWebviewHtml } from '../../utils/reactWebview';
 
 export class LogFileSourcesPanel {
     public static readonly viewType = 'logexplorer.logFileSources';
@@ -8,12 +8,10 @@ export class LogFileSourcesPanel {
     private readonly _panel: vscode.WebviewPanel;
     private _disposables: vscode.Disposable[] = [];
 
-    private constructor(panel: vscode.WebviewPanel) {
+    private constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri) {
         this._panel = panel;
-        this._panel.webview.html = getStubWebviewHtml(
-            'Log File Sources',
-            'Log file source configuration will appear here.',
-            this._panel.webview.cspSource
+        this._panel.webview.html = getReactWebviewHtml(
+            this._panel.webview, extensionUri, 'log-file-sources.js', 'Log File Sources'
         );
         this._panel.onDidDispose(() => this.dispose(), null, this._disposables);
     }
@@ -31,7 +29,7 @@ export class LogFileSourcesPanel {
             { enableScripts: true, localResourceRoots: [extensionUri] }
         );
 
-        LogFileSourcesPanel.currentPanel = new LogFileSourcesPanel(panel);
+        LogFileSourcesPanel.currentPanel = new LogFileSourcesPanel(panel, extensionUri);
     }
 
     public dispose(): void {
