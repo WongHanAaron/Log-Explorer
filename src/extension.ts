@@ -9,6 +9,17 @@ import { registerCommands } from './commands';
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
     console.log('LogExplorer extension is now active!');
 
+    // ensure the initialization flag is false until we evaluate the workspace
+    await vscode.commands.executeCommand('setContext', 'logexplorer.initialized', false);
+
+    // re‑sync whenever the workspace folder set changes (e.g. user opens a new folder)
+    context.subscriptions.push(
+        vscode.workspace.onDidChangeWorkspaceFolders(() => {
+            // fire-and-forget, we don't need to await here
+            syncWorkspaceContext().catch(console.error);
+        })
+    );
+
     // T006 — Register the existing main sidebar panel view provider
     const panelProvider = new LogExplorerPanel(context.extensionUri);
     context.subscriptions.push(

@@ -51,8 +51,8 @@ export function FormPage({
     const params = selectedTemplate?.parameters ?? [];
 
     return (
-        <div className="min-h-screen overflow-y-auto">
-            <div className="mx-auto max-w-3xl px-14 py-12">
+        <div className="h-screen flex flex-col w-full">
+            <div className="w-full px-14 py-12 flex flex-col flex-1 min-h-0 overflow-y-auto">
 
                 {/* Back navigation */}
                 <button
@@ -70,8 +70,8 @@ export function FormPage({
                     )}
                 </div>
 
-                {/* Form body — constrained width */}
-                <div className="max-w-lg flex flex-col gap-5">
+                {/* Form body */}
+                <div className="w-full flex flex-col gap-5 flex-1">
 
                     {/* Session Name */}
                     <div className="flex flex-col gap-1.5">
@@ -155,7 +155,7 @@ export function FormPage({
                     )}
 
                     {/* Submit */}
-                    <div className="flex items-center gap-3 pt-1">
+                    <div className="flex items-center gap-3 pt-1 mt-auto justify-end">
                         <Button
                             onClick={handleSubmit}
                             disabled={!form.name.trim()}

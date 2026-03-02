@@ -115,7 +115,7 @@ export function DataTable<TData, TValue>({
         : setGlobalFilter;
 
     return (
-        <div className="flex flex-col gap-1.5 min-h-0">
+        <div className="flex flex-col gap-1.5 min-h-0 h-full">
             {/* Search input */}
             <Input
                 placeholder={searchPlaceholder}
@@ -126,10 +126,14 @@ export function DataTable<TData, TValue>({
 
             {/* Table */}
             <div
-                className="overflow-auto border border-border rounded-sm"
-                style={{ maxHeight }}
+                className="overflow-auto border border-border rounded-sm flex-1 h-full"
+                style={
+                    maxHeight && maxHeight !== "100%"
+                        ? { maxHeight }
+                        : undefined
+                }
             >
-                <Table>
+                <Table className="h-full">
                     <TableHeader>
                         {table.getHeaderGroups().map((headerGroup) => (
                             <TableRow key={headerGroup.id} className="hover:bg-transparent">
@@ -175,10 +179,10 @@ export function DataTable<TData, TValue>({
                                 );
                             })
                         ) : (
-                            <TableRow>
+                            <TableRow className="h-full">
                                 <TableCell
                                     colSpan={columns.length}
-                                    className="h-12 text-center text-muted-foreground text-xs italic"
+                                    className="h-full flex items-center justify-center text-center text-muted-foreground text-xs italic"
                                 >
                                     {emptyMessage}
                                 </TableCell>

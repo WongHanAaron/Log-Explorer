@@ -96,27 +96,27 @@
             "commandPalette": [
                 {
                     "command": "logexplorer.showPanel",
-                    "when": "workspaceFolderCount > 0 && logexplorer.workspaceInitialized"
+                    "when": "workspaceFolderCount > 0 && logexplorer.initialized && logexplorer.hasLogExplorerWorkspace"
                 },
                 {
                     "command": "logexplorer.newSession",
-                    "when": "workspaceFolderCount > 0 && logexplorer.workspaceInitialized"
+                    "when": "workspaceFolderCount > 0 && logexplorer.initialized && logexplorer.hasLogExplorerWorkspace"
                 },
                 {
                     "command": "logexplorer.editLogFileSourceConfig",
-                    "when": "workspaceFolderCount > 0 && logexplorer.workspaceInitialized"
+                    "when": "workspaceFolderCount > 0 && logexplorer.initialized && logexplorer.hasLogExplorerWorkspace"
                 },
                 {
                     "command": "logexplorer.editFileLogLineConfig",
-                    "when": "workspaceFolderCount > 0 && logexplorer.workspaceInitialized"
+                    "when": "workspaceFolderCount > 0 && logexplorer.initialized && logexplorer.hasLogExplorerWorkspace"
                 },
                 {
                     "command": "logexplorer.editSessionTemplates",
-                    "when": "workspaceFolderCount > 0 && logexplorer.workspaceInitialized"
+                    "when": "workspaceFolderCount > 0 && logexplorer.initialized && logexplorer.hasLogExplorerWorkspace"
                 },
                 {
                     "command": "logexplorer.setupWorkspace",
-                    "when": "workspaceFolderCount > 0 && !logexplorer.workspaceInitialized"
+                    "when": "workspaceFolderCount > 0 && logexplorer.initialized && !logexplorer.hasLogExplorerWorkspace"
                 }
             ]
         }

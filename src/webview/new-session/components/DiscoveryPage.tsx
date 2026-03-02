@@ -68,8 +68,8 @@ export function DiscoveryPage({
     const sesCols = useMemo(() => sessionColumns, []);
 
     return (
-        <div className="min-h-screen overflow-y-auto">
-            <div className="mx-auto max-w-4xl px-14 py-12">
+        <div className="h-screen flex flex-col w-full">
+            <div className="w-full px-14 py-12 flex flex-col flex-1 min-h-0 overflow-y-auto">
 
                 {/* Page header */}
                 <h1 className="text-2xl font-light tracking-tight mb-1">New Session</h1>
@@ -77,23 +77,26 @@ export function DiscoveryPage({
                     Choose a template or open a recent session to get started.
                 </p>
 
-                {/* 2 × 2 grid — no borders, generous gap */}
-                <div className="grid grid-cols-2 gap-x-14 gap-y-10">
+                {/* 2 × 2 grid — stack on narrow panels */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-14 gap-y-10 flex-1 min-h-0">
 
                     {/* ── Templates ──────────────────────────────────────── */}
-                    <div className="flex flex-col gap-2">
+                    <div className="flex flex-col gap-2 h-full">
                         <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
                             New Session Templates
                         </p>
-                        <DataTable
-                            columns={tplCols}
-                            data={templates}
-                            searchPlaceholder="Search templates…"
-                            onRowClick={onSelectTemplate}
-                            selectedRow={selectedTemplate}
-                            rowKey={r => r.id}
-                            emptyMessage="No templates found."
-                        />
+                        <div className="flex-1 min-h-0">
+                            <DataTable
+                                columns={tplCols}
+                                data={templates}
+                                searchPlaceholder="Search templates…"
+                                onRowClick={onSelectTemplate}
+                                selectedRow={selectedTemplate}
+                                rowKey={r => r.id}
+                                emptyMessage="No templates found."
+                                maxHeight="100%"
+                            />
+                        </div>
                         <Button
                             variant="ghost"
                             size="sm"
@@ -113,17 +116,20 @@ export function DiscoveryPage({
                     </div>
 
                     {/* ── Recent Sessions ─────────────────────────────────── */}
-                    <div className="flex flex-col gap-2">
+                    <div className="flex flex-col gap-2 h-full">
                         <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
                             Recent Sessions
                         </p>
-                        <DataTable
-                            columns={sesCols}
-                            data={recentSessions}
-                            searchPlaceholder="Search sessions…"
-                            onRowClick={s => onOpenSession(s.folderName)}
-                            emptyMessage="No recent sessions."
-                        />
+                        <div className="flex-1 min-h-0">
+                            <DataTable
+                                columns={sesCols}
+                                data={recentSessions}
+                                searchPlaceholder="Search sessions…"
+                                onRowClick={s => onOpenSession(s.folderName)}
+                                emptyMessage="No recent sessions."
+                                maxHeight="100%"
+                            />
+                        </div>
                     </div>
 
                     {/* ── Local Logs ──────────────────────────────────────── */}
