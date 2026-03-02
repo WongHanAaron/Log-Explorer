@@ -2,7 +2,7 @@
     "name": "logexplorer",
     "displayName": "LogExplorer",
     "description": "A VSCode extension for exploring and analyzing log files",
-    "version": "0.2.0",
+    "version": "0.3.0",
     "publisher": "logexplorer",
     "engines": {
         "vscode": "^1.85.0"
@@ -96,27 +96,27 @@
             "commandPalette": [
                 {
                     "command": "logexplorer.showPanel",
-                    "when": "workspaceFolderCount > 0 && logexplorer.workspaceInitialized"
+                    "when": "workspaceFolderCount > 0 && logexplorer.initialized && logexplorer.hasLogExplorerWorkspace"
                 },
                 {
                     "command": "logexplorer.newSession",
-                    "when": "workspaceFolderCount > 0 && logexplorer.workspaceInitialized"
+                    "when": "workspaceFolderCount > 0 && logexplorer.initialized && logexplorer.hasLogExplorerWorkspace"
                 },
                 {
                     "command": "logexplorer.editLogFileSourceConfig",
-                    "when": "workspaceFolderCount > 0 && logexplorer.workspaceInitialized"
+                    "when": "workspaceFolderCount > 0 && logexplorer.initialized && logexplorer.hasLogExplorerWorkspace"
                 },
                 {
                     "command": "logexplorer.editFileLogLineConfig",
-                    "when": "workspaceFolderCount > 0 && logexplorer.workspaceInitialized"
+                    "when": "workspaceFolderCount > 0 && logexplorer.initialized && logexplorer.hasLogExplorerWorkspace"
                 },
                 {
                     "command": "logexplorer.editSessionTemplates",
-                    "when": "workspaceFolderCount > 0 && logexplorer.workspaceInitialized"
+                    "when": "workspaceFolderCount > 0 && logexplorer.initialized && logexplorer.hasLogExplorerWorkspace"
                 },
                 {
                     "command": "logexplorer.setupWorkspace",
-                    "when": "workspaceFolderCount > 0 && !logexplorer.workspaceInitialized"
+                    "when": "workspaceFolderCount > 0 && logexplorer.initialized && !logexplorer.hasLogExplorerWorkspace"
                 }
             ]
         }
@@ -140,16 +140,29 @@
         "vscode:prepublish": "node esbuild.mjs --production"
     },
     "devDependencies": {
+        "@radix-ui/react-label": "^2.1.8",
+        "@radix-ui/react-slot": "^1.2.4",
+        "@tailwindcss/cli": "^4.2.1",
+        "@tanstack/react-table": "^8.21.3",
         "@types/glob": "^8.1.0",
         "@types/mocha": "^10.0.10",
         "@types/node": "^25.3.2",
+        "@types/react": "^19.2.14",
+        "@types/react-dom": "^19.2.3",
         "@types/vscode": "^1.85.0",
         "@vscode/test-cli": "^0.0.12",
         "@vscode/test-electron": "^2.5.2",
         "@vscode/vsce": "^3.7.1",
+        "class-variance-authority": "^0.7.1",
+        "clsx": "^2.1.1",
         "esbuild": "^0.27.3",
         "glob": "^13.0.6",
+        "lucide-react": "^0.575.0",
         "mocha": "^11.7.5",
+        "react": "^19.2.4",
+        "react-dom": "^19.2.4",
+        "tailwind-merge": "^3.5.0",
+        "tailwindcss": "^4.2.1",
         "ts-node": "^10.9.2",
         "typescript": "^5.9.3"
     }

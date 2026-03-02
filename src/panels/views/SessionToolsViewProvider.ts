@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { getStubWebviewHtml } from '../../utils/stubHtml';
+import { getReactWebviewHtml } from '../../utils/reactWebview';
 
 export class SessionToolsViewProvider implements vscode.WebviewViewProvider {
     public static readonly viewType = 'logexplorer.sessionTools';
@@ -16,10 +16,8 @@ export class SessionToolsViewProvider implements vscode.WebviewViewProvider {
             localResourceRoots: [this._extensionUri],
         };
 
-        webviewView.webview.html = getStubWebviewHtml(
-            'Session Tools',
-            'Session tools will appear here.',
-            webviewView.webview.cspSource
+        webviewView.webview.html = getReactWebviewHtml(
+            webviewView.webview, this._extensionUri, 'session-tools.js', 'Session Tools'
         );
     }
 }

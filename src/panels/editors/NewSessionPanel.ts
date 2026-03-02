@@ -1,20 +1,28 @@
 import * as vscode from 'vscode';
-import { getStubWebviewHtml } from '../../utils/stubHtml';
+import { getReactWebviewHtml } from '../../utils/reactWebview';
+import { loadTemplates } from '../../workspace/sessionTemplates';
+import { loadRecentSessions, createSession } from '../../workspace/sessions';
 
 export class NewSessionPanel {
     public static readonly viewType = 'logexplorer.newSession';
     private static currentPanel: NewSessionPanel | undefined;
 
     private readonly _panel: vscode.WebviewPanel;
+    private readonly _extensionUri: vscode.Uri;
     private _disposables: vscode.Disposable[] = [];
 
-    private constructor(panel: vscode.WebviewPanel) {
+    private constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri) {
         this._panel = panel;
-        this._panel.webview.html = getStubWebviewHtml(
-            'New Session',
-            'New session configuration will appear here.',
-            this._panel.webview.cspSource
+        this._extensionUri = extensionUri;
+
+        this._panel.webview.html = this._getWebviewContent(this._panel.webview);
+
+        this._panel.webview.onDidReceiveMessage(
+            (message) => this._handleMessage(message),
+            null,
+            this._disposables
         );
+
         this._panel.onDidDispose(() => this.dispose(), null, this._disposables);
     }
 
@@ -28,11 +36,93 @@ export class NewSessionPanel {
             NewSessionPanel.viewType,
             'New Session',
             vscode.ViewColumn.One,
-            { enableScripts: true, localResourceRoots: [extensionUri] }
+            {
+                enableScripts: true,
+                localResourceRoots: [extensionUri],
+                retainContextWhenHidden: true,
+            }
         );
 
-        NewSessionPanel.currentPanel = new NewSessionPanel(panel);
+        NewSessionPanel.currentPanel = new NewSessionPanel(panel, extensionUri);
     }
+
+    // -------------------------------------------------------------------------
+    // Message handling
+    // -------------------------------------------------------------------------
+
+    private async _handleMessage(message: { type: string;[key: string]: unknown }): Promise<void> {
+        const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri;
+
+        switch (message.type) {
+            case 'ready': {
+                if (!workspaceRoot) {
+                    this._postMessage({ type: 'init', templates: [], recentSessions: [] });
+                    return;
+                }
+                try {
+                    const [templates, recentSessions] = await Promise.all([
+                        loadTemplates(workspaceRoot),
+                        loadRecentSessions(workspaceRoot),
+                    ]);
+                    this._postMessage({ type: 'init', templates, recentSessions });
+                } catch {
+                    this._postMessage({ type: 'init', templates: [], recentSessions: [] });
+                }
+                break;
+            }
+
+            case 'submitSession': {
+                if (!workspaceRoot) {
+                    this._postMessage({ type: 'sessionError', message: 'No workspace folder is open.' });
+                    return;
+                }
+                try {
+                    const payload = message.payload as Parameters<typeof createSession>[1];
+                    const summary = await createSession(workspaceRoot, payload);
+                    this._postMessage({ type: 'sessionCreated', session: summary });
+                } catch (err: unknown) {
+                    const msg = err instanceof Error ? err.message : 'Failed to create session.';
+                    this._postMessage({ type: 'sessionError', message: msg });
+                }
+                break;
+            }
+
+            case 'openSession': {
+                if (!workspaceRoot) {
+                    this._postMessage({ type: 'sessionError', message: 'No workspace folder is open.' });
+                    return;
+                }
+                const folderName = message.folderName as string;
+                try {
+                    const sessionJsonUri = vscode.Uri.joinPath(
+                        workspaceRoot, '.logex', 'sessions', folderName, 'session.json'
+                    );
+                    const bytes = await vscode.workspace.fs.readFile(sessionJsonUri);
+                    const session = JSON.parse(Buffer.from(bytes).toString('utf8'));
+                    this._postMessage({ type: 'loadSession', session });
+                } catch {
+                    this._postMessage({ type: 'sessionError', message: 'Could not load session.' });
+                }
+                break;
+            }
+        }
+    }
+
+    private _postMessage(message: object): void {
+        this._panel.webview.postMessage(message);
+    }
+
+    // -------------------------------------------------------------------------
+    // HTML generation
+    // -------------------------------------------------------------------------
+
+    private _getWebviewContent(webview: vscode.Webview): string {
+        return getReactWebviewHtml(webview, this._extensionUri, 'new-session.js', 'New Session');
+    }
+
+    // -------------------------------------------------------------------------
+    // Cleanup
+    // -------------------------------------------------------------------------
 
     public dispose(): void {
         NewSessionPanel.currentPanel = undefined;

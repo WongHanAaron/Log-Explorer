@@ -4,45 +4,65 @@ import * as vscode from 'vscode';
 const LOGEX_SUBDIRS = ['filepath-configs', 'filelog-configs'] as const;
 
 /**
- * Checks whether the `.logex` workspace folder (with both sub-directories) exists
- * and updates the `logexplorer.workspaceInitialized` context key accordingly.
- * Call this on activation and after `executeSetupWorkspace()` succeeds.
+ * Checks the state of the `.logex` workspace folder.
+ *
+ * The function updates two context keys used by command visibility:
+ *   - `logexplorer.hasLogExplorerWorkspace`: mirrors the presence of the
+ *       `.logex` folder at the workspace root.
+ *   - `logexplorer.initialized`: becomes true once the check has completed and
+ *       confirms that the folder (and expected sub‑directories) exists.
+ *
+ * Call this on activation, when the workspace folders change, and after
+ * `executeSetupWorkspace()` succeeds.
  */
 export async function syncWorkspaceContext(): Promise<void> {
+    console.log('Syncing workspace context...');
     const folders = vscode.workspace.workspaceFolders;
+
+    // default states when there is no workspace open
     if (!folders || folders.length === 0) {
-        await vscode.commands.executeCommand(
-            'setContext',
-            'logexplorer.workspaceInitialized',
-            false
-        );
+        await vscode.commands.executeCommand('setContext', 'logexplorer.initialized', false);
+        await vscode.commands.executeCommand('setContext', 'logexplorer.hasLogExplorerWorkspace', false);
         return;
     }
 
     const root = folders[0].uri;
-    let initialized = false;
+    const logexUri = vscode.Uri.joinPath(root, '.logex');
+
+    console.log('Checking for .logex at', logexUri.fsPath);
+    let exists = false;
     try {
-        // Consider the workspace initialised when both data directories exist.
-        for (const sub of LOGEX_SUBDIRS) {
-            await vscode.workspace.fs.stat(vscode.Uri.joinPath(root, '.logex', sub));
-        }
-        initialized = true;
-    } catch {
-        initialized = false;
+        await vscode.workspace.fs.stat(logexUri);
+        exists = true;
+    } catch (err) {
+        // failure simply means the folder doesn't exist; show in logs for debugging
+        console.error('syncWorkspaceContext: stat failed', err);
+        exists = false;
     }
 
-    await vscode.commands.executeCommand(
-        'setContext',
-        'logexplorer.workspaceInitialized',
-        initialized
-    );
+    // determine whether workspace is fully initialised (subdirs present)
+    let initialized = false;
+    if (exists) {
+        try {
+            for (const sub of LOGEX_SUBDIRS) {
+                await vscode.workspace.fs.stat(vscode.Uri.joinPath(root, '.logex', sub));
+            }
+            initialized = true;
+        } catch {
+            initialized = false;
+        }
+    }
+
+    await vscode.commands.executeCommand('setContext', 'logexplorer.hasLogExplorerWorkspace', exists);
+    await vscode.commands.executeCommand('setContext', 'logexplorer.initialized', initialized);
 }
 
 /**
- * Creates `.logex/filepath-configs/` and `.logex/filelog-configs/` at the workspace root.
- * The operation is idempotent — calling it on an already-initialised workspace leaves
- * existing config files untouched.
- * Offers to add `.logex/` to `.gitignore` if the file exists and does not yet contain it.
+ * Creates `.logex` along with the expected sub‑directories at the workspace root.
+ * The operation is idempotent — existing files are left untouched.
+ *
+ * After creation it syncs the workspace context keys and optionally offers to
+ * add `.logex/` to `.gitignore`.
  */
 export async function executeSetupWorkspace(): Promise<void> {
     const folders = vscode.workspace.workspaceFolders;
@@ -66,7 +86,8 @@ export async function executeSetupWorkspace(): Promise<void> {
 
         await syncWorkspaceContext();
         vscode.window.showInformationMessage('Log Explorer workspace initialised.');
-    } catch {
+    } catch (err) {
+        console.error('executeSetupWorkspace: error creating .logex', err);
         vscode.window.showErrorMessage('Log Explorer: Failed to initialise workspace.');
     }
 }
@@ -106,3 +127,4 @@ async function maybeUpdateGitignore(root: vscode.Uri): Promise<void> {
         );
     }
 }
+
