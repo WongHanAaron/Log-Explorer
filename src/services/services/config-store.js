@@ -33,18 +33,42 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.ConfigStore = exports.ConfigCategory = void 0;
+exports.getConfigDir = getConfigDir;
 exports.configFilename = configFilename;
 exports.parseFilepathConfig = parseFilepathConfig;
 exports.parseFileLogLineConfig = parseFileLogLineConfig;
+exports.subscribeConfigAdded = subscribeConfigAdded;
 exports.listConfigs = listConfigs;
 exports.readFilepathConfig = readFilepathConfig;
 exports.readFileLogLineConfig = readFileLogLineConfig;
 exports.writeConfig = writeConfig;
 exports.deleteConfig = deleteConfig;
 exports.configExists = configExists;
+exports.listConfigNames = listConfigNames;
+exports.getConfig = getConfig;
 const vscode = __importStar(require("vscode"));
 const filepath_config_1 = require("../domain/filepath-config");
 const filelog_config_1 = require("../domain/filelog-config");
+// ── Categories & directory helpers ───────────────────────────────────────────
+/**
+ * Represents one of the two supported configuration categories.
+ * Used throughout the public API to avoid magic strings.
+ */
+var ConfigCategory;
+(function (ConfigCategory) {
+    ConfigCategory["Filepath"] = "filepath";
+    ConfigCategory["Filelog"] = "filelog";
+})(ConfigCategory || (exports.ConfigCategory = ConfigCategory = {}));
+/**
+ * Returns the workspace-relative directory URI for the given category.
+ */
+function getConfigDir(workspaceRoot, category) {
+    const subdir = category === ConfigCategory.Filepath
+        ? 'filepath-configs'
+        : 'filelog-configs';
+    return vscode.Uri.joinPath(workspaceRoot, '.logex', subdir);
+}
 // ── Pure parsing helpers (unit-testable without vscode) ───────────────────────
 /** Returns the JSON filename for the given short name. */
 function configFilename(shortName) {
@@ -83,6 +107,48 @@ function parseFileLogLineConfig(json) {
         throw new Error(`Invalid FileLogLineConfig: schema validation failed`);
     }
     return obj;
+}
+// maintain a set of callbacks per category
+const subscribers = new Map();
+/**
+ * Subscribe to notifications when a new config is added to the given category.
+ *
+ * Returns a `Disposable` which may be used to cancel the subscription.  The
+ * disposal operation is idempotent.
+ */
+function subscribeConfigAdded(category, cb) {
+    let set = subscribers.get(category);
+    if (!set) {
+        set = new Set();
+        subscribers.set(category, set);
+    }
+    set.add(cb);
+    let disposed = false;
+    return new vscode.Disposable(() => {
+        if (disposed) {
+            return;
+        }
+        disposed = true;
+        set.delete(cb);
+    });
+}
+/**
+ * Internal helper invoked after a config file has been written.
+ */
+function notifyConfigAdded(category, shortName) {
+    const set = subscribers.get(category);
+    if (!set) {
+        return;
+    }
+    for (const cb of set) {
+        try {
+            cb(shortName);
+        }
+        catch (err) {
+            // ignore subscriber errors to avoid cascading failures
+            console.error(`subscriber error for ${category}/${shortName}`, err);
+        }
+    }
 }
 // ── vscode.workspace.fs I/O helpers ──────────────────────────────────────────
 const ENCODING = 'utf-8';
@@ -129,6 +195,12 @@ async function writeConfig(dir, shortName, data) {
     const uri = vscode.Uri.joinPath(dir, configFilename(shortName));
     const json = JSON.stringify(data, null, 4);
     await vscode.workspace.fs.writeFile(uri, Buffer.from(json, ENCODING));
+    // notify subscribers based on which kind of object was written
+    // determine category by inspecting `data` type discriminator
+    const category = data.pathPattern !== undefined
+        ? ConfigCategory.Filepath
+        : ConfigCategory.Filelog;
+    notifyConfigAdded(category, shortName);
 }
 /**
  * Deletes the config file for the given short name.
@@ -156,4 +228,68 @@ async function configExists(dir, shortName) {
         return false;
     }
 }
-//# sourceMappingURL=config-store.js.map
+// ── High-level workspace-aware helpers ───────────────────────────────────────
+/**
+ * Returns all existing config short names for the given category in the workspace.
+ */
+async function listConfigNames(workspaceRoot, category) {
+    const dir = getConfigDir(workspaceRoot, category);
+    return await listConfigs(dir);
+}
+/**
+ * Returns the config object for the given category/shortName.  Throws if the
+ * file is missing or if parsing/validation fails.
+ */
+async function getConfig(workspaceRoot, category, shortName) {
+    const dir = getConfigDir(workspaceRoot, category);
+    try {
+        switch (category) {
+            case ConfigCategory.Filepath:
+                return await readFilepathConfig(dir, shortName);
+            case ConfigCategory.Filelog:
+                return await readFileLogLineConfig(dir, shortName);
+            default:
+                throw new Error(`Unknown category: ${category}`);
+        }
+    }
+    catch (err) {
+        // If the error is due to missing file, normalize the message
+        if (err && err.code === 'FileNotFound' /* as thrown by vscode */) {
+            throw new Error(`Config not found: ${category}/${shortName}`);
+        }
+        // rethrow validation/parse errors or other I/O errors
+        throw err;
+    }
+}
+// ── Object-oriented wrapper for convenience ─────────────────────────────────
+/**
+ * Thin class wrapper around the free functions, binding a workspace root.
+ * Consumers may prefer this style for dependency injection or testability.
+ */
+class ConfigStore {
+    constructor(workspaceRoot) {
+        this.workspaceRoot = workspaceRoot;
+    }
+    listConfigNames(category) {
+        return listConfigNames(this.workspaceRoot, category);
+    }
+    getConfig(category, shortName) {
+        return getConfig(this.workspaceRoot, category, shortName);
+    }
+    subscribeConfigAdded(category, cb) {
+        return subscribeConfigAdded(category, cb);
+    }
+    writeConfig(category, shortName, data) {
+        const dir = getConfigDir(this.workspaceRoot, category);
+        return writeConfig(dir, shortName, data);
+    }
+    deleteConfig(category, shortName) {
+        const dir = getConfigDir(this.workspaceRoot, category);
+        return deleteConfig(dir, shortName);
+    }
+    configExists(category, shortName) {
+        const dir = getConfigDir(this.workspaceRoot, category);
+        return configExists(dir, shortName);
+    }
+}
+exports.ConfigStore = ConfigStore;

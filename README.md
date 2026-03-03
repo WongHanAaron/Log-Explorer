@@ -28,6 +28,8 @@ Click the **LogExplorer icon** in the Activity Bar to open the sidebar panel.
 
 ## Development
 
+For project conventions (especially TypeScript file/class isolation) see [docs/typescript-guidelines.md](docs/typescript-guidelines.md).
+
 | Task | Command |
 |------|---------|
 | Build once | `npm run build` |

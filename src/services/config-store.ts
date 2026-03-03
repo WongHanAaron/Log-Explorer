@@ -1,131 +1,259 @@
 import * as vscode from 'vscode';
 import { FilepathConfig, isFilepathConfig } from '../domain/filepath-config';
 import { FileLogLineConfig, isFileLogLineConfig } from '../domain/filelog-config';
+import { ConfigParser } from './config-parser';
 
-// ── Pure parsing helpers (unit-testable without vscode) ───────────────────────
+// small abstraction so callers can inject a fake in tests.  The real
+// workspace API exposes a `FileSystem` object which extends
+// `FileSystemProvider` with additional helpers and events, so we alias that
+// concrete type here rather than duplicating its members.
+export type FsProvider = vscode.FileSystem;
 
-/** Returns the JSON filename for the given short name. */
-export function configFilename(shortName: string): string {
-    return `${shortName}.json`;
+// ── Categories & directory helpers ───────────────────────────────────────────
+
+/**
+ * Represents one of the two supported configuration categories.
+ * Used throughout the public API to avoid magic strings.
+ */
+export enum ConfigCategory {
+    Filepath = 'filepath',
+    Filelog = 'filelog',
 }
 
 /**
- * Parses a JSON string into a validated `FilepathConfig`.
- * @throws if the JSON is malformed or the object fails schema validation.
+ * Returns the workspace-relative directory URI for the given category.
  */
-export function parseFilepathConfig(json: string): FilepathConfig {
-    let obj: unknown;
-    try {
-        obj = JSON.parse(json);
-    } catch {
-        throw new Error(`Malformed JSON: could not parse filepath config`);
+function getConfigDir(
+    workspaceRoot: vscode.Uri,
+    category: ConfigCategory
+): vscode.Uri {
+    const subdir =
+        category === ConfigCategory.Filepath
+            ? 'filepath-configs'
+            : 'filelog-configs';
+    return vscode.Uri.joinPath(workspaceRoot, '.logex', subdir);
+}
+
+
+// ── Subscription infrastructure & high-level API ─────────────────────────────
+
+export type ConfigAddedCallback = (shortName: string) => void;
+
+// maintain a set of callbacks per category
+const subscribers: Map<ConfigCategory, Set<ConfigAddedCallback>> = new Map();
+
+/**
+ * Subscribe to notifications when a new config is added to the given category.
+ *
+ * Returns a `Disposable` which may be used to cancel the subscription.  The
+ * disposal operation is idempotent.
+ */
+function subscribeConfigAdded(
+    category: ConfigCategory,
+    cb: ConfigAddedCallback
+): vscode.Disposable {
+    let set = subscribers.get(category);
+    if (!set) {
+        set = new Set();
+        subscribers.set(category, set);
     }
-    if (!isFilepathConfig(obj)) {
-        throw new Error(`Invalid FilepathConfig: schema validation failed`);
-    }
-    return obj;
+    set.add(cb);
+    let disposed = false;
+    return new vscode.Disposable(() => {
+        if (disposed) {
+            return;
+        }
+        disposed = true;
+        set!.delete(cb);
+    });
 }
 
 /**
- * Parses a JSON string into a validated `FileLogLineConfig`.
- * @throws if the JSON is malformed or the object fails schema validation.
+ * Internal helper invoked after a config file has been written.
  */
-export function parseFileLogLineConfig(json: string): FileLogLineConfig {
-    let obj: unknown;
-    try {
-        obj = JSON.parse(json);
-    } catch {
-        throw new Error(`Malformed JSON: could not parse filelog config`);
+function notifyConfigAdded(category: ConfigCategory, shortName: string): void {
+    const set = subscribers.get(category);
+    if (!set) {
+        return;
     }
-    if (!isFileLogLineConfig(obj)) {
-        throw new Error(`Invalid FileLogLineConfig: schema validation failed`);
+    for (const cb of set) {
+        try {
+            cb(shortName);
+        } catch (err) {
+            // ignore subscriber errors to avoid cascading failures
+            console.error(`subscriber error for ${category}/${shortName}`, err);
+        }
     }
-    return obj;
 }
 
 // ── vscode.workspace.fs I/O helpers ──────────────────────────────────────────
 
 const ENCODING = 'utf-8';
 
+// These lower-level operations are now implemented as private instance
+// methods on `ConfigStore` so that tests can inject a fake filesystem.  The
+// free functions earlier were moved inside the class; they are no longer
+// needed outside and therefore have been removed.
+
+// ── (high-level helpers are now methods on the ConfigStore class) ───────────
+
+
+// ── Object-oriented wrapper for convenience ─────────────────────────────────
+
 /**
- * Lists all `.json` config files in the given directory.
- * Returns an array of short names (filenames without the `.json` extension).
+ * Thin class wrapper around the free functions, binding a workspace root.
+ * Consumers may prefer this style for dependency injection or testability.
  */
-export async function listConfigs(dir: vscode.Uri): Promise<string[]> {
-    try {
-        const entries = await vscode.workspace.fs.readDirectory(dir);
-        return entries
-            .filter(([name, type]) => type === vscode.FileType.File && name.endsWith('.json'))
-            .map(([name]) => name.slice(0, -5)); // strip .json
-    } catch {
-        return [];
+export class ConfigStore {
+    constructor(
+        private workspaceRoot: vscode.Uri,
+        private fs: FsProvider = vscode.workspace.fs
+    ) { }
+
+    private getCategoryDir(category: ConfigCategory): vscode.Uri {
+        return getConfigDir(this.workspaceRoot, category);
     }
-}
 
-/**
- * Reads and parses a filepath config from disk.
- * @throws on I/O error or schema validation failure.
- */
-export async function readFilepathConfig(
-    dir: vscode.Uri,
-    shortName: string
-): Promise<FilepathConfig> {
-    const uri = vscode.Uri.joinPath(dir, configFilename(shortName));
-    const bytes = await vscode.workspace.fs.readFile(uri);
-    const json = Buffer.from(bytes).toString(ENCODING);
-    return parseFilepathConfig(json);
-}
+    // lower-level helpers operate on a directory and use the injected fs
 
-/**
- * Reads and parses a file log line config from disk.
- * @throws on I/O error or schema validation failure.
- */
-export async function readFileLogLineConfig(
-    dir: vscode.Uri,
-    shortName: string
-): Promise<FileLogLineConfig> {
-    const uri = vscode.Uri.joinPath(dir, configFilename(shortName));
-    const bytes = await vscode.workspace.fs.readFile(uri);
-    const json = Buffer.from(bytes).toString(ENCODING);
-    return parseFileLogLineConfig(json);
-}
-
-/**
- * Serialises and writes a config object to disk.
- * Overwrites any existing file with the same name.
- */
-export async function writeConfig(
-    dir: vscode.Uri,
-    shortName: string,
-    data: FilepathConfig | FileLogLineConfig
-): Promise<void> {
-    const uri = vscode.Uri.joinPath(dir, configFilename(shortName));
-    const json = JSON.stringify(data, null, 4);
-    await vscode.workspace.fs.writeFile(uri, Buffer.from(json, ENCODING));
-}
-
-/**
- * Deletes the config file for the given short name.
- * Silently succeeds if the file does not exist.
- */
-export async function deleteConfig(dir: vscode.Uri, shortName: string): Promise<void> {
-    const uri = vscode.Uri.joinPath(dir, configFilename(shortName));
-    try {
-        await vscode.workspace.fs.delete(uri);
-    } catch {
-        // file already absent — treat as success
+    private async listConfigs(dir: vscode.Uri): Promise<string[]> {
+        try {
+            const entries = await this.fs.readDirectory(dir);
+            return entries
+                .filter(([name, type]) =>
+                    type === vscode.FileType.File && name.endsWith('.json')
+                )
+                .map(([name]) => name.slice(0, -5));
+        } catch {
+            return [];
+        }
     }
+
+    private async readFilepathConfig(
+        dir: vscode.Uri,
+        shortName: string
+    ): Promise<FilepathConfig> {
+        const uri = vscode.Uri.joinPath(dir, ConfigParser.configFilename(shortName));
+        const bytes = await this.fs.readFile(uri);
+        const json = Buffer.from(bytes).toString(ENCODING);
+        return ConfigParser.parseFilepathConfig(json);
+    }
+
+    private async readFileLogLineConfig(
+        dir: vscode.Uri,
+        shortName: string
+    ): Promise<FileLogLineConfig> {
+        const uri = vscode.Uri.joinPath(dir, ConfigParser.configFilename(shortName));
+        const bytes = await this.fs.readFile(uri);
+        const json = Buffer.from(bytes).toString(ENCODING);
+        return ConfigParser.parseFileLogLineConfig(json);
+    }
+
+    private async writeConfigInternal(
+        dir: vscode.Uri,
+        shortName: string,
+        data: FilepathConfig | FileLogLineConfig
+    ): Promise<void> {
+        const uri = vscode.Uri.joinPath(dir, ConfigParser.configFilename(shortName));
+        const json = JSON.stringify(data, null, 4);
+        // `vscode.FileSystem.writeFile` accepts only uri and content on
+        // current versions of the API (options are not needed).
+        await this.fs.writeFile(uri, Buffer.from(json, ENCODING));
+        const category =
+            (data as any).pathPattern !== undefined
+                ? ConfigCategory.Filepath
+                : ConfigCategory.Filelog;
+        notifyConfigAdded(category, shortName);
+    }
+
+    private async deleteConfigInternal(
+        dir: vscode.Uri,
+        shortName: string
+    ): Promise<void> {
+        const uri = vscode.Uri.joinPath(dir, ConfigParser.configFilename(shortName));
+        try {
+            await this.fs.delete(uri);
+        } catch {
+            // silent
+        }
+    }
+
+    private async configExistsInternal(
+        dir: vscode.Uri,
+        shortName: string
+    ): Promise<boolean> {
+        const uri = vscode.Uri.joinPath(dir, ConfigParser.configFilename(shortName));
+        try {
+            await this.fs.stat(uri);
+            return true;
+        } catch {
+            return false;
+        }
+    }
+
+    // public API -----------------------------------------------------------
+
+    listConfigNames(category: ConfigCategory): Promise<string[]> {
+        return this.listConfigs(this.getCategoryDir(category));
+    }
+
+    async getConfig(
+        category: ConfigCategory,
+        shortName: string
+    ): Promise<FilepathConfig | FileLogLineConfig> {
+        const dir = this.getCategoryDir(category);
+        try {
+            switch (category) {
+                case ConfigCategory.Filepath:
+                    return await this.readFilepathConfig(dir, shortName);
+                case ConfigCategory.Filelog:
+                    return await this.readFileLogLineConfig(dir, shortName);
+                default:
+                    throw new Error(`Unknown category: ${category}`);
+            }
+        } catch (err: any) {
+            if (err && err.code === 'FileNotFound') {
+                throw new Error(`Config not found: ${category}/${shortName}`);
+            }
+            throw err;
+        }
+    }
+
+    subscribeConfigAdded(
+        category: ConfigCategory,
+        cb: ConfigAddedCallback
+    ): vscode.Disposable {
+        return subscribeConfigAdded(category, cb);
+    }
+
+    writeConfig(
+        category: ConfigCategory,
+        shortName: string,
+        data: FilepathConfig | FileLogLineConfig
+    ): Promise<void> {
+        return this.writeConfigInternal(
+            this.getCategoryDir(category),
+            shortName,
+            data
+        );
+    }
+
+    deleteConfig(category: ConfigCategory, shortName: string): Promise<void> {
+        return this.deleteConfigInternal(
+            this.getCategoryDir(category),
+            shortName
+        );
+    }
+
+    configExists(
+        category: ConfigCategory,
+        shortName: string
+    ): Promise<boolean> {
+        return this.configExistsInternal(
+            this.getCategoryDir(category),
+            shortName
+        );
+    }
+
 }
 
-/**
- * Returns true if a config file for `shortName` exists in the directory.
- */
-export async function configExists(dir: vscode.Uri, shortName: string): Promise<boolean> {
-    const uri = vscode.Uri.joinPath(dir, configFilename(shortName));
-    try {
-        await vscode.workspace.fs.stat(uri);
-        return true;
-    } catch {
-        return false;
-    }
-}

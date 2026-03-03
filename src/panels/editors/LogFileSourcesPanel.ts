@@ -2,11 +2,7 @@ import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
 import { getNonce } from '../../utils/nonce';
-import {
-    configExists,
-    writeConfig,
-    readFilepathConfig
-} from '../../services/config-store';
+import { ConfigStore, ConfigCategory } from '../../services/config-store';
 import { isFilepathConfig } from '../../domain/filepath-config';
 import type {
     FilepathConfigSaveMessage,
@@ -22,17 +18,20 @@ export class LogFileSourcesPanel {
     private readonly _panel: vscode.WebviewPanel;
     private readonly _extensionUri: vscode.Uri;
     private readonly _configDirUri: vscode.Uri;
+    private readonly _store: ConfigStore;
     private _disposables: vscode.Disposable[] = [];
 
     private constructor(
         panel: vscode.WebviewPanel,
         extensionUri: vscode.Uri,
         configDirUri: vscode.Uri,
-        shortName?: string
+        shortName?: string,
+        workspaceRoot?: vscode.Uri
     ) {
         this._panel = panel;
         this._extensionUri = extensionUri;
         this._configDirUri = configDirUri;
+        this._store = new ConfigStore(workspaceRoot!);
         this._panel.webview.html = this._buildHtml();
 
         this._panel.webview.onDidReceiveMessage(
@@ -53,7 +52,8 @@ export class LogFileSourcesPanel {
             return;
         }
 
-        const configDirUri = vscode.Uri.joinPath(folders[0].uri, FILEPATH_CONFIGS_SUBDIR);
+        const workspaceRoot = folders[0].uri;
+        const configDirUri = vscode.Uri.joinPath(workspaceRoot, FILEPATH_CONFIGS_SUBDIR);
 
         if (LogFileSourcesPanel.currentPanel) {
             LogFileSourcesPanel.currentPanel._panel.reveal();
@@ -76,7 +76,8 @@ export class LogFileSourcesPanel {
             panel,
             extensionUri,
             configDirUri,
-            shortName
+            shortName,
+            workspaceRoot
         );
     }
 
@@ -121,7 +122,7 @@ export class LogFileSourcesPanel {
     private async _sendLoad(shortName?: string): Promise<void> {
         if (shortName) {
             try {
-                const config = await readFilepathConfig(this._configDirUri, shortName);
+                const config = await this._store.getConfig(ConfigCategory.Filepath, shortName);
                 this._panel.webview.postMessage({ type: 'filepath-config:load', config, isNew: false });
             } catch (err) {
                 vscode.window.showErrorMessage(
@@ -148,9 +149,9 @@ export class LogFileSourcesPanel {
                     return;
                 }
                 try {
-                    // make sure parent directory is present
+                    // ensure directory exists
                     await vscode.workspace.fs.createDirectory(this._configDirUri);
-                    await writeConfig(this._configDirUri, config.shortName, config);
+                    await this._store.writeConfig(ConfigCategory.Filepath, config.shortName, config);
                     this._panel.webview.postMessage({ type: 'filepath-config:save-result', success: true });
                 } catch (err) {
                     this._panel.webview.postMessage({
@@ -162,7 +163,7 @@ export class LogFileSourcesPanel {
             }
             case 'filepath-config:validate-name': {
                 const { shortName } = msg as FilepathConfigValidateNameMessage;
-                const exists = await configExists(this._configDirUri, shortName);
+                const exists = await this._store.configExists(ConfigCategory.Filepath, shortName);
                 this._panel.webview.postMessage({ type: 'filepath-config:name-available', available: !exists });
                 break;
             }

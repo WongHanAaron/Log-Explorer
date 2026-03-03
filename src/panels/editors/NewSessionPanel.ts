@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { getReactWebviewHtml } from '../../utils/reactWebview';
 import { loadTemplates, createTemplate } from '../../workspace/sessionTemplates';
 import { loadRecentSessions, createSession } from '../../workspace/sessions';
-import { listConfigs } from '../../services/config-store';
+import { ConfigStore, ConfigCategory } from '../../services/config-store';
 
 export class NewSessionPanel {
     public static readonly viewType = 'logexplorer.newSession';
@@ -61,11 +61,12 @@ export class NewSessionPanel {
                     return;
                 }
                 try {
+                    const store = new ConfigStore(workspaceRoot);
                     const [templates, recentSessions, fileConfigs, logConfigs] = await Promise.all([
                         loadTemplates(workspaceRoot),
                         loadRecentSessions(workspaceRoot),
-                        listConfigs(vscode.Uri.joinPath(workspaceRoot, '.logex', 'filepath-configs')),
-                        listConfigs(vscode.Uri.joinPath(workspaceRoot, '.logex', 'filelog-configs')),
+                        store.listConfigNames(ConfigCategory.Filepath),
+                        store.listConfigNames(ConfigCategory.Filelog),
                     ]);
                     this._postMessage({ type: 'init', templates, recentSessions, fileConfigs, logConfigs });
                 } catch {
