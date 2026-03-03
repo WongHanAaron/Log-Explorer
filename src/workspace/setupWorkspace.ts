@@ -1,5 +1,20 @@
 import * as vscode from 'vscode';
 
+// exported for unit tests so we can assert what syncWorkspaceContext calculated
+export interface WorkspaceContextState {
+    folderExists: boolean;
+    ready: boolean;
+}
+
+export let lastWorkspaceContext: WorkspaceContextState = { folderExists: false, ready: false };
+
+/**
+ * API used by tests to examine what the most recent context sync calculated.
+ */
+export function getLastWorkspaceContext(): WorkspaceContextState {
+    return lastWorkspaceContext;
+}
+
 /** Sub-directories created inside `.logex` during workspace initialisation. */
 const LOGEX_SUBDIRS = ['filepath-configs', 'filelog-configs'] as const;
 
@@ -7,10 +22,12 @@ const LOGEX_SUBDIRS = ['filepath-configs', 'filelog-configs'] as const;
  * Checks the state of the `.logex` workspace folder.
  *
  * The function updates two context keys used by command visibility:
- *   - `logexplorer.hasLogExplorerWorkspace`: mirrors the presence of the
- *       `.logex` folder at the workspace root.
- *   - `logexplorer.initialized`: becomes true once the check has completed and
- *       confirms that the folder (and expected sub‑directories) exists.
+ *   - `logexplorer.hasLogExplorerWorkspace`: reflects whether a `.logex`
+ *       directory exists at the workspace root (regardless of its contents).
+ *   - `logexplorer.initialized`: becomes true only when the workspace is
+ *       fully initialised (the folder exists **and** expected sub‑directories
+ *       are present).  This flag is used by most commands to gate access to
+ *       features that require a ready workspace.
  *
  * Call this on activation, when the workspace folders change, and after
  * `executeSetupWorkspace()` succeeds.
@@ -21,8 +38,8 @@ export async function syncWorkspaceContext(): Promise<void> {
 
     // default states when there is no workspace open
     if (!folders || folders.length === 0) {
-        await vscode.commands.executeCommand('setContext', 'logexplorer.initialized', false);
         await vscode.commands.executeCommand('setContext', 'logexplorer.hasLogExplorerWorkspace', false);
+        await vscode.commands.executeCommand('setContext', 'logexplorer.initialized', false);
         return;
     }
 
@@ -30,31 +47,34 @@ export async function syncWorkspaceContext(): Promise<void> {
     const logexUri = vscode.Uri.joinPath(root, '.logex');
 
     console.log('Checking for .logex at', logexUri.fsPath);
-    let exists = false;
+    let folderExists = false;
     try {
         await vscode.workspace.fs.stat(logexUri);
-        exists = true;
+        folderExists = true;
     } catch (err) {
-        // failure simply means the folder doesn't exist; show in logs for debugging
+        // folder is missing, nothing more to check
         console.error('syncWorkspaceContext: stat failed', err);
-        exists = false;
+        folderExists = false;
     }
 
     // determine whether workspace is fully initialised (subdirs present)
-    let initialized = false;
-    if (exists) {
+    let ready = false;
+    if (folderExists) {
         try {
             for (const sub of LOGEX_SUBDIRS) {
                 await vscode.workspace.fs.stat(vscode.Uri.joinPath(root, '.logex', sub));
             }
-            initialized = true;
+            ready = true;
         } catch {
-            initialized = false;
+            ready = false;
         }
     }
 
-    await vscode.commands.executeCommand('setContext', 'logexplorer.hasLogExplorerWorkspace', exists);
-    await vscode.commands.executeCommand('setContext', 'logexplorer.initialized', initialized);
+    await vscode.commands.executeCommand('setContext', 'logexplorer.hasLogExplorerWorkspace', folderExists);
+    await vscode.commands.executeCommand('setContext', 'logexplorer.initialized', ready);
+
+    // record for tests
+    lastWorkspaceContext = { folderExists, ready };
 }
 
 /**
@@ -74,11 +94,15 @@ export async function executeSetupWorkspace(): Promise<void> {
     const root = folders[0].uri;
 
     try {
-        // Create .logex/ and both subdirectories (createDirectory is idempotent).
+        const logexUri = vscode.Uri.joinPath(root, '.logex');
+        // create the root folder first in case it does not exist; the
+        // subsequent calls will happily succeed if it already does.
+        await vscode.workspace.fs.createDirectory(logexUri);
+
+        // Create both expected subdirectories (createDirectory is idempotent).
         for (const sub of LOGEX_SUBDIRS) {
-            await vscode.workspace.fs.createDirectory(
-                vscode.Uri.joinPath(root, '.logex', sub)
-            );
+            const subUri = vscode.Uri.joinPath(logexUri, sub);
+            await vscode.workspace.fs.createDirectory(subUri);
         }
 
         // Optionally update .gitignore.

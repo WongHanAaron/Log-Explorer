@@ -1,7 +1,8 @@
 import * as vscode from 'vscode';
 import { getReactWebviewHtml } from '../../utils/reactWebview';
-import { loadTemplates } from '../../workspace/sessionTemplates';
+import { loadTemplates, createTemplate } from '../../workspace/sessionTemplates';
 import { loadRecentSessions, createSession } from '../../workspace/sessions';
+import { listConfigs } from '../../services/config-store';
 
 export class NewSessionPanel {
     public static readonly viewType = 'logexplorer.newSession';
@@ -56,17 +57,19 @@ export class NewSessionPanel {
         switch (message.type) {
             case 'ready': {
                 if (!workspaceRoot) {
-                    this._postMessage({ type: 'init', templates: [], recentSessions: [] });
+                    this._postMessage({ type: 'init', templates: [], recentSessions: [], fileConfigs: [], logConfigs: [] });
                     return;
                 }
                 try {
-                    const [templates, recentSessions] = await Promise.all([
+                    const [templates, recentSessions, fileConfigs, logConfigs] = await Promise.all([
                         loadTemplates(workspaceRoot),
                         loadRecentSessions(workspaceRoot),
+                        listConfigs(vscode.Uri.joinPath(workspaceRoot, '.logex', 'filepath-configs')),
+                        listConfigs(vscode.Uri.joinPath(workspaceRoot, '.logex', 'filelog-configs')),
                     ]);
-                    this._postMessage({ type: 'init', templates, recentSessions });
+                    this._postMessage({ type: 'init', templates, recentSessions, fileConfigs, logConfigs });
                 } catch {
-                    this._postMessage({ type: 'init', templates: [], recentSessions: [] });
+                    this._postMessage({ type: 'init', templates: [], recentSessions: [], fileConfigs: [], logConfigs: [] });
                 }
                 break;
             }
@@ -82,6 +85,21 @@ export class NewSessionPanel {
                     this._postMessage({ type: 'sessionCreated', session: summary });
                 } catch (err: unknown) {
                     const msg = err instanceof Error ? err.message : 'Failed to create session.';
+                    this._postMessage({ type: 'sessionError', message: msg });
+                }
+                break;
+            }
+            case 'saveSessionTemplate': {
+                if (!workspaceRoot) {
+                    this._postMessage({ type: 'sessionError', message: 'No workspace folder is open.' });
+                    return;
+                }
+                try {
+                    const payload = message.payload as Omit<import('../../workspace/sessionTemplates').SessionTemplate, 'id'>;
+                    const tpl = await createTemplate(workspaceRoot, payload);
+                    this._postMessage({ type: 'templateSaved', template: tpl });
+                } catch (err: unknown) {
+                    const msg = err instanceof Error ? err.message : 'Failed to save template.';
                     this._postMessage({ type: 'sessionError', message: msg });
                 }
                 break;

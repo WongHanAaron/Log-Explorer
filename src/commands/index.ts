@@ -51,6 +51,24 @@ export function registerCommands(context: vscode.ExtensionContext): void {
         () => GettingStartedPanel.createOrShow(context.extensionUri)
     );
 
+    // Internal helper exposed for tests so they can query the last-synced
+    // workspace context without reaching into the module filesystem.
+    const getContextCommand = vscode.commands.registerCommand(
+        'logexplorer._getWorkspaceContext',
+        () => {
+            const { getLastWorkspaceContext } = require('../workspace/setupWorkspace');
+            return getLastWorkspaceContext();
+        }
+    );
+
+    const syncContextCommand = vscode.commands.registerCommand(
+        'logexplorer._syncWorkspaceContext',
+        () => {
+            const { syncWorkspaceContext } = require('../workspace/setupWorkspace');
+            return syncWorkspaceContext();
+        }
+    );
+
     context.subscriptions.push(
         showPanelCommand,
         newSessionCommand,
@@ -58,6 +76,7 @@ export function registerCommands(context: vscode.ExtensionContext): void {
         editFileLogLineConfigCommand,
         editSessionTemplatesCommand,
         setupWorkspaceCommand,
-        gettingStartedCommand
+        gettingStartedCommand,
+        getContextCommand
     );
 }

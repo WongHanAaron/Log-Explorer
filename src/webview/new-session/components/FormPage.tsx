@@ -12,6 +12,10 @@ interface FormPageProps {
     error: string | null;
     onBack: () => void;
     onSubmit: (values: FormValues) => void;
+    /** called when user chooses to save current session as template */
+    onSaveTemplate: (tpl: Omit<TemplateData, 'id'>) => void;
+    fileConfigs: string[];
+    logConfigs: string[];
 }
 
 export function FormPage({
@@ -21,6 +25,9 @@ export function FormPage({
     error,
     onBack,
     onSubmit,
+    onSaveTemplate,
+    fileConfigs,
+    logConfigs,
 }: FormPageProps) {
     const update = useCallback(
         <K extends keyof FormValues>(key: K, value: FormValues[K]) => {
@@ -45,6 +52,17 @@ export function FormPage({
         (sources: SourceLogConfigReference[]) => update("sources", sources),
         [update]
     );
+
+    const handleSaveTemplate = useCallback(() => {
+        // derive minimal template info from form and selected template parameters
+        const tpl: Omit<TemplateData, 'id'> = {
+            name: form.name.trim(),
+            description: form.description,
+            parameters: Object.keys(form.parameters).map(n => ({ name: n })),
+            sources: form.sources,
+        };
+        onSaveTemplate(tpl);
+    }, [form, onSaveTemplate]);
 
     const title = selectedTemplate?.name ?? "New Session";
     const description = selectedTemplate?.description ?? "";
@@ -146,6 +164,8 @@ export function FormPage({
                         <SourcesTable
                             sources={form.sources}
                             onChange={handleSourcesChange}
+                            fileConfigs={fileConfigs}
+                            logConfigs={logConfigs}
                         />
                     </div>
 
@@ -161,6 +181,13 @@ export function FormPage({
                             disabled={!form.name.trim()}
                         >
                             Create Session
+                        </Button>
+                        <Button
+                            variant="outline"
+                            disabled={!form.name.trim()}
+                            onClick={handleSaveTemplate}
+                        >
+                            Save as template
                         </Button>
                     </div>
 

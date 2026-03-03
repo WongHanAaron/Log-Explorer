@@ -12,9 +12,11 @@ import type { SourceLogConfigReference } from "../App";
 interface SourcesTableProps {
     sources: SourceLogConfigReference[];
     onChange: (sources: SourceLogConfigReference[]) => void;
+    fileConfigs: string[];
+    logConfigs: string[];
 }
 
-export function SourcesTable({ sources, onChange }: SourcesTableProps) {
+export function SourcesTable({ sources, onChange, fileConfigs, logConfigs }: SourcesTableProps) {
     const update = useCallback(
         (index: number, patch: Partial<SourceLogConfigReference>) => {
             const next = sources.map((s, i) => (i === index ? { ...s, ...patch } : s));
@@ -59,22 +61,24 @@ export function SourcesTable({ sources, onChange }: SourcesTableProps) {
                                 </select>
                             </TableCell>
                             <TableCell className="py-1 pr-2">
-                                <input
-                                    type="text"
-                                    placeholder="Source config name"
+                                <select
                                     value={source.sourceConfig}
                                     onChange={e => update(index, { sourceConfig: e.target.value })}
                                     className="w-full bg-[--input-bg] border border-[--input-border] text-foreground text-xs px-1.5 py-0.5 focus:outline-none focus:ring-1 focus:ring-ring"
-                                />
+                                >
+                                    <option value="">(choose)</option>
+                                    {fileConfigs.map(c => <option key={c} value={c}>{c}</option>)}
+                                </select>
                             </TableCell>
                             <TableCell className="py-1 pr-2">
-                                <input
-                                    type="text"
-                                    placeholder="Log config name"
+                                <select
                                     value={source.logConfig}
                                     onChange={e => update(index, { logConfig: e.target.value })}
                                     className="w-full bg-[--input-bg] border border-[--input-border] text-foreground text-xs px-1.5 py-0.5 focus:outline-none focus:ring-1 focus:ring-ring"
-                                />
+                                >
+                                    <option value="">(choose)</option>
+                                    {logConfigs.map(c => <option key={c} value={c}>{c}</option>)}
+                                </select>
                             </TableCell>
                             <TableCell className="py-1 text-center">
                                 <button

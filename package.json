@@ -96,27 +96,27 @@
             "commandPalette": [
                 {
                     "command": "logexplorer.showPanel",
-                    "when": "workspaceFolderCount > 0 && logexplorer.initialized && logexplorer.hasLogExplorerWorkspace"
+                    "when": "workspaceFolderCount > 0 && logexplorer.initialized"
                 },
                 {
                     "command": "logexplorer.newSession",
-                    "when": "workspaceFolderCount > 0 && logexplorer.initialized && logexplorer.hasLogExplorerWorkspace"
+                    "when": "workspaceFolderCount > 0 && logexplorer.initialized"
                 },
                 {
                     "command": "logexplorer.editLogFileSourceConfig",
-                    "when": "workspaceFolderCount > 0 && logexplorer.initialized && logexplorer.hasLogExplorerWorkspace"
+                    "when": "workspaceFolderCount > 0 && logexplorer.initialized"
                 },
                 {
                     "command": "logexplorer.editFileLogLineConfig",
-                    "when": "workspaceFolderCount > 0 && logexplorer.initialized && logexplorer.hasLogExplorerWorkspace"
+                    "when": "workspaceFolderCount > 0 && logexplorer.initialized"
                 },
                 {
                     "command": "logexplorer.editSessionTemplates",
-                    "when": "workspaceFolderCount > 0 && logexplorer.initialized && logexplorer.hasLogExplorerWorkspace"
+                    "when": "workspaceFolderCount > 0 && logexplorer.initialized"
                 },
                 {
                     "command": "logexplorer.setupWorkspace",
-                    "when": "workspaceFolderCount > 0 && logexplorer.initialized && !logexplorer.hasLogExplorerWorkspace"
+                    "when": "workspaceFolderCount > 0 && !logexplorer.initialized"
                 }
             ]
         }

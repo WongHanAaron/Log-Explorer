@@ -144,6 +144,8 @@ export class LogFileLinesPanel {
                     return;
                 }
                 try {
+                    // ensure directory exists in case workspace was not fully set up
+                    await vscode.workspace.fs.createDirectory(this._configDirUri);
                     await writeConfig(this._configDirUri, config.shortName, config);
                     this._panel.webview.postMessage({ type: 'filelog-config:save-result', success: true });
                 } catch (err) {

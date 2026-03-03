@@ -11,7 +11,8 @@ body {
     color: var(--vscode-foreground);
     font-family: var(--vscode-font-family);
     font-size: var(--vscode-font-size);
-    max-width: 720px;
+    /* stretch fully; width controlled by container */
+    max-width: 100%;
 }
 
 h2 {

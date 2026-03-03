@@ -9,8 +9,9 @@ import { registerCommands } from './commands';
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
     console.log('LogExplorer extension is now active!');
 
-    // ensure the initialization flag is false until we evaluate the workspace
+    // ensure the context flags are reset until we evaluate the workspace
     await vscode.commands.executeCommand('setContext', 'logexplorer.initialized', false);
+    await vscode.commands.executeCommand('setContext', 'logexplorer.hasLogExplorerWorkspace', false);
 
     // re‑sync whenever the workspace folder set changes (e.g. user opens a new folder)
     context.subscriptions.push(
@@ -19,6 +20,19 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
             syncWorkspaceContext().catch(console.error);
         })
     );
+
+    // watch for manual changes to the .logex folder so that context keys
+    // update automatically when the user creates/deletes it or its contents
+    // outside of the extension.  Without this a manual `mkdir .logex` would
+    // require a window reload to make commands appear.
+    const logexWatcher = vscode.workspace.createFileSystemWatcher('**/.logex');
+    const logexContentsWatcher = vscode.workspace.createFileSystemWatcher('**/.logex/**');
+    for (const w of [logexWatcher, logexContentsWatcher]) {
+        context.subscriptions.push(w);
+        w.onDidCreate(() => syncWorkspaceContext().catch(console.error));
+        w.onDidChange(() => syncWorkspaceContext().catch(console.error));
+        w.onDidDelete(() => syncWorkspaceContext().catch(console.error));
+    }
 
     // T006 — Register the existing main sidebar panel view provider
     const panelProvider = new LogExplorerPanel(context.extensionUri);

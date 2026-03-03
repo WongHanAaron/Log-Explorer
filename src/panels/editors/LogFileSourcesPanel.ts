@@ -148,6 +148,8 @@ export class LogFileSourcesPanel {
                     return;
                 }
                 try {
+                    // make sure parent directory is present
+                    await vscode.workspace.fs.createDirectory(this._configDirUri);
                     await writeConfig(this._configDirUri, config.shortName, config);
                     this._panel.webview.postMessage({ type: 'filepath-config:save-result', success: true });
                 } catch (err) {

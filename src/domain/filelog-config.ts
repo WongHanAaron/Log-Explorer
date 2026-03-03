@@ -8,7 +8,7 @@
 /** Extract a field value using fixed prefix and optional suffix markers. */
 export interface PrefixSuffixExtraction {
     kind: 'prefix-suffix';
-    prefix: string;
+    prefix?: string;
     suffix?: string;
 }
 
@@ -113,8 +113,11 @@ export function isFileLogLineConfig(obj: unknown): obj is FileLogLineConfig {
     }
 }
 
-function isTextLineConfig(c: Record<string, unknown>): c is TextLineConfig {
-    return Array.isArray(c.fields) && (c.fields as unknown[]).every(isTextField);
+function isTextLineConfig(c: unknown): c is TextLineConfig {
+    if (!c || typeof c !== 'object') {
+        return false;
+    }
+    return Array.isArray((c as any).fields) && ((c as any).fields as unknown[]).every(isTextField);
 }
 
 function isTextField(f: unknown): f is TextField {
@@ -139,19 +142,26 @@ function isFieldExtraction(e: unknown): e is FieldExtraction {
     return false;
 }
 
-function isXmlLineConfig(c: Record<string, unknown>): c is XmlLineConfig {
-    return typeof c.rootXpath === 'string' && Array.isArray(c.fields);
+function isXmlLineConfig(c: unknown): c is XmlLineConfig {
+    if (!c || typeof c !== 'object') {
+        return false;
+    }
+    return typeof (c as any).rootXpath === 'string' && Array.isArray((c as any).fields);
 }
 
-function isJsonLineConfig(c: Record<string, unknown>): c is JsonLineConfig {
+function isJsonLineConfig(c: unknown): c is JsonLineConfig {
+    if (!c || typeof c !== 'object') {
+        return false;
+    }
+    const fields = (c as any).fields;
     return (
-        Array.isArray(c.fields) &&
-        (c.fields as unknown[]).every(
+        Array.isArray(fields) &&
+        (fields as unknown[]).every(
             (f: unknown) =>
                 f &&
                 typeof f === 'object' &&
-                typeof (f as Record<string, unknown>).name === 'string' &&
-                typeof (f as Record<string, unknown>).jsonPath === 'string'
+                typeof (f as any).name === 'string' &&
+                typeof (f as any).jsonPath === 'string'
         )
     );
 }

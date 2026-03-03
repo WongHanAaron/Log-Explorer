@@ -51,6 +51,10 @@ export function App() {
     const [templates, setTemplates] = useState<TemplateData[]>([]);
     const [recentSessions, setRecentSessions] = useState<SessionSummary[]>([]);
 
+    // configuration names available for dropdowns
+    const [fileConfigs, setFileConfigs] = useState<string[]>([]);
+    const [logConfigs, setLogConfigs] = useState<string[]>([]);
+
     // Currently selected template (carries into FormPage)
     const [selectedTemplate, setSelectedTemplate] = useState<TemplateData | null>(null);
 
@@ -106,9 +110,16 @@ export function App() {
                 case "init":
                     setTemplates(msg.templates ?? []);
                     setRecentSessions(msg.recentSessions ?? []);
+                    setFileConfigs(msg.fileConfigs ?? []);
+                    setLogConfigs(msg.logConfigs ?? []);
                     break;
                 case "sessionCreated":
                     handleSessionCreated(msg.session);
+                    break;
+                case "templateSaved":
+                    // add the new template and select it automatically
+                    setTemplates(prev => [...prev, msg.template]);
+                    setSelectedTemplate(msg.template);
                     break;
                 case "sessionError":
                     setFormError(msg.message ?? "An error occurred.");
@@ -187,6 +198,9 @@ export function App() {
                 error={formError}
                 onBack={handleBack}
                 onSubmit={handleSubmit}
+                onSaveTemplate={tpl => vscode.postMessage({ type: 'saveSessionTemplate', payload: tpl })}
+                fileConfigs={fileConfigs}
+                logConfigs={logConfigs}
             />
         );
     }
