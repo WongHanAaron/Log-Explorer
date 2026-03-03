@@ -88,4 +88,6 @@ describe('ConfigStore (pure parsing)', function () {
             assert.throws(() => parseFileLogLineConfig(json), /invalid.*filelog/i);
         });
     });
+
+
 });

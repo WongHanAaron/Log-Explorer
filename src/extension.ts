@@ -5,8 +5,9 @@ import { LogDetailsViewProvider } from './panels/views/LogDetailsViewProvider';
 import { SearchResultsViewProvider } from './panels/views/SearchResultsViewProvider';
 import { syncWorkspaceContext } from './workspace/setupWorkspace';
 import { registerCommands } from './commands';
+import { ConfigStore, ConfigCategory } from './services/config-store';
 
-export async function activate(context: vscode.ExtensionContext): Promise<void> {
+export async function activate(context: vscode.ExtensionContext): Promise<{ ConfigStore: typeof ConfigStore; ConfigCategory: typeof ConfigCategory }> {
     console.log('LogExplorer extension is now active!');
 
     // ensure the context flags are reset until we evaluate the workspace
@@ -73,6 +74,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
     // T011, T014, T020, T016 — Register all commands (includes new session panels + setupWorkspace)
     registerCommands(context);
+
+    // export useful helpers for tests
+    return { ConfigStore, ConfigCategory };
 }
 
 export function deactivate(): void {
