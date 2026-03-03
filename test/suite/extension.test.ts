@@ -31,15 +31,16 @@ suite('LogExplorer Extension', () => {
         let root: vscode.Uri;
         let ConfigStore: any;
         let ConfigCategory: any;
-        // ensure there's at least one workspace folder for our file operations
+        // ensure there's a fresh workspace folder for our file operations
         setup(async () => {
-            if (!vscode.workspace.workspaceFolders || vscode.workspace.workspaceFolders.length === 0) {
-                const tmpDir = path.join(os.tmpdir(), 'logexplorer-test');
-                await fs.promises.mkdir(tmpDir, { recursive: true });
-                vscode.workspace.updateWorkspaceFolders(0, null, { uri: vscode.Uri.file(tmpDir) });
-                // give the extension host a moment to pick up the change
-                await new Promise((r) => setTimeout(r, 200));
-            }
+            // create a fresh temporary workspace for every test run
+            const tmpDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'logexplorer-test-'));
+            await fs.promises.mkdir(tmpDir, { recursive: true });
+            // replace any existing workspace folders with the new one
+            const removeCount = vscode.workspace.workspaceFolders ? vscode.workspace.workspaceFolders.length : 0;
+            vscode.workspace.updateWorkspaceFolders(0, removeCount, { uri: vscode.Uri.file(tmpDir) });
+            // give the extension host a moment to pick up the change
+            await new Promise((r) => setTimeout(r, 200));
             // after update attempt, grab the first folder
             if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0) {
                 root = vscode.workspace.workspaceFolders[0].uri;

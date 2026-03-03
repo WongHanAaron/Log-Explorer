@@ -1,19 +1,15 @@
 import * as assert from 'assert';
-import {
-    configFilename,
-    parseFilepathConfig,
-    parseFileLogLineConfig
-} from '../../../src/services/config-store';
+import { ConfigStore } from '../../../src/services/config-store';
 
 describe('ConfigStore (pure parsing)', function () {
     // ── configFilename ────────────────────────────────────────────────────────
 
     describe('configFilename', function () {
         it('appends .json to the short name', () => {
-            assert.strictEqual(configFilename('nginx-access'), 'nginx-access.json');
+            assert.strictEqual(ConfigStore.configFilename('nginx-access'), 'nginx-access.json');
         });
         it('works for single-word names', () => {
-            assert.strictEqual(configFilename('app'), 'app.json');
+            assert.strictEqual(ConfigStore.configFilename('app'), 'app.json');
         });
     });
 
@@ -26,19 +22,19 @@ describe('ConfigStore (pure parsing)', function () {
                 label: 'My Log',
                 pathPattern: '/var/log/app.log'
             });
-            const cfg = parseFilepathConfig(json);
+            const cfg = ConfigStore.parseFilepathConfig(json);
             assert.strictEqual(cfg.shortName, 'my-log');
             assert.strictEqual(cfg.label, 'My Log');
             assert.strictEqual(cfg.pathPattern, '/var/log/app.log');
         });
 
         it('throws on malformed JSON', () => {
-            assert.throws(() => parseFilepathConfig('{invalid'), /malformed/i);
+            assert.throws(() => ConfigStore.parseFilepathConfig('{invalid'), /malformed/i);
         });
 
         it('throws on valid JSON but invalid schema', () => {
             const json = JSON.stringify({ shortName: 'INVALID NAME', label: 'X', pathPattern: 'y' });
-            assert.throws(() => parseFilepathConfig(json), /invalid.*filepath/i);
+            assert.throws(() => ConfigStore.parseFilepathConfig(json), /invalid.*filepath/i);
         });
 
         it('preserves optional description field', () => {
@@ -48,7 +44,7 @@ describe('ConfigStore (pure parsing)', function () {
                 pathPattern: '*.log',
                 description: 'main app'
             });
-            const cfg = parseFilepathConfig(json);
+            const cfg = ConfigStore.parseFilepathConfig(json);
             assert.strictEqual(cfg.description, 'main app');
         });
     });
@@ -63,7 +59,7 @@ describe('ConfigStore (pure parsing)', function () {
                 label: 'IIS',
                 fields: [{ name: 'ts', extraction: { kind: 'prefix-suffix', prefix: '[', suffix: ']' } }]
             });
-            const cfg = parseFileLogLineConfig(json);
+            const cfg = ConfigStore.parseFileLogLineConfig(json);
             assert.strictEqual(cfg.type, 'text');
             assert.strictEqual(cfg.shortName, 'iis');
         });
@@ -75,17 +71,17 @@ describe('ConfigStore (pure parsing)', function () {
                 label: 'Structured',
                 fields: [{ name: 'level', jsonPath: 'level' }]
             });
-            const cfg = parseFileLogLineConfig(json);
+            const cfg = ConfigStore.parseFileLogLineConfig(json);
             assert.strictEqual(cfg.type, 'json');
         });
 
         it('throws on malformed JSON', () => {
-            assert.throws(() => parseFileLogLineConfig('{{'), /malformed/i);
+            assert.throws(() => ConfigStore.parseFileLogLineConfig('{{'), /malformed/i);
         });
 
         it('throws on valid JSON but invalid schema', () => {
             const json = JSON.stringify({ type: 'unknown', shortName: 'x', label: 'X', fields: [] });
-            assert.throws(() => parseFileLogLineConfig(json), /invalid.*filelog/i);
+            assert.throws(() => ConfigStore.parseFileLogLineConfig(json), /invalid.*filelog/i);
         });
     });
 

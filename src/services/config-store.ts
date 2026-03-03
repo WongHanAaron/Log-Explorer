@@ -16,7 +16,7 @@ export enum ConfigCategory {
 /**
  * Returns the workspace-relative directory URI for the given category.
  */
-export function getConfigDir(
+function getConfigDir(
     workspaceRoot: vscode.Uri,
     category: ConfigCategory
 ): vscode.Uri {
@@ -31,7 +31,7 @@ export function getConfigDir(
 // ── Pure parsing helpers (unit-testable without vscode) ───────────────────────
 
 /** Returns the JSON filename for the given short name. */
-export function configFilename(shortName: string): string {
+function configFilename(shortName: string): string {
     return `${shortName}.json`;
 }
 
@@ -39,7 +39,7 @@ export function configFilename(shortName: string): string {
  * Parses a JSON string into a validated `FilepathConfig`.
  * @throws if the JSON is malformed or the object fails schema validation.
  */
-export function parseFilepathConfig(json: string): FilepathConfig {
+function parseFilepathConfig(json: string): FilepathConfig {
     let obj: unknown;
     try {
         obj = JSON.parse(json);
@@ -56,7 +56,7 @@ export function parseFilepathConfig(json: string): FilepathConfig {
  * Parses a JSON string into a validated `FileLogLineConfig`.
  * @throws if the JSON is malformed or the object fails schema validation.
  */
-export function parseFileLogLineConfig(json: string): FileLogLineConfig {
+function parseFileLogLineConfig(json: string): FileLogLineConfig {
     let obj: unknown;
     try {
         obj = JSON.parse(json);
@@ -82,7 +82,7 @@ const subscribers: Map<ConfigCategory, Set<ConfigAddedCallback>> = new Map();
  * Returns a `Disposable` which may be used to cancel the subscription.  The
  * disposal operation is idempotent.
  */
-export function subscribeConfigAdded(
+function subscribeConfigAdded(
     category: ConfigCategory,
     cb: ConfigAddedCallback
 ): vscode.Disposable {
@@ -128,7 +128,7 @@ const ENCODING = 'utf-8';
  * Lists all `.json` config files in the given directory.
  * Returns an array of short names (filenames without the `.json` extension).
  */
-export async function listConfigs(dir: vscode.Uri): Promise<string[]> {
+async function listConfigs(dir: vscode.Uri): Promise<string[]> {
     try {
         const entries = await vscode.workspace.fs.readDirectory(dir);
         return entries
@@ -143,7 +143,7 @@ export async function listConfigs(dir: vscode.Uri): Promise<string[]> {
  * Reads and parses a filepath config from disk.
  * @throws on I/O error or schema validation failure.
  */
-export async function readFilepathConfig(
+async function readFilepathConfig(
     dir: vscode.Uri,
     shortName: string
 ): Promise<FilepathConfig> {
@@ -157,7 +157,7 @@ export async function readFilepathConfig(
  * Reads and parses a file log line config from disk.
  * @throws on I/O error or schema validation failure.
  */
-export async function readFileLogLineConfig(
+async function readFileLogLineConfig(
     dir: vscode.Uri,
     shortName: string
 ): Promise<FileLogLineConfig> {
@@ -171,7 +171,7 @@ export async function readFileLogLineConfig(
  * Serialises and writes a config object to disk.
  * Overwrites any existing file with the same name.
  */
-export async function writeConfig(
+async function writeConfig(
     dir: vscode.Uri,
     shortName: string,
     data: FilepathConfig | FileLogLineConfig
@@ -192,7 +192,7 @@ export async function writeConfig(
  * Deletes the config file for the given short name.
  * Silently succeeds if the file does not exist.
  */
-export async function deleteConfig(dir: vscode.Uri, shortName: string): Promise<void> {
+async function deleteConfig(dir: vscode.Uri, shortName: string): Promise<void> {
     const uri = vscode.Uri.joinPath(dir, configFilename(shortName));
     try {
         await vscode.workspace.fs.delete(uri);
@@ -204,7 +204,7 @@ export async function deleteConfig(dir: vscode.Uri, shortName: string): Promise<
 /**
  * Returns true if a config file for `shortName` exists in the directory.
  */
-export async function configExists(dir: vscode.Uri, shortName: string): Promise<boolean> {
+async function configExists(dir: vscode.Uri, shortName: string): Promise<boolean> {
     const uri = vscode.Uri.joinPath(dir, configFilename(shortName));
     try {
         await vscode.workspace.fs.stat(uri);
@@ -263,7 +263,7 @@ export async function getConfig(
  * Consumers may prefer this style for dependency injection or testability.
  */
 export class ConfigStore {
-    constructor(private workspaceRoot: vscode.Uri) {}
+    constructor(private workspaceRoot: vscode.Uri) { }
 
     listConfigNames(category: ConfigCategory): Promise<string[]> {
         return listConfigNames(this.workspaceRoot, category);
@@ -290,6 +290,20 @@ export class ConfigStore {
     configExists(category: ConfigCategory, shortName: string): Promise<boolean> {
         const dir = getConfigDir(this.workspaceRoot, category);
         return configExists(dir, shortName);
+    }
+
+    // ── static helpers for legacy/unit tests ───────────────────────────────
+
+    static configFilename(shortName: string): string {
+        return configFilename(shortName);
+    }
+
+    static parseFilepathConfig(json: string): FilepathConfig {
+        return parseFilepathConfig(json);
+    }
+
+    static parseFileLogLineConfig(json: string): FileLogLineConfig {
+        return parseFileLogLineConfig(json);
     }
 }
 

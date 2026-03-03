@@ -2,11 +2,7 @@ import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
 import { getNonce } from '../../utils/nonce';
-import {
-    configExists,
-    writeConfig,
-    readFileLogLineConfig
-} from '../../services/config-store';
+import { ConfigStore, ConfigCategory } from '../../services/config-store';
 import { isFileLogLineConfig } from '../../domain/filelog-config';
 import type {
     FilelogConfigSaveMessage,
@@ -23,17 +19,20 @@ export class LogFileLinesPanel {
     private readonly _panel: vscode.WebviewPanel;
     private readonly _extensionUri: vscode.Uri;
     private readonly _configDirUri: vscode.Uri;
+    private readonly _store: ConfigStore;
     private _disposables: vscode.Disposable[] = [];
 
     private constructor(
         panel: vscode.WebviewPanel,
         extensionUri: vscode.Uri,
         configDirUri: vscode.Uri,
-        shortName?: string
+        shortName?: string,
+        workspaceRoot?: vscode.Uri
     ) {
         this._panel = panel;
         this._extensionUri = extensionUri;
         this._configDirUri = configDirUri;
+        this._store = new ConfigStore(workspaceRoot!);
         this._panel.webview.html = this._buildHtml();
 
         this._panel.webview.onDidReceiveMessage(
@@ -53,7 +52,8 @@ export class LogFileLinesPanel {
             return;
         }
 
-        const configDirUri = vscode.Uri.joinPath(folders[0].uri, FILELOG_CONFIGS_SUBDIR);
+        const workspaceRoot = folders[0].uri;
+        const configDirUri = vscode.Uri.joinPath(workspaceRoot, FILELOG_CONFIGS_SUBDIR);
 
         if (LogFileLinesPanel.currentPanel) {
             LogFileLinesPanel.currentPanel._panel.reveal();
@@ -76,7 +76,8 @@ export class LogFileLinesPanel {
             panel,
             extensionUri,
             configDirUri,
-            shortName
+            shortName,
+            workspaceRoot
         );
     }
 
@@ -117,7 +118,7 @@ export class LogFileLinesPanel {
     private async _sendLoad(shortName?: string): Promise<void> {
         if (shortName) {
             try {
-                const config = await readFileLogLineConfig(this._configDirUri, shortName);
+                const config = await this._store.getConfig(ConfigCategory.Filelog, shortName);
                 this._panel.webview.postMessage({ type: 'filelog-config:load', config, isNew: false });
             } catch (err) {
                 vscode.window.showErrorMessage(
@@ -144,9 +145,9 @@ export class LogFileLinesPanel {
                     return;
                 }
                 try {
-                    // ensure directory exists in case workspace was not fully set up
+                    // ensure directory exists
                     await vscode.workspace.fs.createDirectory(this._configDirUri);
-                    await writeConfig(this._configDirUri, config.shortName, config);
+                    await this._store.writeConfig(ConfigCategory.Filelog, config.shortName, config);
                     this._panel.webview.postMessage({ type: 'filelog-config:save-result', success: true });
                 } catch (err) {
                     this._panel.webview.postMessage({
@@ -185,7 +186,7 @@ export class LogFileLinesPanel {
             }
             case 'filelog-config:validate-name': {
                 const { shortName } = msg as FilelogConfigValidateNameMessage;
-                const exists = await configExists(this._configDirUri, shortName);
+                const exists = await this._store.configExists(ConfigCategory.Filelog, shortName);
                 this._panel.webview.postMessage({ type: 'filelog-config:name-available', available: !exists });
                 break;
             }
