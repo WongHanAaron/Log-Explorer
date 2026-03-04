@@ -17,6 +17,16 @@ class FakeFs implements vscode.FileSystem {
         return path.posix.normalize(p.replace(/\\/g, '/'));
     }
 
+    // additional members required by vscode.FileSystem
+    copy(source: vscode.Uri, target: vscode.Uri, options?: { overwrite?: boolean }): Thenable<void> {
+        // no-op for tests
+        return Promise.resolve();
+    }
+    isWritableFileSystem(scheme: string): boolean | undefined {
+        // allow everything
+        return true;
+    }
+
     watch(_uri: vscode.Uri): vscode.Disposable {
         // no-op watcher
         return new vscode.Disposable(() => { });
@@ -51,8 +61,9 @@ class FakeFs implements vscode.FileSystem {
         return Promise.resolve(Array.from(entries));
     }
 
-    createDirectory(uri: vscode.Uri): void {
+    createDirectory(uri: vscode.Uri): Thenable<void> {
         this.dirs.add(this.normalize(uri.fsPath));
+        return Promise.resolve();
     }
 
     readFile(uri: vscode.Uri): Thenable<Uint8Array> {
@@ -64,21 +75,23 @@ class FakeFs implements vscode.FileSystem {
         return Promise.resolve(contents);
     }
 
-    writeFile(uri: vscode.Uri, content: Uint8Array, _options: { create: boolean; overwrite: boolean; }): void {
+    writeFile(uri: vscode.Uri, content: Uint8Array): Thenable<void> {
         const p = this.normalize(uri.fsPath);
         // ensure parent directory exists
         const dir = path.posix.dirname(p);
         this.dirs.add(dir);
         this.files.set(p, content);
+        return Promise.resolve();
     }
 
-    delete(uri: vscode.Uri, _options: { recursive: boolean; }): void {
+    delete(uri: vscode.Uri, _options?: { recursive?: boolean }): Thenable<void> {
         const p = this.normalize(uri.fsPath);
         this.files.delete(p);
         // note: directories are not removed for simplicity
+        return Promise.resolve();
     }
 
-    rename(oldUri: vscode.Uri, newUri: vscode.Uri, _options: { overwrite: boolean; }): void {
+    rename(oldUri: vscode.Uri, newUri: vscode.Uri, _options?: { overwrite?: boolean }): Thenable<void> {
         const oldp = this.normalize(oldUri.fsPath);
         const newp = this.normalize(newUri.fsPath);
         const data = this.files.get(oldp);
@@ -87,6 +100,7 @@ class FakeFs implements vscode.FileSystem {
         }
         this.files.delete(oldp);
         this.files.set(newp, data);
+        return Promise.resolve();
     }
 }
 
