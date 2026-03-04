@@ -39,7 +39,9 @@ npm test; npm run lint
 
 ## Code Style
 
-TypeScript 5.x, Node.js 18+: Follow standard conventions
+TypeScript 5.x, Node.js 18+: Follow standard conventions.  When authoring
+TypeScript code, consult `docs/typescript-guidelines.md` for our project‑wide
+rules on file/class isolation, exports, dependency injection, etc.
 
 ## Recent Changes
 - 001-new-session-panel: Added TypeScript 5.x, target ES2020 + VS Code API ^1.85.0; esbuild ^0.27

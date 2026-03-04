@@ -1,7 +1,8 @@
 import * as assert from 'assert';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { ConfigStore, ConfigCategory, ConfigParser } from '../../../src/services/config-store';
+import { ConfigStore, ConfigCategory } from '../../../src/services/config-store';
+import { ConfigParser } from '../../../src/services/config-parser';
 
 class FakeFs implements vscode.FileSystem {
     private files = new Map<string, Uint8Array>();
