@@ -49,6 +49,25 @@ well‑isolated, and easy to test.
 - Domain interfaces and validator functions that belong strictly to one class
   may be defined in the same file; export them only if they’re used elsewhere.
 
+## 8. JavaScript sources are generated
+
+- The `src/` tree should contain **only** TypeScript source files for
+  application logic.  Any `.js` files under `src/` are considered build
+  artifacts and must not be edited directly.
+- Source files under `src/` are purely TypeScript.  The compiler (via
+  `tsc` or our esbuild-based workflow) emits all JavaScript into a separate
+  `dist/` directory specified by `outDir` in `tsconfig.json`.  This keeps the
+  tree clean and avoids accidental edits to generated code.  Any `.js` or
+  `.js.map` files found inside `src/` are leftovers and should be deleted.
+  The `.gitignore` has a catch‑all rule for `src/**/*.js` to prevent them
+  from sneaking into the repository.
+- Small wrapper scripts (e.g. `tools/loggen.js`) are permitted only when they
+  are merely bootstrappers; the actual implementation lives in a `.ts`
+  sibling and is executed via `ts-node` or through the build output.
+
+By keeping all business logic in TypeScript we get compile‑time checking,
+consistent type inference, and simpler refactoring.  Generated JavaScript
+should never be modified by hand.
 ## Enforcement
 
 - Linters (`eslint` with `import/no-cycle`, `no-restricted-imports`) should be

@@ -18,6 +18,13 @@ releases/
 .DS_Store
 Thumbs.db
 
+# build artifacts - compiled JavaScript must live in the outDir rather than
+# alongside the TypeScript sources.  `tsc`/esbuild emit into `dist/` and
+# the old per‑directory patterns below were replaced with a blanket rule.
+# Any stray .js or .js.map files under src/ should be removed from git.
+src/**/*.js
+src/**/*.js.map
+
 # Environment
 .env*
 
