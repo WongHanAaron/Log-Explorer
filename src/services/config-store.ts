@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { FilepathConfig, isFilepathConfig } from '../domain/filepath-config';
-import { FileLogLineConfig, isFileLogLineConfig } from '../domain/filelog-config';
+import { FileLogLineConfig } from '../domain/filelog-config';
 import { ConfigParser } from './config-parser';
 
 // small abstraction so callers can inject a fake in tests.  The real
@@ -8,9 +8,11 @@ import { ConfigParser } from './config-parser';
 // `FileSystemProvider` with additional helpers and events, so we alias that
 // concrete type here rather than duplicating its members.
 export type FsProvider = vscode.FileSystem;
-export type FsChangeEventSource = {
-    onDidChangeFile: vscode.Event<readonly vscode.FileChangeEvent[]>;
-};
+// A factory used to create filesystem watchers.  This is injectable for
+// unit tests; the default uses `vscode.workspace.createFileSystemWatcher`.
+export type WatcherFactory = (
+    pattern: vscode.GlobPattern
+) => vscode.FileSystemWatcher;
 
 // ── Categories & directory helpers ───────────────────────────────────────────
 
@@ -44,19 +46,33 @@ export type ConfigAddedCallback = (shortName: string) => void;
 
 class ConfigSubscriptionRegistry implements vscode.Disposable {
     private subscribers = new Map<ConfigCategory, Set<ConfigAddedCallback>>();
-    private readonly fsSubscription: vscode.Disposable;
+    private readonly watchers: vscode.FileSystemWatcher[] = [];
 
     constructor(
         private workspaceRoot: vscode.Uri,
-        private fsEvents: FsChangeEventSource
+        watcherFactory: WatcherFactory
     ) {
-        this.fsSubscription = this.fsEvents.onDidChangeFile((changes: readonly vscode.FileChangeEvent[]) => {
-            this.handleFileChanges(changes);
-        });
+        // create watchers for both category directories
+        const fpPattern = new vscode.RelativePattern(
+            workspaceRoot,
+            '.logex/filepath-configs/*.json'
+        );
+        const flPattern = new vscode.RelativePattern(
+            workspaceRoot,
+            '.logex/filelog-configs/*.json'
+        );
+        this.watchers.push(watcherFactory(fpPattern));
+        this.watchers.push(watcherFactory(flPattern));
+
+        for (const w of this.watchers) {
+            w.onDidCreate((uri) => this.handleFileChanges([{ type: vscode.FileChangeType.Created, uri }]));
+        }
     }
 
     dispose(): void {
-        this.fsSubscription.dispose();
+        for (const w of this.watchers) {
+            w.dispose();
+        }
         this.subscribers.clear();
     }
 
@@ -168,9 +184,9 @@ export class ConfigStore {
     constructor(
         private workspaceRoot: vscode.Uri,
         private fs: FsProvider = vscode.workspace.fs,
-        fsEvents: FsChangeEventSource = vscode.workspace.fs as unknown as FsChangeEventSource
+        watcherFactory: WatcherFactory = vscode.workspace.createFileSystemWatcher.bind(vscode.workspace)
     ) {
-        this.subscriptions = new ConfigSubscriptionRegistry(workspaceRoot, fsEvents);
+        this.subscriptions = new ConfigSubscriptionRegistry(workspaceRoot, watcherFactory);
     }
 
     dispose(): void {

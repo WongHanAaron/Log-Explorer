@@ -7,7 +7,7 @@ import { ConfigParser } from '../../../src/services/config-parser';
 class FakeFs implements vscode.FileSystem {
     private files = new Map<string, Uint8Array>();
     private dirs = new Set<string>();
-    private readonly fileChangeEmitter = new vscode.EventEmitter<vscode.FileChangeEvent[]>();
+    readonly fileChangeEmitter = new vscode.EventEmitter<vscode.FileChangeEvent[]>();
     readonly onDidChangeFile: vscode.Event<vscode.FileChangeEvent[]> =
         this.fileChangeEmitter.event;
 
@@ -222,10 +222,38 @@ describe('ConfigStore (filesystem interactions)', function () {
     let store: ConfigStore;
     let fs: FakeFs;
 
+    // helper factory that creates a watcher forwarding fs change events matching
+    // the relative glob pattern (simplified for tests).
+    function makeWatcherFactory(fs: FakeFs, root: vscode.Uri) {
+        return (pattern: vscode.GlobPattern): vscode.FileSystemWatcher => {
+            const emitter = new vscode.EventEmitter<vscode.Uri>();
+            const w: vscode.FileSystemWatcher = {
+                onDidCreate: emitter.event,
+                onDidChange: emitter.event,
+                onDidDelete: emitter.event,
+                dispose: () => emitter.dispose(),
+            } as any;
+            fs.fileChangeEmitter.event((changes) => {
+                for (const c of changes) {
+                    if (c.type !== vscode.FileChangeType.Created) {
+                        continue;
+                    }
+                    // pattern is RelativePattern, use its pattern portion to
+                    // check inclusion; this is a simple substring check.
+                    const pat = (pattern as vscode.RelativePattern).pattern.replace('*', '');
+                    if (c.uri.path.includes(pat)) {
+                        emitter.fire(c.uri);
+                    }
+                }
+            });
+            return w;
+        };
+    }
+
     beforeEach(() => {
         fs = new FakeFs();
         const root = vscode.Uri.parse('file:///workspace');
-        store = new ConfigStore(root, fs);
+        store = new ConfigStore(root, fs, makeWatcherFactory(fs, root));
     });
 
     it('can write, list and read a filepath config', async () => {
@@ -279,6 +307,8 @@ describe('ConfigStore (filesystem interactions)', function () {
             label: 'X',
             fields: []
         } as any);
+        // our fake watcher should fire asynchronously; allow a tick
+        await new Promise((r) => setTimeout(r, 0));
         assert.strictEqual(notified, true);
     });
 });
