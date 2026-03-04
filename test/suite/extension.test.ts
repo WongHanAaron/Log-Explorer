@@ -4,7 +4,36 @@ import * as os from 'os';
 import * as path from 'path';
 import * as fs from 'fs';
 
-suite('LogExplorer Extension', () => {
+// shared state used across multiple suites/tests
+let root: vscode.Uri;
+let ConfigStore: any;
+let ConfigCategory: any;
+
+suite('LogExplorer Extension', function () {
+
+    setup(async () => {
+        // initialize fresh workspace folder before any tests run
+        const tmpDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'logexplorer-test-'));
+        await fs.promises.mkdir(tmpDir, { recursive: true });
+        const removeCount = vscode.workspace.workspaceFolders ? vscode.workspace.workspaceFolders.length : 0;
+        vscode.workspace.updateWorkspaceFolders(0, removeCount, { uri: vscode.Uri.file(tmpDir) });
+        await new Promise((r) => setTimeout(r, 200));
+        if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0) {
+            root = vscode.workspace.workspaceFolders[0].uri;
+        } else {
+            throw new Error('Failed to create workspace folder');
+        }
+
+        const ext = vscode.extensions.getExtension('logexplorer.logexplorer');
+        assert.ok(ext, 'Extension should be present for tests');
+        if (ext && !ext.isActive) {
+            await ext.activate();
+        }
+        const exportsObj = (ext.exports || ext) as any;
+        ConfigStore = exportsObj.ConfigStore;
+        ConfigCategory = exportsObj.ConfigCategory;
+    });
+
     test('Extension should be present', () => {
         const extension = vscode.extensions.getExtension('logexplorer.logexplorer');
         assert.ok(extension, 'Extension should be found in installed extensions');
@@ -32,29 +61,6 @@ suite('LogExplorer Extension', () => {
         // caused a missing filesystem method error during panel creation.
         await vscode.commands.executeCommand('logexplorer.editLogFileSourceConfig');
     });
-    // create a fresh temporary workspace for every test run
-    const tmpDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'logexplorer-test-'));
-    await fs.promises.mkdir(tmpDir, { recursive: true });
-    // replace any existing workspace folders with the new one
-    const removeCount = vscode.workspace.workspaceFolders ? vscode.workspace.workspaceFolders.length : 0;
-    vscode.workspace.updateWorkspaceFolders(0, removeCount, { uri: vscode.Uri.file(tmpDir) });
-    // give the extension host a moment to pick up the change
-    await new Promise((r) => setTimeout(r, 200));
-    // after update attempt, grab the first folder
-    if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0) {
-        root = vscode.workspace.workspaceFolders[0].uri;
-    } else {
-        throw new Error('Failed to create workspace folder');
-    }
-
-    // activate extension and pull exports
-    const ext = vscode.extensions.getExtension('logexplorer.logexplorer');
-    assert.ok(ext, 'Extension should be present for tests');
-    const activated = await ext.activate();
-    // activated value may be our export object or void
-    const exportsObj = (ext.exports || activated) as any;
-    ConfigStore = exportsObj.ConfigStore;
-    ConfigCategory = exportsObj.ConfigCategory;
 });
 
 suite('config store I/O', () => {
@@ -171,7 +177,4 @@ test.skip('watcher triggers sync when .logex is created manually', async () => {
     // watcher should have invoked syncWorkspaceContext and updated state
     const lastWorkspaceContext2 = await getLastContext();
     assert.strictEqual(lastWorkspaceContext2.folderExists, true);
-});
-
-    });
 });
