@@ -8,6 +8,9 @@ import { ConfigParser } from './config-parser';
 // `FileSystemProvider` with additional helpers and events, so we alias that
 // concrete type here rather than duplicating its members.
 export type FsProvider = vscode.FileSystem;
+export type FsChangeEventSource = {
+    onDidChangeFile: vscode.Event<readonly vscode.FileChangeEvent[]>;
+};
 
 // ── Categories & directory helpers ───────────────────────────────────────────
 
@@ -39,49 +42,104 @@ function getConfigDir(
 
 export type ConfigAddedCallback = (shortName: string) => void;
 
-// maintain a set of callbacks per category
-const subscribers: Map<ConfigCategory, Set<ConfigAddedCallback>> = new Map();
+class ConfigSubscriptionRegistry implements vscode.Disposable {
+    private subscribers = new Map<ConfigCategory, Set<ConfigAddedCallback>>();
+    private readonly fsSubscription: vscode.Disposable;
 
-/**
- * Subscribe to notifications when a new config is added to the given category.
- *
- * Returns a `Disposable` which may be used to cancel the subscription.  The
- * disposal operation is idempotent.
- */
-function subscribeConfigAdded(
-    category: ConfigCategory,
-    cb: ConfigAddedCallback
-): vscode.Disposable {
-    let set = subscribers.get(category);
-    if (!set) {
-        set = new Set();
-        subscribers.set(category, set);
+    constructor(
+        private workspaceRoot: vscode.Uri,
+        private fsEvents: FsChangeEventSource
+    ) {
+        this.fsSubscription = this.fsEvents.onDidChangeFile((changes: readonly vscode.FileChangeEvent[]) => {
+            this.handleFileChanges(changes);
+        });
     }
-    set.add(cb);
-    let disposed = false;
-    return new vscode.Disposable(() => {
-        if (disposed) {
+
+    dispose(): void {
+        this.fsSubscription.dispose();
+        this.subscribers.clear();
+    }
+
+    subscribe(
+        category: ConfigCategory,
+        cb: ConfigAddedCallback
+    ): vscode.Disposable {
+        let set = this.subscribers.get(category);
+        if (!set) {
+            set = new Set();
+            this.subscribers.set(category, set);
+        }
+
+        set.add(cb);
+
+        let disposed = false;
+        return new vscode.Disposable(() => {
+            if (disposed) {
+                return;
+            }
+            disposed = true;
+            set!.delete(cb);
+        });
+    }
+
+    private handleFileChanges(changes: readonly vscode.FileChangeEvent[]): void {
+        for (const change of changes) {
+            if (change.type !== vscode.FileChangeType.Created) {
+                continue;
+            }
+
+            const parsed = this.tryParseConfigAdded(change.uri);
+            if (!parsed) {
+                continue;
+            }
+
+            this.notify(parsed.category, parsed.shortName);
+        }
+    }
+
+    private tryParseConfigAdded(
+        uri: vscode.Uri
+    ): { category: ConfigCategory; shortName: string } | undefined {
+        if (!uri.path.endsWith('.json')) {
+            return undefined;
+        }
+
+        const normalizedPath = uri.path.toLowerCase();
+        for (const category of [ConfigCategory.Filepath, ConfigCategory.Filelog]) {
+            const categoryDir = getConfigDir(this.workspaceRoot, category)
+                .path
+                .toLowerCase();
+            const prefix = `${categoryDir}/`;
+            if (!normalizedPath.startsWith(prefix)) {
+                continue;
+            }
+
+            const relative = uri.path.slice(prefix.length);
+            if (relative.includes('/')) {
+                return undefined;
+            }
+
+            return {
+                category,
+                shortName: relative.slice(0, -5),
+            };
+        }
+
+        return undefined;
+    }
+
+    private notify(category: ConfigCategory, shortName: string): void {
+        const set = this.subscribers.get(category);
+        if (!set) {
             return;
         }
-        disposed = true;
-        set!.delete(cb);
-    });
-}
 
-/**
- * Internal helper invoked after a config file has been written.
- */
-function notifyConfigAdded(category: ConfigCategory, shortName: string): void {
-    const set = subscribers.get(category);
-    if (!set) {
-        return;
-    }
-    for (const cb of set) {
-        try {
-            cb(shortName);
-        } catch (err) {
-            // ignore subscriber errors to avoid cascading failures
-            console.error(`subscriber error for ${category}/${shortName}`, err);
+        for (const cb of set) {
+            try {
+                cb(shortName);
+            } catch (err) {
+                console.error(`subscriber error for ${category}/${shortName}`, err);
+            }
         }
     }
 }
@@ -105,10 +163,19 @@ const ENCODING = 'utf-8';
  * Consumers may prefer this style for dependency injection or testability.
  */
 export class ConfigStore {
+    private readonly subscriptions: ConfigSubscriptionRegistry;
+
     constructor(
         private workspaceRoot: vscode.Uri,
-        private fs: FsProvider = vscode.workspace.fs
-    ) { }
+        private fs: FsProvider = vscode.workspace.fs,
+        fsEvents: FsChangeEventSource = vscode.workspace.fs as unknown as FsChangeEventSource
+    ) {
+        this.subscriptions = new ConfigSubscriptionRegistry(workspaceRoot, fsEvents);
+    }
+
+    dispose(): void {
+        this.subscriptions.dispose();
+    }
 
     private getCategoryDir(category: ConfigCategory): vscode.Uri {
         return getConfigDir(this.workspaceRoot, category);
@@ -159,11 +226,6 @@ export class ConfigStore {
         // `vscode.FileSystem.writeFile` accepts only uri and content on
         // current versions of the API (options are not needed).
         await this.fs.writeFile(uri, Buffer.from(json, ENCODING));
-        const category =
-            (data as any).pathPattern !== undefined
-                ? ConfigCategory.Filepath
-                : ConfigCategory.Filelog;
-        notifyConfigAdded(category, shortName);
     }
 
     private async deleteConfigInternal(
@@ -223,7 +285,7 @@ export class ConfigStore {
         category: ConfigCategory,
         cb: ConfigAddedCallback
     ): vscode.Disposable {
-        return subscribeConfigAdded(category, cb);
+        return this.subscriptions.subscribe(category, cb);
     }
 
     writeConfig(

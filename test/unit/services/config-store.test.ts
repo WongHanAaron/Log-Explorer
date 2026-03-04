@@ -7,10 +7,9 @@ import { ConfigParser } from '../../../src/services/config-parser';
 class FakeFs implements vscode.FileSystem {
     private files = new Map<string, Uint8Array>();
     private dirs = new Set<string>();
-    // minimal event implementation; nobody listens in our tests but the property
-    // is required by the type.
+    private readonly fileChangeEmitter = new vscode.EventEmitter<vscode.FileChangeEvent[]>();
     readonly onDidChangeFile: vscode.Event<vscode.FileChangeEvent[]> =
-        new vscode.EventEmitter<vscode.FileChangeEvent[]>().event;
+        this.fileChangeEmitter.event;
 
     // helpers
     private normalize(p: string) {
@@ -77,17 +76,34 @@ class FakeFs implements vscode.FileSystem {
 
     writeFile(uri: vscode.Uri, content: Uint8Array): Thenable<void> {
         const p = this.normalize(uri.fsPath);
+        const existed = this.files.has(p);
         // ensure parent directory exists
         const dir = path.posix.dirname(p);
         this.dirs.add(dir);
         this.files.set(p, content);
+        this.fileChangeEmitter.fire([
+            {
+                type: existed
+                    ? vscode.FileChangeType.Changed
+                    : vscode.FileChangeType.Created,
+                uri,
+            },
+        ]);
         return Promise.resolve();
     }
 
     delete(uri: vscode.Uri, _options?: { recursive?: boolean }): Thenable<void> {
         const p = this.normalize(uri.fsPath);
-        this.files.delete(p);
+        const existed = this.files.delete(p);
         // note: directories are not removed for simplicity
+        if (existed) {
+            this.fileChangeEmitter.fire([
+                {
+                    type: vscode.FileChangeType.Deleted,
+                    uri,
+                },
+            ]);
+        }
         return Promise.resolve();
     }
 
@@ -100,6 +116,16 @@ class FakeFs implements vscode.FileSystem {
         }
         this.files.delete(oldp);
         this.files.set(newp, data);
+        this.fileChangeEmitter.fire([
+            {
+                type: vscode.FileChangeType.Deleted,
+                uri: oldUri,
+            },
+            {
+                type: vscode.FileChangeType.Created,
+                uri: newUri,
+            },
+        ]);
         return Promise.resolve();
     }
 }

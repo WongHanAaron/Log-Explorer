@@ -25,7 +25,7 @@ const names = await store.listConfigNames(ConfigCategory.Filepath);
 // read a specific config
 const cfg = await store.getConfig(ConfigCategory.Filepath, 'app-logs');
 
-// subscribe to additions
+// subscribe to additions detected from filesystem events
 const disposable = store.subscribeConfigAdded(ConfigCategory.Filepath, name => {
   console.log('new filepath config', name);
 });
@@ -38,9 +38,10 @@ All operations return promises and may throw `Error` objects on I/O or
 validation failures.  The class is intentionally thin, but unlike earlier
 versions it now accepts an injectable filesystem provider (`FsProvider`) in
 its constructor; the default uses `vscode.workspace.fs`.  This makes it
-straightforward to supply an in‑memory fake in unit tests.  There are no
-public free functions in this module; all functionality is accessed via the
-`ConfigStore` instance.
+straightforward to supply an in‑memory fake in unit tests.  Subscriptions are
+backed by filesystem change events and are not triggered directly from
+`writeConfig` calls.  There are no public free functions in this module; all
+functionality is accessed via the `ConfigStore` instance.
 
 ### Parsing helpers
 
