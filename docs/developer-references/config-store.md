@@ -35,6 +35,24 @@ disposable.dispose();
 ```
 
 All operations return promises and may throw `Error` objects on I/O or
-validation failures.  The class is intentionally thin; most of the real work
-is done by the free functions in the same module, which are exported for
-internal use and unit testing.
+validation failures.  The class is intentionally thin, but unlike earlier
+versions it now accepts an injectable filesystem provider (`FsProvider`) in
+its constructor; the default uses `vscode.workspace.fs`.  This makes it
+straightforward to supply an in‑memory fake in unit tests.  There are no
+public free functions in this module; all functionality is accessed via the
+`ConfigStore` instance.
+
+### Parsing helpers
+
+To assist with filename conversion and JSON validation outside of a
+workspace, the module also exports `ConfigParser` with purely static methods:
+
+```ts
+import { ConfigParser } from 'logexplorer';
+
+const filename = ConfigParser.configFilename('app-logs'); // "app-logs.json"
+const cfg = ConfigParser.parseFilepathConfig(jsonString);
+```
+
+These helpers are useful in unit tests or other contexts where you want to
+exercise parsing logic without creating a `ConfigStore`.

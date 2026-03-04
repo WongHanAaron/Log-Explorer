@@ -34,6 +34,7 @@
 - [x] T004 [P] Implement `subscribeConfigAdded(category: ConfigCategory, cb: ConfigAddedCallback): vscode.Disposable` which adds `cb` to the appropriate set and returns a `Disposable` whose `dispose()` removes the callback (idempotent).
 - [x] T005 [P] Add internal helper `notifyConfigAdded(category: ConfigCategory, shortName: string): void` that iterates the set and invokes each callback.
 - [x] T006 [P] Modify existing `writeConfig` in `src/services/config-store.ts` to call `notifyConfigAdded` after successfully writing the file. Ensure `writeConfig` still accepts either `FilepathConfig` or `FileLogLineConfig` and continues to serialise and write JSON.
+- [x] T006a [P] Introduce `FsProvider` type alias and update `ConfigStore` to accept an injected filesystem provider (defaulting to `vscode.workspace.fs`).  Refactor all I/O helpers to be private instance methods using `this.fs` instead of `vscode.workspace.fs` so that the behaviour can be faked in unit tests.
 - [x] T007 [P] Add public API methods:
   - `async function listConfigNames(workspaceRoot: vscode.Uri, category: ConfigCategory): Promise<string[]>` that calls `listConfigs(getConfigDir(...))` and returns the result.
   - `async function getConfig(workspaceRoot: vscode.Uri, category: ConfigCategory, shortName: string): Promise<FilepathConfig | FileLogLineConfig>` which builds the appropriate dir, invokes `readFilepathConfig` or `readFileLogLineConfig` depending on category, and throws an `Error` with message `Config not found: ${category}/${shortName}` if the file doesn't exist (catch STAT errors) or rethrows parse/validation errors unchanged.
@@ -48,6 +49,7 @@
 **Independent Test**: write some configs into the .logex folder via the low‑level API or by hand, call `listConfigNames` and assert the returned array matches.
 
 - [x] T008 [US1] Add unit tests in `test/unit/services/config-store.test.ts` verifying `listConfigNames` returns correct names for both `ConfigCategory.Filepath` and `ConfigCategory.Filelog`. Include tests for empty directories and mixed non-json files.
+- [x] T008a [US?] Add unit tests exercising the filesystem abstraction by instantiating `ConfigStore` with a fake `FsProvider` and verifying that `writeConfig`, `listConfigNames`, `getConfig`, `deleteConfig`, `configExists`, and subscriptions work against the in-memory provider.
 
 ---
 
