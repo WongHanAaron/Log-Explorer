@@ -45,6 +45,9 @@ TypeScript 5.x, Node.js 18+: Follow standard conventions.  When authoring
 TypeScript code, consult `docs/typescript-guidelines.md` for our project‑wide
 rules on file/class isolation, exports, dependency injection, etc.
 
+# React UI Development. 
+When authoring UI code, consult the 'docs/react-ui-guidelines.md' for our conventions on webview structure, messaging, styling, and documentation.
+
 ## Recent Changes
 - 001-react-logfile-source: Added [e.g., Python 3.11, Swift 5.9, Rust 1.75 or NEEDS CLARIFICATION] + [e.g., FastAPI, UIKit, LLVM or NEEDS CLARIFICATION]
 - 001-new-session-panel: Added TypeScript 5.x, target ES2020 + VS Code API ^1.85.0; esbuild ^0.27
