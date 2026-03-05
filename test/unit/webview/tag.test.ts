@@ -27,6 +27,10 @@ describe('TagSet component', () => {
         assert.ok(pillElement, 'pill should be a button');
         assert.strictEqual(pillElement?.classList.contains('capitalize'), false);
         assert.strictEqual(pillElement?.classList.contains('text-center'), true);
+        // icon margin should be reduced so text remains centered
+        const svg = pillElement?.querySelector('svg');
+        assert.ok(svg, 'should have remove icon');
+        assert.strictEqual(svg?.classList.contains('ml-0.5'), true);
         // click add
         fireEvent.click(screen.getByRole('button', { name: /add/i }));
         const input = screen.getByRole('textbox');

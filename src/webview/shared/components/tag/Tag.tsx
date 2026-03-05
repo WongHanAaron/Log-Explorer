@@ -67,7 +67,7 @@ export function Tag(props: TagProps) {
             {value}
             {onRemove && (
                 <X
-                    className="ml-1 h-3 w-3 cursor-pointer text-destructive-foreground hover:text-destructive-foreground"
+                    className="ml-0.5 h-3 w-3 cursor-pointer text-destructive-foreground hover:text-destructive-foreground"
                     onClick={e => {
                         e.stopPropagation();
                         onRemove();
