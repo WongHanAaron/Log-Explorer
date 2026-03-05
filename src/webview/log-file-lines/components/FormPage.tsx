@@ -40,11 +40,11 @@ export interface FormPageProps {
     rootXpath: string;
     setRootXpath: (v: string) => void;
     textFields: TextField[];
-    setTextFields: (f: TextField[]) => void;
+    setTextFields: React.Dispatch<React.SetStateAction<TextField[]>>;
     xmlFields: XmlField[];
-    setXmlFields: (f: XmlField[]) => void;
+    setXmlFields: React.Dispatch<React.SetStateAction<XmlField[]>>;
     jsonFields: JsonField[];
-    setJsonFields: (f: JsonField[]) => void;
+    setJsonFields: React.Dispatch<React.SetStateAction<JsonField[]>>;
     isNew: boolean;
     errors: { shortName?: string; label?: string };
     status: { text: string; kind: "info" | "success" | "error" } | null;
@@ -81,33 +81,33 @@ export function FormPage({
 }: FormPageProps) {
     // helper functions for field manipulation
     const addTextField = () => {
-        setTextFields(prev => [...prev, { name: "", extraction: { kind: "prefix-suffix", prefix: "" } }]);
+        setTextFields((prev: TextField[]) => [...prev, { name: "", extraction: { kind: "prefix-suffix", prefix: "" } }]);
     };
     const removeTextField = (i: number) => {
-        setTextFields(prev => prev.filter((_, idx) => idx !== i));
+        setTextFields((prev: TextField[]) => prev.filter((_, idx) => idx !== i));
     };
     const updateTextField = (i: number, field: Partial<TextField>) => {
-        setTextFields(prev => {
+        setTextFields((prev: TextField[]) => {
             const copy = [...prev];
             copy[i] = { ...copy[i], ...field };
             return copy;
         });
     };
 
-    const addXmlField = () => setXmlFields(prev => [...prev, { name: "", xpath: "" }]);
-    const removeXmlField = (i: number) => setXmlFields(prev => prev.filter((_, idx) => idx !== i));
+    const addXmlField = () => setXmlFields((prev: XmlField[]) => [...prev, { name: "", xpath: "" }]);
+    const removeXmlField = (i: number) => setXmlFields((prev: XmlField[]) => prev.filter((_, idx) => idx !== i));
     const updateXmlField = (i: number, field: Partial<XmlField>) => {
-        setXmlFields(prev => {
+        setXmlFields((prev: XmlField[]) => {
             const copy = [...prev];
             copy[i] = { ...copy[i], ...field };
             return copy;
         });
     };
 
-    const addJsonField = () => setJsonFields(prev => [...prev, { name: "", jsonPath: "" }]);
-    const removeJsonField = (i: number) => setJsonFields(prev => prev.filter((_, idx) => idx !== i));
+    const addJsonField = () => setJsonFields((prev: JsonField[]) => [...prev, { name: "", jsonPath: "" }]);
+    const removeJsonField = (i: number) => setJsonFields((prev: JsonField[]) => prev.filter((_, idx) => idx !== i));
     const updateJsonField = (i: number, field: Partial<JsonField>) => {
-        setJsonFields(prev => {
+        setJsonFields((prev: JsonField[]) => {
             const copy = [...prev];
             copy[i] = { ...copy[i], ...field };
             return copy;
