@@ -49,6 +49,8 @@ export interface TextLineConfig {
     label: string;
     description?: string;
     fields: TextField[];
+    /** Optional tag list for categorizing this line config */
+    tags?: string[];
 }
 
 // ── XML Line Config ───────────────────────────────────────────────────────────
@@ -66,6 +68,8 @@ export interface XmlLineConfig {
     description?: string;
     rootXpath: string;
     fields: XmlFieldMapping[];
+    /** Optional tag list for categorizing this line config */
+    tags?: string[];
 }
 
 // ── JSON Line Config ──────────────────────────────────────────────────────────
@@ -86,6 +90,8 @@ export interface JsonLineConfig {
     label: string;
     description?: string;
     fields: JsonFieldMapping[];
+    /** Optional tag list for categorizing this line config */
+    tags?: string[];
 }
 
 // ── Union ─────────────────────────────────────────────────────────────────────
@@ -104,6 +110,14 @@ export function isFileLogLineConfig(obj: unknown): obj is FileLogLineConfig {
     }
     if (typeof c.label !== 'string' || c.label.trim().length === 0) {
         return false;
+    }
+    if (c.tags !== undefined) {
+        if (!Array.isArray(c.tags)) { return false; }
+        for (const t of c.tags) {
+            if (typeof t !== 'string' || t.trim().length === 0) {
+                return false;
+            }
+        }
     }
     switch (c.type) {
         case 'text': return isTextLineConfig(c);

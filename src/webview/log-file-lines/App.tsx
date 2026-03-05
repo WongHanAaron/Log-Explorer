@@ -14,8 +14,8 @@ const vscode = acquireVsCodeApi();
 
 export function App() {
     const [shortName, setShortName] = useState("");
-    const [label, setLabel] = useState("");
     const [description, setDescription] = useState("");
+    const [tags, setTags] = useState<string[]>([]);
     const [lineType, setLineType] = useState<"text" | "xml" | "json">("text");
     const [rootXpath, setRootXpath] = useState("");
 
@@ -24,7 +24,7 @@ export function App() {
     const [jsonFields, setJsonFields] = useState<JsonField[]>([]);
 
     const [isNew, setIsNew] = useState(true);
-    const [errors, setErrors] = useState<{ shortName?: string; label?: string }>({});
+    const [errors, setErrors] = useState<{ shortName?: string }>({});
     const [status, setStatus] = useState<{ text: string; kind: "info" | "success" | "error" } | null>(null);
 
     const KEBAB_RE = /^[a-z0-9]+(-[a-z0-9]+)*$/;
@@ -39,8 +39,9 @@ export function App() {
                     setIsNew(msg.isNew);
                     if (cfg) {
                         setShortName(cfg.shortName);
-                        setLabel(cfg.label);
+                        // label is stored but not editable
                         setDescription(cfg.description || "");
+                        setTags(cfg.tags || []);
                         setLineType(cfg.type || "text");
                         setTextFields(cfg.textFields || []);
                         setXmlFields(cfg.xmlFields || []);
@@ -48,7 +49,7 @@ export function App() {
                         setRootXpath(cfg.rootXpath || "");
                     } else {
                         // clear
-                        setShortName(""); setLabel(""); setDescription("");
+                        setShortName(""); setDescription(""); setTags([]);
                         setLineType("text"); setTextFields([]); setXmlFields([]); setJsonFields([]); setRootXpath("");
                     }
                     break;
@@ -89,10 +90,9 @@ export function App() {
         const errs: any = {};
         if (!shortName.trim()) { errs.shortName = "Short name is required."; }
         else if (!KEBAB_RE.test(shortName.trim())) { errs.shortName = "Short name must be kebab-case."; }
-        if (!label.trim()) { errs.label = "Label is required."; }
         setErrors(errs);
         return Object.keys(errs).length === 0;
-    }, [shortName, label]);
+    }, [shortName]);
 
     const onSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -101,8 +101,8 @@ export function App() {
         const payload: any = {
             type: lineType,
             shortName: shortName.trim(),
-            label: label.trim(),
             ...(description.trim() ? { description: description.trim() } : {}),
+            tags,
         };
         if (lineType === "xml") payload.rootXpath = rootXpath;
         if (textFields.length) payload.textFields = textFields;
@@ -117,10 +117,16 @@ export function App() {
         <FormPage
             shortName={shortName}
             setShortName={setShortName}
-            label={label}
-            setLabel={setLabel}
             description={description}
             setDescription={setDescription}
+            tags={tags}
+            onAddTag={tag => setTags(prev => [...prev, tag])}
+            onRenameTag={(i, tag) => setTags(prev => {
+                const copy = [...prev];
+                copy[i] = tag;
+                return copy;
+            })}
+            onRemoveTag={i => setTags(prev => prev.filter((_, idx) => idx !== i))}
             lineType={lineType}
             setLineType={setLineType}
             rootXpath={rootXpath}

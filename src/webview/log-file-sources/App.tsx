@@ -14,13 +14,13 @@ const vscode = acquireVsCodeApi();
 
 export function App() {
     const [shortName, setShortName] = useState("");
-    const [label, setLabel] = useState("");
     const [pathPattern, setPathPattern] = useState("");
     const [description, setDescription] = useState("");
+    const [tags, setTags] = useState<string[]>([]);
 
     const [isNew, setIsNew] = useState(true);
     const [originalShortName, setOriginalShortName] = useState<string | null>(null);
-    const [errors, setErrors] = useState({ shortName: "", label: "", pathPattern: "" });
+    const [errors, setErrors] = useState({ shortName: "", pathPattern: "" });
     const [status, setStatus] = useState<{ text: string; kind: "info" | "success" | "error" } | null>(null);
 
     const KEBAB_RE = /^[a-z0-9]+(-[a-z0-9]+)*$/;
@@ -34,10 +34,16 @@ export function App() {
                     setIsNew(msg.isNew);
                     if (cfg) {
                         setShortName(cfg.shortName);
-                        setLabel(cfg.label);
                         setPathPattern(cfg.pathPattern);
                         setDescription(cfg.description ?? "");
+                        setTags(cfg.tags || []);
                         setOriginalShortName(cfg.shortName);
+                    } else {
+                        setShortName("");
+                        setPathPattern("");
+                        setDescription("");
+                        setTags([]);
+                        setOriginalShortName(null);
                     }
                     break;
                 }
@@ -71,16 +77,12 @@ export function App() {
 
     const validateForm = useCallback(() => {
         let valid = true;
-        const errs = { shortName: "", label: "", pathPattern: "" };
+        const errs = { shortName: "", pathPattern: "" };
         if (!shortName.trim()) {
             errs.shortName = "Short name is required.";
             valid = false;
         } else if (!KEBAB_RE.test(shortName.trim())) {
             errs.shortName = "Short name must be kebab-case (lowercase letters, digits, hyphens).";
-            valid = false;
-        }
-        if (!label.trim()) {
-            errs.label = "Label is required.";
             valid = false;
         }
         if (!pathPattern.trim()) {
@@ -89,7 +91,7 @@ export function App() {
         }
         setErrors(errs);
         return valid;
-    }, [shortName, label, pathPattern]);
+    }, [shortName, pathPattern]);
 
     const onShortNameBlur = () => {
         const name = shortName.trim();
@@ -107,9 +109,9 @@ export function App() {
             type: "filepath-config:save",
             config: {
                 shortName: shortName.trim(),
-                label: label.trim(),
                 pathPattern: pathPattern.trim(),
                 ...(description.trim() ? { description: description.trim() } : {}),
+                tags,
             },
         });
     };
@@ -122,12 +124,18 @@ export function App() {
         <FormPage
             shortName={shortName}
             setShortName={setShortName}
-            label={label}
-            setLabel={setLabel}
             pathPattern={pathPattern}
             setPathPattern={setPathPattern}
             description={description}
             setDescription={setDescription}
+            tags={tags}
+            onAddTag={tag => setTags(prev => [...prev, tag])}
+            onRenameTag={(i, tag) => setTags(prev => {
+                const copy = [...prev];
+                copy[i] = tag;
+                return copy;
+            })}
+            onRemoveTag={i => setTags(prev => prev.filter((_, idx) => idx !== i))}
             isNew={isNew}
             errors={errors}
             status={status}

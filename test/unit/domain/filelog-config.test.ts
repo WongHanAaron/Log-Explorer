@@ -28,6 +28,16 @@ describe('FileLogLineConfig domain', function () {
             };
             assert.strictEqual(isFileLogLineConfig(cfg), true);
         });
+        it('accepts tags array on text config', () => {
+            const cfg: TextLineConfig = {
+                type: 'text',
+                shortName: 'tagged',
+                label: 'Tagged',
+                fields: [{ name: 'x', extraction: { kind: 'prefix-suffix', prefix: 'x' } }],
+                tags: ['foo', 'bar']
+            };
+            assert.strictEqual(isFileLogLineConfig(cfg), true);
+        });
 
         it('accepts prefix-suffix without suffix (to end-of-line)', () => {
             const cfg: TextLineConfig = {
@@ -101,6 +111,17 @@ describe('FileLogLineConfig domain', function () {
             };
             assert.strictEqual(isFileLogLineConfig(cfg), true);
         });
+        it('accepts tags array on xml config', () => {
+            const cfg: XmlLineConfig = {
+                type: 'xml',
+                shortName: 'events2',
+                label: 'Events2',
+                rootXpath: '//Event',
+                fields: [],
+                tags: ['alpha']
+            };
+            assert.strictEqual(isFileLogLineConfig(cfg), true);
+        });
 
         it('rejects xml config without rootXpath', () => {
             const cfg = { ...base('xml'), fields: [{ name: 'x', xpath: '//x' }] };
@@ -129,6 +150,15 @@ describe('FileLogLineConfig domain', function () {
                 ]
             };
             assert.strictEqual(isFileLogLineConfig(cfg), true);
+        });
+        it('rejects invalid tags', () => {
+            const cfg = {
+                ...base('text'),
+                label: 'Bad',
+                fields: [],
+                tags: ['good', '']
+            };
+            assert.strictEqual(isFileLogLineConfig(cfg), false);
         });
 
         it('rejects json field without jsonPath', () => {

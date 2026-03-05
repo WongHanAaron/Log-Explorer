@@ -2,6 +2,7 @@ import React from "react";
 import { Input } from "../../shared/components/ui/input";
 import { Button } from "../../shared/components/ui/button";
 import { Label } from "../../shared/components/ui/label";
+import { TagSet } from "../../shared/components/tag/TagSet";
 
 export type ExtractionKind = "prefix-suffix" | "regex";
 export interface TextField {
@@ -31,10 +32,13 @@ export interface JsonField {
 export interface FormPageProps {
     shortName: string;
     setShortName: (s: string) => void;
-    label: string;
-    setLabel: (s: string) => void;
+    // label removed from UI; kept internally by host if needed
     description: string;
     setDescription: (s: string) => void;
+    tags: string[];
+    onAddTag: (tag: string) => void;
+    onRenameTag: (index: number, tag: string) => void;
+    onRemoveTag: (index: number) => void;
     lineType: "text" | "xml" | "json";
     setLineType: (v: "text" | "xml" | "json") => void;
     rootXpath: string;
@@ -46,7 +50,7 @@ export interface FormPageProps {
     jsonFields: JsonField[];
     setJsonFields: React.Dispatch<React.SetStateAction<JsonField[]>>;
     isNew: boolean;
-    errors: { shortName?: string; label?: string };
+    errors: { shortName?: string };
     status: { text: string; kind: "info" | "success" | "error" } | null;
     validateForm: () => boolean;
     onSubmit: (e: React.FormEvent) => void;
@@ -57,10 +61,12 @@ export interface FormPageProps {
 export function FormPage({
     shortName,
     setShortName,
-    label,
-    setLabel,
     description,
     setDescription,
+    tags,
+    onAddTag,
+    onRenameTag,
+    onRemoveTag,
     lineType,
     setLineType,
     rootXpath,
@@ -126,9 +132,13 @@ export function FormPage({
                     <span className="text-xs text-destructive-foreground">{errors.shortName}</span>
                 </div>
                 <div className="flex flex-col gap-1 mb-3">
-                    <Label htmlFor="label">Label <span className="text-destructive-foreground">*</span></Label>
-                    <Input id="label" value={label} onChange={e => setLabel(e.target.value)} autoComplete="off" placeholder="e.g. Nginx Combined Format" />
-                    <span className="text-xs text-destructive-foreground">{errors.label}</span>
+                    <Label>Tags</Label>
+                    <TagSet
+                        tags={tags}
+                        onAdd={onAddTag}
+                        onRename={onRenameTag}
+                        onRemove={onRemoveTag}
+                    />
                 </div>
                 <div className="flex flex-col gap-1 mb-3">
                     <Label htmlFor="description">Description</Label>

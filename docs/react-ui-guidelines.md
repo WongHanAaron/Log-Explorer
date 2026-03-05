@@ -64,7 +64,9 @@ pattern exactly to keep code consistent, maintainable, and theme‑aware.
      focused.  Each component file should export a single React function
      component.
    - Use shared UI components (`Input`, `Button`, `Label`, etc.) from
-     `src/webview/shared/components/ui` for consistency.
+     `src/webview/shared/components/ui` for consistency.  For tag-like or
+     pill controls, use the new `Tag`/`TagSet` components located at
+     `src/webview/shared/components/tag`.
    - Use `useEffect` to send `{ type: 'ready' }` once and to set up a
      `window.addEventListener('message',…)` listener.
    - Handle messages by casting to `HostToWebviewMessage` (imported from
