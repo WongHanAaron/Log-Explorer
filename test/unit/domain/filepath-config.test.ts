@@ -76,7 +76,7 @@ describe('FilepathConfig domain', function () {
         });
         it('accepts with tags array', () => {
             assert.strictEqual(
-                isFilepathConfig({ ...valid, tags: ['foo','bar'] }),
+                isFilepathConfig({ ...valid, tags: ['foo', 'bar'] }),
                 true
             );
         });
