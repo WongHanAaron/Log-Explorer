@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useCallback } from "react";
 import type { HostToWebviewMessage, WebviewToHostMessage } from "../messages";
-import { FormPage } from "./components/FormPage";
+import { FormPage, TextField, XmlField, JsonField } from "./components/FormPage";
 
 // VS Code API helper available in webview context
 
 declare const acquireVsCodeApi: () => {
-    postMessage(message: WebviewToHostMessage | { type: string; [key: string]: any }): void;
+    postMessage(message: WebviewToHostMessage | { type: string;[key: string]: any }): void;
     getState(): unknown;
     setState(state: unknown): void;
 };
@@ -19,9 +19,9 @@ export function App() {
     const [lineType, setLineType] = useState<"text" | "xml" | "json">("text");
     const [rootXpath, setRootXpath] = useState("");
 
-    const [textFields, setTextFields] = useState<any[]>([]);
-    const [xmlFields, setXmlFields] = useState<any[]>([]);
-    const [jsonFields, setJsonFields] = useState<any[]>([]);
+    const [textFields, setTextFields] = useState<TextField[]>([]);
+    const [xmlFields, setXmlFields] = useState<XmlField[]>([]);
+    const [jsonFields, setJsonFields] = useState<JsonField[]>([]);
 
     const [isNew, setIsNew] = useState(true);
     const [errors, setErrors] = useState<{ shortName?: string; label?: string }>({});
@@ -85,14 +85,14 @@ export function App() {
     }, [isNew]);
 
     // validation
-    const validateForm = () => {
+    const validateForm = useCallback(() => {
         const errs: any = {};
         if (!shortName.trim()) { errs.shortName = "Short name is required."; }
         else if (!KEBAB_RE.test(shortName.trim())) { errs.shortName = "Short name must be kebab-case."; }
         if (!label.trim()) { errs.label = "Label is required."; }
         setErrors(errs);
         return Object.keys(errs).length === 0;
-    };
+    }, [shortName, label]);
 
     const onSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -135,8 +135,9 @@ export function App() {
             errors={errors}
             status={status}
             onSubmit={onSubmit}
+            onCancel={() => vscode.postMessage({ type: "filelog-config:cancel" })}
             validateForm={validateForm}
-            onTestRegex={(i:number)=>vscode.postMessage({type:"filelog-config:test-regex",fieldIndex:i,pattern:textFields[i].extraction.pattern||"",sampleLine:textFields[i].sample||""})}
+            onTestRegex={(i: number) => vscode.postMessage({ type: "filelog-config:test-regex", fieldIndex: i, pattern: textFields[i].extraction.pattern || "", sampleLine: textFields[i].sample || "" })}
         />
     );
 }

@@ -50,6 +50,7 @@ export interface FormPageProps {
     status: { text: string; kind: "info" | "success" | "error" } | null;
     validateForm: () => boolean;
     onSubmit: (e: React.FormEvent) => void;
+    onCancel: () => void;
     onTestRegex: (index: number) => void;
 }
 
@@ -75,6 +76,7 @@ export function FormPage({
     status,
     validateForm,
     onSubmit,
+    onCancel,
     onTestRegex,
 }: FormPageProps) {
     // helper functions for field manipulation
@@ -226,7 +228,7 @@ export function FormPage({
 
                 <div className="flex gap-2 mb-3">
                     <Button type="submit">Save</Button>
-                    <Button variant="secondary" onClick={() => vscode.postMessage({ type: "filelog-config:cancel" })}>Cancel</Button>
+                    <Button variant="secondary" onClick={onCancel}>Cancel</Button>
                 </div>
 
                 {status && (
