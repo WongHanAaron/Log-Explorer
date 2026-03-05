@@ -212,6 +212,17 @@ describe('ConfigStore (pure parsing)', function () {
             const json = JSON.stringify({ type: 'unknown', shortName: 'x', label: 'X', fields: [] });
             assert.throws(() => ConfigParser.parseFileLogLineConfig(json), /invalid.*filelog/i);
         });
+        it('accepts tags in filelog JSON', () => {
+            const json = JSON.stringify({
+                type: 'text',
+                shortName: 'foo',
+                label: 'Foo',
+                fields: [],
+                tags: ['a','b']
+            });
+            const cfg = ConfigParser.parseFileLogLineConfig(json);
+            assert.deepStrictEqual(cfg.tags, ['a','b']);
+        });
     });
 
 
