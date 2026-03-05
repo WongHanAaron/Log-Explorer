@@ -39,7 +39,7 @@ describe('TagSet component', () => {
         fireEvent.mouseOver(pillElement!);
         assert.strictEqual(svg?.classList.contains('opacity-100'), true);
         const span2 = pillElement?.querySelector('span');
-        assert.ok(span2?.classList.contains('-translate-x-2'));
+        assert.ok(span2?.classList.contains('-translate-x-1'));
         // click add
         fireEvent.click(screen.getByRole('button', { name: /add/i }));
         const input = screen.getByRole('textbox');

@@ -62,13 +62,13 @@ export function Tag(props: TagProps) {
         <Button
             size="sm"
             variant="default"
-            className="relative rounded-full text-center items-center leading-none pl-4 pr-3 py-1"
+            className="relative rounded-full text-center items-center leading-none px-3 py-1"
             onClick={onClick}
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}
         >
             <span className={
-                `relative transition-transform duration-200 ${hovered ? '-translate-x-2' : ''} -top-px`
+                `relative transition-transform duration-200 ${hovered ? '-translate-x-1' : ''} -top-px`
             }>
                 {value}
             </span>
