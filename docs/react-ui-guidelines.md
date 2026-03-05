@@ -47,15 +47,22 @@ pattern exactly to keep code consistent, maintainable, and theme‑aware.
    ```tsx
    import React, { StrictMode } from 'react';
    import { createRoot } from 'react-dom/client';
-   import { App } from './App'; // or inline component
+   import { App } from './App'; // entrypoint component that contains the page logic
 
    createRoot(document.getElementById('root')!).render(
      <StrictMode><App /></StrictMode>
    );
    ```
+   The `App` component is responsible for holding local state, registering
+   message handlers, and orchestrating child components. Keep `main.tsx` as
+   a trivial bootstrapper so that the bundle size stays small.
 3. Use `acquireVsCodeApi()` to obtain the VS Code API.  Prefer a helper
    `getVsCodeApi()` in `webview/shared/lib/vscode.ts` if available.
 4. Components: put them under `src/webview/<featureName>/components`.
+   - The top‑level `App` can delegate portions of the UI to smaller
+     components (e.g. a `FormPage` or `SettingsPanel`) to keep files
+     focused.  Each component file should export a single React function
+     component.
    - Use shared UI components (`Input`, `Button`, `Label`, etc.) from
      `src/webview/shared/components/ui` for consistency.
    - Use `useEffect` to send `{ type: 'ready' }` once and to set up a

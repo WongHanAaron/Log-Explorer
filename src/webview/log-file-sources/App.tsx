@@ -5,7 +5,7 @@ import { FormPage } from "./components/FormPage";
 // VS Code API helper made available inside webview context
 
 declare const acquireVsCodeApi: () => {
-    postMessage(message: WebviewToHostMessage | { type: string; [key: string]: any }): void;
+    postMessage(message: WebviewToHostMessage | { type: string;[key: string]: any }): void;
     getState(): unknown;
     setState(state: unknown): void;
 };
