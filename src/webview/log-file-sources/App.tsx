@@ -14,8 +14,6 @@ const vscode = acquireVsCodeApi();
 
 export function App() {
     const [shortName, setShortName] = useState("");
-    // label field removed from UI; keep track internally for compatibility if needed
-    const [label, setLabel] = useState("");
     const [pathPattern, setPathPattern] = useState("");
     const [description, setDescription] = useState("");
     const [tags, setTags] = useState<string[]>([]);
@@ -36,15 +34,12 @@ export function App() {
                     setIsNew(msg.isNew);
                     if (cfg) {
                         setShortName(cfg.shortName);
-                        // retain label internally but not shown to user
-                        setLabel(cfg.label);
                         setPathPattern(cfg.pathPattern);
                         setDescription(cfg.description ?? "");
                         setTags(cfg.tags || []);
                         setOriginalShortName(cfg.shortName);
                     } else {
                         setShortName("");
-                        setLabel("");
                         setPathPattern("");
                         setDescription("");
                         setTags([]);
@@ -114,8 +109,6 @@ export function App() {
             type: "filepath-config:save",
             config: {
                 shortName: shortName.trim(),
-                // keep previous label or default to shortName if blank
-                label: label.trim() || shortName.trim(),
                 pathPattern: pathPattern.trim(),
                 ...(description.trim() ? { description: description.trim() } : {}),
                 tags,
