@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { getLogFileLinesHtml } from './logFileLinesHtml';
+import { getReactWebviewHtml } from '../../utils/reactWebview';
 import { ConfigStore, ConfigCategory } from '../../services/config-store';
 import { isFileLogLineConfig } from '../../domain/filelog-config';
 import type {
@@ -17,8 +17,7 @@ export class LogFileLinesPanel {
     private readonly _panel: vscode.WebviewPanel;
     private readonly _extensionUri: vscode.Uri;
     private readonly _configDirUri: vscode.Uri;
-    private readonly _store: ConfigStore;
-    private _disposables: vscode.Disposable[] = [];
+    private readonly _store: ConfigStore; private readonly _shortName?: string; private _disposables: vscode.Disposable[] = [];
 
     private constructor(
         panel: vscode.WebviewPanel,
@@ -31,7 +30,7 @@ export class LogFileLinesPanel {
         this._extensionUri = extensionUri;
         this._configDirUri = configDirUri;
         this._store = new ConfigStore(workspaceRoot!);
-        this._panel.webview.html = this._buildHtml();
+        this._panel.webview.html = this._getWebviewContent(this._panel.webview);
 
         this._panel.webview.onDidReceiveMessage(
             (msg: unknown) => this._handleMessage(msg),
@@ -40,7 +39,7 @@ export class LogFileLinesPanel {
         );
         this._panel.onDidDispose(() => this.dispose(), null, this._disposables);
 
-        setTimeout(() => this._sendLoad(shortName), 100);
+        this._shortName = shortName;
     }
 
     public static createOrShow(extensionUri: vscode.Uri, shortName?: string): void {
@@ -90,21 +89,22 @@ export class LogFileLinesPanel {
 
     // ── HTML generation ───────────────────────────────────────────────────────
 
-    private _buildHtml(): string {
-        return getLogFileLinesHtml(this._panel.webview, this._extensionUri);
+    private _getWebviewContent(webview: vscode.Webview): string {
+        return getReactWebviewHtml(webview, this._extensionUri, 'log-file-lines.js', 'Log File Line Config');
     }
 
 
     // ── Message flow ──────────────────────────────────────────────────────────
 
     private async _sendLoad(shortName?: string): Promise<void> {
-        if (shortName) {
+        const name = shortName ?? this._shortName;
+        if (name) {
             try {
-                const config = await this._store.getConfig(ConfigCategory.Filelog, shortName);
+                const config = await this._store.getConfig(ConfigCategory.Filelog, name);
                 this._panel.webview.postMessage({ type: 'filelog-config:load', config, isNew: false });
             } catch (err) {
                 vscode.window.showErrorMessage(
-                    `Log Explorer: Could not load "${shortName}": ${(err as Error).message}`
+                    `Log Explorer: Could not load "${name}": ${(err as Error).message}`
                 );
                 this._panel.webview.postMessage({ type: 'filelog-config:load', config: null, isNew: true });
             }
@@ -118,6 +118,10 @@ export class LogFileLinesPanel {
         const m = msg as { type: string };
 
         switch (m.type) {
+            case 'ready': {
+                this._sendLoad();
+                break;
+            }
             case 'filelog-config:save': {
                 const { config } = msg as FilelogConfigSaveMessage;
                 if (!isFileLogLineConfig(config)) {

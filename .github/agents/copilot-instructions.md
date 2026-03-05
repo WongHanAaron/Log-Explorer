@@ -1,4 +1,4 @@
-﻿# LogExplorer Development Guidelines
+# LogExplorer Development Guidelines
 
 Auto-generated from all feature plans. Last updated: 2026-02-28
 
@@ -14,6 +14,8 @@ Auto-generated from all feature plans. Last updated: 2026-02-28
 - Local workspace filesystem — `.logex` folder created via `vscode.workspace.fs` (cross-platform, no native I/O) (001-extension-ui-commands)
 - TypeScript 5.x, target ES2020 + VS Code API ^1.85.0; esbuild ^0.27 (001-new-session-panel)
 - Filesystem — `.logex/session-templates/*.json` (read) and `.logex/sessions/<name>/session.json` (read/write) via `vscode.workspace.fs` (001-new-session-panel)
+- [e.g., Python 3.11, Swift 5.9, Rust 1.75 or NEEDS CLARIFICATION] + [e.g., FastAPI, UIKit, LLVM or NEEDS CLARIFICATION] (001-react-logfile-source)
+- [if applicable, e.g., PostgreSQL, CoreData, files or N/A] (001-react-logfile-source)
 
 - TypeScript 5.x, Node.js 18+ + @types/vscode (extension API types), esbuild (bundler) (001-vscode-extension-setup)
 
@@ -43,11 +45,13 @@ TypeScript 5.x, Node.js 18+: Follow standard conventions.  When authoring
 TypeScript code, consult `docs/typescript-guidelines.md` for our project‑wide
 rules on file/class isolation, exports, dependency injection, etc.
 
+# React UI Development. 
+When authoring UI code, consult the 'docs/react-ui-guidelines.md' for our conventions on webview structure, messaging, styling, and documentation.
+
 ## Recent Changes
+- 001-react-logfile-source: Added [e.g., Python 3.11, Swift 5.9, Rust 1.75 or NEEDS CLARIFICATION] + [e.g., FastAPI, UIKit, LLVM or NEEDS CLARIFICATION]
 - 001-new-session-panel: Added TypeScript 5.x, target ES2020 + VS Code API ^1.85.0; esbuild ^0.27
 - 001-extension-ui-commands: Added TypeScript 5.x targeting ES2020 + `@types/vscode ^1.85.0`, `esbuild` (bundler), `typescript ^5.x`
-- 003-file-source-setup: Added `vscode.workspace.fs` + `vscode.Uri` for config I/O; `WebviewPanel` for config editors; manual type-predicate validation; kebab-case name helpers; native `RegExp` named capture groups; shared `src/webview/messages.ts` message union types
-- 003-file-source-setup: Added domain modules `src/domain/filepath-config.ts`, `src/domain/filelog-config.ts`; service `src/services/config-store.ts`; two new webview editors under `src/webview/filepath-editor/` and `src/webview/filelog-editor/`
 
 
 <!-- MANUAL ADDITIONS START -->
