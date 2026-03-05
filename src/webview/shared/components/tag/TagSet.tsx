@@ -39,7 +39,9 @@ export function TagSet({
 
     const finishEdit = () => {
         if (editingIndex === null) return;
-        const value = editingValue.trim();
+        let value = editingValue.trim();
+        // normalize to lowercase per requirements
+        value = value.toLowerCase();
         // if editing existing tag and blank -> remove
         if (value === "") {
             onRemove(editingIndex);
@@ -47,9 +49,8 @@ export function TagSet({
             setEditingValue("");
             return;
         }
-        const lower = value.toLowerCase();
         const existing = tags.findIndex(
-            (t, i) => i !== editingIndex && t.toLowerCase() === lower
+            (t, i) => i !== editingIndex && t.toLowerCase() === value
         );
         if (existing !== -1) {
             // merge: update casing on existing and remove current if new

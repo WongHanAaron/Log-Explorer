@@ -2,7 +2,7 @@ import 'jsdom-global/register.js';
 import * as React from 'react';
 import * as assert from 'assert';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { TagSet } from '../../../src/webview/shared/components/tag/TagSet.tsx';
+import { TagSet } from '../../../src/webview/shared/components/tag/TagSet';
 
 describe('TagSet component', () => {
     it('displays initial tags and adds a new one', () => {
@@ -27,6 +27,24 @@ describe('TagSet component', () => {
         fireEvent.change(input, { target: { value: 'two' } });
         fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' });
         assert.strictEqual(added, 'two');
+    });
+
+    it('converts uppercase input to lowercase when adding', () => {
+        const tags: string[] = [];
+        let added: string | null = null;
+        const add = (tag: string) => { added = tag; };
+        const rename = () => { };
+        const remove = () => { };
+
+        render(
+            React.createElement(TagSet, { tags, onAdd: add, onRename: rename, onRemove: remove })
+        );
+
+        fireEvent.click(screen.getByRole('button', { name: /add/i }));
+        const input = screen.getByRole('textbox');
+        fireEvent.change(input, { target: { value: 'NEW' } });
+        fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' });
+        assert.strictEqual(added, 'new');
     });
 
     it('merges duplicate tags case-insensitively', () => {

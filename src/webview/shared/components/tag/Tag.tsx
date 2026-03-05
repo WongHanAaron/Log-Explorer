@@ -52,7 +52,7 @@ export function Tag(props: TagProps) {
                 onChange={e => onChange && onChange(e.target.value)}
                 onBlur={() => onSubmit && onSubmit()}
                 onKeyDown={handleKeyDown}
-                className="h-6 px-2"
+                className="h-6 px-2 min-w-[4rem] w-auto"
             />
         );
     }
@@ -61,7 +61,7 @@ export function Tag(props: TagProps) {
         <Button
             size="sm"
             variant="default"
-            className="capitalize"
+            className="capitalize rounded-full"
             onClick={onClick}
         >
             {value}
