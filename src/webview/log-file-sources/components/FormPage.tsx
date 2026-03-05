@@ -7,8 +7,6 @@ import { TagSet } from "../../shared/components/tag/TagSet";
 export interface FormPageProps {
     shortName: string;
     setShortName: (s: string) => void;
-    label: string;
-    setLabel: (s: string) => void;
     pathPattern: string;
     setPathPattern: (s: string) => void;
     description: string;
@@ -18,7 +16,7 @@ export interface FormPageProps {
     onRenameTag: (index: number, tag: string) => void;
     onRemoveTag: (index: number) => void;
     isNew: boolean;
-    errors: { shortName?: string; label?: string; pathPattern?: string };
+    errors: { shortName?: string; pathPattern?: string };
     status: { text: string; kind: "info" | "success" | "error" } | null;
     validateForm: () => boolean;
     onShortNameBlur: () => void;
@@ -30,8 +28,6 @@ export interface FormPageProps {
 export function FormPage({
     shortName,
     setShortName,
-    label,
-    setLabel,
     pathPattern,
     setPathPattern,
     description,
@@ -73,19 +69,6 @@ export function FormPage({
                     <span className="text-xs text-muted-foreground italic">Kebab-case identifier — used as the filename</span>
                 </div>
 
-                <div className="flex flex-col gap-1 mb-3">
-                    <Label htmlFor="label" className="flex items-center gap-1">
-                        Label <span className="text-destructive-foreground">*</span>
-                    </Label>
-                    <Input
-                        id="label"
-                        value={label}
-                        onChange={e => setLabel(e.target.value)}
-                        autoComplete="off"
-                        placeholder="e.g. Nginx Access Log"
-                    />
-                    <span className="text-xs text-destructive-foreground">{errors.label}</span>
-                </div>
 
                 <div className="flex flex-col gap-1 mb-3">
                     <Label htmlFor="pathPattern" className="flex items-center gap-1">

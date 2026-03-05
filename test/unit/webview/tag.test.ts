@@ -19,11 +19,19 @@ describe('TagSet component', () => {
             React.createElement(TagSet, { tags, onAdd: add, onRename: rename, onRemove: remove })
         );
 
-        // initial pill
-        assert.strictEqual(screen.getByText('one') !== null, true);
+        // initial pill should show exact lowercase text and be centered
+        const pill = screen.getByText('one');
+        assert.strictEqual(pill !== null, true);
+        // styling: ensure we didn't accidentally apply capitalize and text is centered
+        const pillElement = pill.closest('button');
+        assert.ok(pillElement, 'pill should be a button');
+        assert.strictEqual(pillElement?.classList.contains('capitalize'), false);
+        assert.strictEqual(pillElement?.classList.contains('text-center'), true);
         // click add
         fireEvent.click(screen.getByRole('button', { name: /add/i }));
         const input = screen.getByRole('textbox');
+        // input text should be centered
+        assert.strictEqual(input.classList.contains('text-center'), true);
         fireEvent.change(input, { target: { value: 'two' } });
         fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' });
         assert.strictEqual(added, 'two');

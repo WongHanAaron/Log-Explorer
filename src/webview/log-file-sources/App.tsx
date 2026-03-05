@@ -14,6 +14,7 @@ const vscode = acquireVsCodeApi();
 
 export function App() {
     const [shortName, setShortName] = useState("");
+    // label field removed from UI; keep track internally for compatibility if needed
     const [label, setLabel] = useState("");
     const [pathPattern, setPathPattern] = useState("");
     const [description, setDescription] = useState("");
@@ -21,7 +22,7 @@ export function App() {
 
     const [isNew, setIsNew] = useState(true);
     const [originalShortName, setOriginalShortName] = useState<string | null>(null);
-    const [errors, setErrors] = useState({ shortName: "", label: "", pathPattern: "" });
+    const [errors, setErrors] = useState({ shortName: "", pathPattern: "" });
     const [status, setStatus] = useState<{ text: string; kind: "info" | "success" | "error" } | null>(null);
 
     const KEBAB_RE = /^[a-z0-9]+(-[a-z0-9]+)*$/;
@@ -35,6 +36,7 @@ export function App() {
                     setIsNew(msg.isNew);
                     if (cfg) {
                         setShortName(cfg.shortName);
+                        // retain label internally but not shown to user
                         setLabel(cfg.label);
                         setPathPattern(cfg.pathPattern);
                         setDescription(cfg.description ?? "");
@@ -80,16 +82,12 @@ export function App() {
 
     const validateForm = useCallback(() => {
         let valid = true;
-        const errs = { shortName: "", label: "", pathPattern: "" };
+        const errs = { shortName: "", pathPattern: "" };
         if (!shortName.trim()) {
             errs.shortName = "Short name is required.";
             valid = false;
         } else if (!KEBAB_RE.test(shortName.trim())) {
             errs.shortName = "Short name must be kebab-case (lowercase letters, digits, hyphens).";
-            valid = false;
-        }
-        if (!label.trim()) {
-            errs.label = "Label is required.";
             valid = false;
         }
         if (!pathPattern.trim()) {
@@ -98,7 +96,7 @@ export function App() {
         }
         setErrors(errs);
         return valid;
-    }, [shortName, label, pathPattern]);
+    }, [shortName, pathPattern]);
 
     const onShortNameBlur = () => {
         const name = shortName.trim();
@@ -116,7 +114,8 @@ export function App() {
             type: "filepath-config:save",
             config: {
                 shortName: shortName.trim(),
-                label: label.trim(),
+                // keep previous label or default to shortName if blank
+                label: label.trim() || shortName.trim(),
                 pathPattern: pathPattern.trim(),
                 ...(description.trim() ? { description: description.trim() } : {}),
                 tags,
@@ -132,8 +131,6 @@ export function App() {
         <FormPage
             shortName={shortName}
             setShortName={setShortName}
-            label={label}
-            setLabel={setLabel}
             pathPattern={pathPattern}
             setPathPattern={setPathPattern}
             description={description}
