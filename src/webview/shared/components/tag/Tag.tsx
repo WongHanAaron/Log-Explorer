@@ -24,6 +24,7 @@ export function Tag(props: TagProps) {
         onCancel,
         onRemove,
     } = props;
+    const [hovered, setHovered] = React.useState(false);
 
     const inputRef = useRef<HTMLInputElement>(null);
 
@@ -61,15 +62,21 @@ export function Tag(props: TagProps) {
         <Button
             size="sm"
             variant="default"
-            className="relative group rounded-full text-center items-center leading-none px-3 py-1"
+            className="relative rounded-full text-center items-center leading-none px-3 py-1"
             onClick={onClick}
+            onMouseEnter={() => setHovered(true)}
+            onMouseLeave={() => setHovered(false)}
         >
-            <span className="relative transition-transform duration-200 group-hover:-translate-x-2 -top-px">
+            <span className={
+                `relative transition-transform duration-200 ${hovered ? '-translate-x-2' : ''} -top-px`
+            }>
                 {value}
             </span>
             {onRemove && (
                 <X
-                    className="absolute right-1 h-3 w-3 cursor-pointer text-destructive-foreground opacity-0 transition-opacity duration-200 group-hover:opacity-100"
+                    className={
+                        `absolute right-1 h-3 w-3 cursor-pointer text-destructive-foreground transition-opacity duration-200 ${hovered ? 'opacity-100' : 'opacity-0'}`
+                    }
                     onClick={e => {
                         e.stopPropagation();
                         onRemove();
