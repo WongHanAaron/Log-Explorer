@@ -61,10 +61,10 @@ export function Tag(props: TagProps) {
         <Button
             size="sm"
             variant="default"
-            className="rounded-full text-center gap-1 items-center"
+            className="rounded-full text-center gap-1 items-center leading-none"
             onClick={onClick}
         >
-            {value}
+            <span className="relative -top-px">{value}</span>
             {onRemove && (
                 <X
                     className="h-3 w-3 cursor-pointer text-destructive-foreground hover:text-destructive-foreground"

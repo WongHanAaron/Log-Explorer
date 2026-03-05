@@ -27,10 +27,16 @@ describe('TagSet component', () => {
         assert.ok(pillElement, 'pill should be a button');
         assert.strictEqual(pillElement?.classList.contains('capitalize'), false);
         assert.strictEqual(pillElement?.classList.contains('text-center'), true);
-        // icon margin should be reduced so text remains centered
+        // vertical shift applied to text
+        const span = pillElement?.querySelector('span');
+        assert.ok(span?.classList.contains('relative'));
+        assert.ok(span?.classList.contains('-top-px'));
+        // button should have a small gap between text and icon
+        assert.strictEqual(pillElement?.classList.contains('gap-1'), true);
+        // icon should not have extra left margin now
         const svg = pillElement?.querySelector('svg');
         assert.ok(svg, 'should have remove icon');
-        assert.strictEqual(svg?.classList.contains('ml-0.5'), true);
+        assert.strictEqual(svg?.classList.contains('ml-0.5'), false);
         // click add
         fireEvent.click(screen.getByRole('button', { name: /add/i }));
         const input = screen.getByRole('textbox');
