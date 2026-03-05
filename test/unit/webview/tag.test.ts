@@ -1,8 +1,8 @@
-import 'jsdom-global/register';
+import 'jsdom-global/register.js';
 import * as React from 'react';
 import * as assert from 'assert';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { TagSet } from '../../../src/webview/shared/components/tag/TagSet';
+import { TagSet } from '../../../src/webview/shared/components/tag/TagSet.tsx';
 
 describe('TagSet component', () => {
     it('displays initial tags and adds a new one', () => {
@@ -20,7 +20,7 @@ describe('TagSet component', () => {
         );
 
         // initial pill
-        expect(screen.getByText('one')).toBeInTheDocument();
+        assert.strictEqual(screen.getByText('one') !== null, true);
         // click add
         fireEvent.click(screen.getByRole('button', { name: /add/i }));
         const input = screen.getByRole('textbox');
@@ -34,7 +34,7 @@ describe('TagSet component', () => {
         const add = (tag: string) => { tags.push(tag); };
         let renameCalled = false;
         const rename = (idx: number, v: string) => { renameCalled = true; };
-        const remove = () => {};
+        const remove = () => { };
 
         render(
             React.createElement(TagSet, { tags, onAdd: add, onRename: rename, onRemove: remove })
