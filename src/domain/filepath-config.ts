@@ -14,6 +14,8 @@ export interface FilepathConfig {
     pathPattern: string;
     /** Optional description / note for the user */
     description?: string;
+    /** Optional tag list for categorizing the source */
+    tags?: string[];
 }
 
 // ── Public helpers ────────────────────────────────────────────────────────────
@@ -58,6 +60,14 @@ export function isFilepathConfig(obj: unknown): obj is FilepathConfig {
     }
     if (c.description !== undefined && typeof c.description !== 'string') {
         return false;
+    }
+    if (c.tags !== undefined) {
+        if (!Array.isArray(c.tags)) { return false; }
+        for (const t of c.tags) {
+            if (typeof t !== 'string' || t.trim().length === 0) {
+                return false;
+            }
+        }
     }
     return true;
 }

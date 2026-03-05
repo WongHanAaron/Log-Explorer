@@ -17,6 +17,7 @@ export function App() {
     const [label, setLabel] = useState("");
     const [pathPattern, setPathPattern] = useState("");
     const [description, setDescription] = useState("");
+    const [tags, setTags] = useState<string[]>([]);
 
     const [isNew, setIsNew] = useState(true);
     const [originalShortName, setOriginalShortName] = useState<string | null>(null);
@@ -37,7 +38,15 @@ export function App() {
                         setLabel(cfg.label);
                         setPathPattern(cfg.pathPattern);
                         setDescription(cfg.description ?? "");
+                        setTags(cfg.tags || []);
                         setOriginalShortName(cfg.shortName);
+                    } else {
+                        setShortName("");
+                        setLabel("");
+                        setPathPattern("");
+                        setDescription("");
+                        setTags([]);
+                        setOriginalShortName(null);
                     }
                     break;
                 }
@@ -110,6 +119,7 @@ export function App() {
                 label: label.trim(),
                 pathPattern: pathPattern.trim(),
                 ...(description.trim() ? { description: description.trim() } : {}),
+                tags,
             },
         });
     };
@@ -128,6 +138,14 @@ export function App() {
             setPathPattern={setPathPattern}
             description={description}
             setDescription={setDescription}
+            tags={tags}
+            onAddTag={tag => setTags(prev => [...prev, tag])}
+            onRenameTag={(i, tag) => setTags(prev => {
+                const copy = [...prev];
+                copy[i] = tag;
+                return copy;
+            })}
+            onRemoveTag={i => setTags(prev => prev.filter((_, idx) => idx !== i))}
             isNew={isNew}
             errors={errors}
             status={status}

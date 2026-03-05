@@ -74,6 +74,24 @@ describe('FilepathConfig domain', function () {
                 true
             );
         });
+        it('accepts with tags array', () => {
+            assert.strictEqual(
+                isFilepathConfig({ ...valid, tags: ['foo','bar'] }),
+                true
+            );
+        });
+        it('rejects tags that are not strings', () => {
+            assert.strictEqual(
+                isFilepathConfig({ ...valid, tags: ['good', 123 as any] }),
+                false
+            );
+        });
+        it('rejects tags with empty string', () => {
+            assert.strictEqual(
+                isFilepathConfig({ ...valid, tags: ['ok', '   '] }),
+                false
+            );
+        });
         it('rejects missing shortName', () => {
             const { shortName: _, ...rest } = valid;
             assert.strictEqual(isFilepathConfig(rest), false);

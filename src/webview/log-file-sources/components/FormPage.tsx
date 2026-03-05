@@ -2,6 +2,7 @@ import React from "react";
 import { Input } from "../../shared/components/ui/input";
 import { Button } from "../../shared/components/ui/button";
 import { Label } from "../../shared/components/ui/label";
+import { TagSet } from "../../shared/components/tag/TagSet";
 
 export interface FormPageProps {
     shortName: string;
@@ -12,6 +13,10 @@ export interface FormPageProps {
     setPathPattern: (s: string) => void;
     description: string;
     setDescription: (s: string) => void;
+    tags: string[];
+    onAddTag: (tag: string) => void;
+    onRenameTag: (index: number, tag: string) => void;
+    onRemoveTag: (index: number) => void;
     isNew: boolean;
     errors: { shortName?: string; label?: string; pathPattern?: string };
     status: { text: string; kind: "info" | "success" | "error" } | null;
@@ -31,6 +36,10 @@ export function FormPage({
     setPathPattern,
     description,
     setDescription,
+    tags,
+    onAddTag,
+    onRenameTag,
+    onRemoveTag,
     isNew,
     errors,
     status,
@@ -103,7 +112,16 @@ export function FormPage({
                         className="w-full border border-[--input-border] bg-[--input-bg] px-2 py-1 rounded-sm focus:outline-none focus:ring-1 focus:ring-ring"
                     />
                 </div>
-
+                <div className="flex flex-col gap-1 mb-3">
+                    <Label>Tags</Label>
+                    <TagSet
+                        tags={tags}
+                        onAdd={onAddTag}
+                        onRename={onRenameTag}
+                        onRemove={onRemoveTag}
+                        maxTags={undefined}
+                    />
+                </div>
                 <div className="flex gap-2 mb-3">
                     <Button type="submit" variant="default" size="default">
                         Save
