@@ -61,13 +61,15 @@ export function Tag(props: TagProps) {
         <Button
             size="sm"
             variant="default"
-            className="rounded-full text-center gap-1 items-center leading-none"
+            className="relative group rounded-full text-center items-center leading-none px-3 py-1"
             onClick={onClick}
         >
-            <span className="relative -top-px">{value}</span>
+            <span className="relative transition-transform duration-200 group-hover:-translate-x-2 -top-px">
+                {value}
+            </span>
             {onRemove && (
                 <X
-                    className="h-3 w-3 cursor-pointer text-destructive-foreground hover:text-destructive-foreground"
+                    className="absolute right-1 h-3 w-3 cursor-pointer text-destructive-foreground opacity-0 transition-opacity duration-200 group-hover:opacity-100"
                     onClick={e => {
                         e.stopPropagation();
                         onRemove();

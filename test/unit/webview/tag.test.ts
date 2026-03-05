@@ -31,12 +31,14 @@ describe('TagSet component', () => {
         const span = pillElement?.querySelector('span');
         assert.ok(span?.classList.contains('relative'));
         assert.ok(span?.classList.contains('-top-px'));
-        // button should have a small gap between text and icon
-        assert.strictEqual(pillElement?.classList.contains('gap-1'), true);
-        // icon should not have extra left margin now
+        // icon is present but initially hidden via opacity utility class
         const svg = pillElement?.querySelector('svg');
         assert.ok(svg, 'should have remove icon');
-        assert.strictEqual(svg?.classList.contains('ml-0.5'), false);
+        assert.strictEqual(svg?.classList.contains('opacity-0'), true);
+        // simulate hover to reveal icon and shift text (actual visibility depends on CSS)
+        fireEvent.mouseOver(pillElement!);
+        const span2 = pillElement?.querySelector('span');
+        assert.ok(span2?.classList.contains('group-hover:-translate-x-2'));
         // click add
         fireEvent.click(screen.getByRole('button', { name: /add/i }));
         const input = screen.getByRole('textbox');
