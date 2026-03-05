@@ -61,13 +61,13 @@ export function Tag(props: TagProps) {
         <Button
             size="sm"
             variant="default"
-            className="rounded-full text-center"
+            className="rounded-full text-center gap-1 items-center"
             onClick={onClick}
         >
             {value}
             {onRemove && (
                 <X
-                    className="ml-0.5 h-3 w-3 cursor-pointer text-destructive-foreground hover:text-destructive-foreground"
+                    className="h-3 w-3 cursor-pointer text-destructive-foreground hover:text-destructive-foreground"
                     onClick={e => {
                         e.stopPropagation();
                         onRemove();
