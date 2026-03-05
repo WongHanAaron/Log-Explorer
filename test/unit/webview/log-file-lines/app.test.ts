@@ -7,7 +7,7 @@ let lastMsg: any = null;
 (global as any).acquireVsCodeApi = () => ({
     postMessage: (msg: any) => { lastMsg = msg; },
     getState: () => ({}),
-    setState: (_: any) => {},
+    setState: (_: any) => { },
 });
 
 import { App } from '../../../../src/webview/log-file-lines/App';

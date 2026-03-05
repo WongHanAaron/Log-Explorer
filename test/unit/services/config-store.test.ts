@@ -218,10 +218,10 @@ describe('ConfigStore (pure parsing)', function () {
                 shortName: 'foo',
                 label: 'Foo',
                 fields: [],
-                tags: ['a','b']
+                tags: ['a', 'b']
             });
             const cfg = ConfigParser.parseFileLogLineConfig(json);
-            assert.deepStrictEqual(cfg.tags, ['a','b']);
+            assert.deepStrictEqual(cfg.tags, ['a', 'b']);
         });
     });
 

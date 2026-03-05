@@ -34,7 +34,7 @@ describe('FileLogLineConfig domain', function () {
                 shortName: 'tagged',
                 label: 'Tagged',
                 fields: [{ name: 'x', extraction: { kind: 'prefix-suffix', prefix: 'x' } }],
-                tags: ['foo','bar']
+                tags: ['foo', 'bar']
             };
             assert.strictEqual(isFileLogLineConfig(cfg), true);
         });

@@ -68,8 +68,16 @@ export function FormPage({
                     <span className="text-xs text-destructive-foreground">{errors.shortName}</span>
                     <span className="text-xs text-muted-foreground italic">Kebab-case identifier — used as the filename</span>
                 </div>
-
-
+                <div className="flex flex-col gap-1 mb-3">
+                    <Label>Tags</Label>
+                    <TagSet
+                        tags={tags}
+                        onAdd={onAddTag}
+                        onRename={onRenameTag}
+                        onRemove={onRemoveTag}
+                        maxTags={undefined}
+                    />
+                </div>
                 <div className="flex flex-col gap-1 mb-3">
                     <Label htmlFor="pathPattern" className="flex items-center gap-1">
                         Path / Glob Pattern <span className="text-destructive-foreground">*</span>
@@ -93,16 +101,6 @@ export function FormPage({
                         rows={3}
                         placeholder="Optional notes about this log source"
                         className="w-full border border-[--input-border] bg-[--input-bg] px-2 py-1 rounded-sm focus:outline-none focus:ring-1 focus:ring-ring"
-                    />
-                </div>
-                <div className="flex flex-col gap-1 mb-3">
-                    <Label>Tags</Label>
-                    <TagSet
-                        tags={tags}
-                        onAdd={onAddTag}
-                        onRename={onRenameTag}
-                        onRemove={onRemoveTag}
-                        maxTags={undefined}
                     />
                 </div>
                 <div className="flex gap-2 mb-3">
