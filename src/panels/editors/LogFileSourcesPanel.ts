@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { getReactWebviewHtml } from '../../utils/reactWebview';
 import { ConfigStore, ConfigCategory } from '../../services/config-store';
-import { isFilepathConfig } from '../../domain/filepath-config';
+import { FilepathConfig } from '../../domain/filepath-config';
 import type {
     FilepathConfigSaveMessage,
     FilepathConfigValidateNameMessage
@@ -129,16 +129,14 @@ export class LogFileSourcesPanel {
             }
             case 'filepath-config:save': {
                 const { config } = msg as FilepathConfigSaveMessage;
-                if (!isFilepathConfig(config)) {
-                    this._panel.webview.postMessage({
-                        type: 'filepath-config:save-result', success: false, errorMessage: 'Invalid config.'
-                    });
-                    return;
-                }
                 try {
-                    // ensure directory exists
+                    // validate payload by round‑tripping through the class
+                    const [valid, err] = await FilepathConfig.fromJson(config.toJson());
+                    if (err || !valid) {
+                        throw err || new Error('validation failed');
+                    }
                     await vscode.workspace.fs.createDirectory(this._configDirUri);
-                    await this._store.writeConfig(ConfigCategory.Filepath, config.shortName, config);
+                    await this._store.writeConfig(ConfigCategory.Filepath, valid.shortName, valid);
                     this._panel.webview.postMessage({ type: 'filepath-config:save-result', success: true });
                 } catch (err) {
                     this._panel.webview.postMessage({

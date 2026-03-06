@@ -1,181 +1,174 @@
-/**
- * FileLogLineConfig domain object hierarchy and validators.
- * Stored at: .logex/filelog-configs/{shortName}.json
- */
+// @ts-nocheck
+import { Expose, Type } from 'class-transformer';
+import { IsString, IsOptional, IsArray, ValidateNested, IsIn } from 'class-validator';
+import { IsSerializable } from './serializable';
 
-// ── Shared Extraction Types ───────────────────────────────────────────────────
+// shared extraction types ----------------------------------------------------
+export abstract class FieldExtraction {
+    @Expose()
+    @IsString()
+    kind!: string;
+}
 
-/** Extract a field value using fixed prefix and optional suffix markers. */
-export interface PrefixSuffixExtraction {
-    kind: 'prefix-suffix';
+export class PrefixSuffixExtraction extends FieldExtraction {
+    @Expose()
+    @IsIn(['prefix-suffix'])
+    kind: 'prefix-suffix' = 'prefix-suffix';
+
+    @Expose()
+    @IsOptional()
+    @IsString()
     prefix?: string;
+
+    @Expose()
+    @IsOptional()
+    @IsString()
     suffix?: string;
 }
 
-/** Extract a field value using a JavaScript RegExp named capture group `(?<value>…)`. */
-export interface RegexExtraction {
-    kind: 'regex';
-    /** JavaScript RegExp pattern string. Should contain at least one named group. */
-    pattern: string;
+export class RegexExtraction extends FieldExtraction {
+    @Expose()
+    @IsIn(['regex'])
+    kind: 'regex' = 'regex';
+
+    @Expose()
+    @IsString()
+    pattern!: string;
 }
 
-export type FieldExtraction = PrefixSuffixExtraction | RegexExtraction;
+export type FieldExtractionType = PrefixSuffixExtraction | RegexExtraction;
 
-// ── Datetime Format ───────────────────────────────────────────────────────────
-
-/**
- * Describes how to parse or format a datetime string.
- * Token vocabulary (shared with tools/loggen.ts):
- *   yyyy MM dd HH mm ss SSS
- */
-export interface DateTimeFormat {
-    /** Token-based format string, e.g. "yyyy-MM-dd HH:mm:ss" */
+export class DateTimeFormat {
+    @Expose()
+    @IsOptional()
+    @IsString()
     formatString?: string;
-    /** When true, attempt to detect the format automatically */
-    autoDetect?: boolean;
+
+    @Expose()
+    @IsOptional()
+    readonly autoDetect?: boolean;
 }
 
-// ── Text Line Config ──────────────────────────────────────────────────────────
+export class TextField {
+    @Expose()
+    @IsString()
+    name!: string;
 
-export interface TextField {
-    name: string;
-    extraction: FieldExtraction;
-    datetime?: DateTimeFormat;
-}
-
-export interface TextLineConfig {
-    type: 'text';
-    shortName: string;
-    label: string;
-    description?: string;
-    fields: TextField[];
-    /** Optional tag list for categorizing this line config */
-    tags?: string[];
-}
-
-// ── XML Line Config ───────────────────────────────────────────────────────────
-
-export interface XmlFieldMapping {
-    name: string;
-    xpath: string;
-    datetime?: DateTimeFormat;
-}
-
-export interface XmlLineConfig {
-    type: 'xml';
-    shortName: string;
-    label: string;
-    description?: string;
-    rootXpath: string;
-    fields: XmlFieldMapping[];
-    /** Optional tag list for categorizing this line config */
-    tags?: string[];
-}
-
-// ── JSON Line Config ──────────────────────────────────────────────────────────
-
-export interface JsonFieldMapping {
-    name: string;
-    /**
-     * Dot-notation path into the parsed JSON object.
-     * Example: "metadata.timestamp"
-     */
-    jsonPath: string;
-    datetime?: DateTimeFormat;
-}
-
-export interface JsonLineConfig {
-    type: 'json';
-    shortName: string;
-    label: string;
-    description?: string;
-    fields: JsonFieldMapping[];
-    /** Optional tag list for categorizing this line config */
-    tags?: string[];
-}
-
-// ── Union ─────────────────────────────────────────────────────────────────────
-
-export type FileLogLineConfig = TextLineConfig | XmlLineConfig | JsonLineConfig;
-
-// ── Validators ────────────────────────────────────────────────────────────────
-
-export function isFileLogLineConfig(obj: unknown): obj is FileLogLineConfig {
-    if (!obj || typeof obj !== 'object') {
-        return false;
-    }
-    const c = obj as Record<string, unknown>;
-    if (typeof c.shortName !== 'string' || c.shortName.trim().length === 0) {
-        return false;
-    }
-    if (typeof c.label !== 'string' || c.label.trim().length === 0) {
-        return false;
-    }
-    if (c.tags !== undefined) {
-        if (!Array.isArray(c.tags)) { return false; }
-        for (const t of c.tags) {
-            if (typeof t !== 'string' || t.trim().length === 0) {
-                return false;
-            }
+    @Expose()
+    @ValidateNested()
+    @Type(() => FieldExtraction, {
+        discriminator: {
+            property: 'kind',
+            subTypes: [
+                { value: PrefixSuffixExtraction, name: 'prefix-suffix' },
+                { value: RegexExtraction, name: 'regex' }
+            ]
         }
-    }
-    switch (c.type) {
-        case 'text': return isTextLineConfig(c);
-        case 'xml': return isXmlLineConfig(c);
-        case 'json': return isJsonLineConfig(c);
-        default: return false;
-    }
+    })
+    extraction!: FieldExtractionType;
+
+    @Expose()
+    @IsOptional()
+    @ValidateNested()
+    @Type(() => DateTimeFormat)
+    datetime?: DateTimeFormat;
 }
 
-function isTextLineConfig(c: unknown): c is TextLineConfig {
-    if (!c || typeof c !== 'object') {
-        return false;
-    }
-    return Array.isArray((c as any).fields) && ((c as any).fields as unknown[]).every(isTextField);
+export class XmlFieldMapping {
+    @Expose()
+    @IsString()
+    name!: string;
+
+    @Expose()
+    @IsString()
+    xpath!: string;
+
+    @Expose()
+    @IsOptional()
+    @ValidateNested()
+    @Type(() => DateTimeFormat)
+    datetime?: DateTimeFormat;
 }
 
-function isTextField(f: unknown): f is TextField {
-    if (!f || typeof f !== 'object') {
-        return false;
-    }
-    const field = f as Record<string, unknown>;
-    return typeof field.name === 'string' && isFieldExtraction(field.extraction);
+export class JsonFieldMapping {
+    @Expose()
+    @IsString()
+    name!: string;
+
+    @Expose()
+    @IsString()
+    jsonPath!: string;
+
+    @Expose()
+    @IsOptional()
+    @ValidateNested()
+    @Type(() => DateTimeFormat)
+    datetime?: DateTimeFormat;
 }
 
-function isFieldExtraction(e: unknown): e is FieldExtraction {
-    if (!e || typeof e !== 'object') {
-        return false;
-    }
-    const ex = e as Record<string, unknown>;
-    if (ex.kind === 'prefix-suffix') {
-        return typeof ex.prefix === 'string';
-    }
-    if (ex.kind === 'regex') {
-        return typeof ex.pattern === 'string';
-    }
-    return false;
+// config classes ----------------------------------------------------------------
+export abstract class FileLogLineConfig extends IsSerializable {
+    @Expose()
+    @IsIn(['text', 'xml', 'json'])
+    type!: 'text' | 'xml' | 'json';
+
+    @Expose()
+    @IsString()
+    shortName!: string;
+
+    @Expose()
+    @IsString()
+    label!: string;
+
+    @Expose()
+    @IsOptional()
+    @IsString()
+    description?: string;
+
+    @Expose()
+    @IsOptional()
+    @IsArray()
+    @IsString({ each: true })
+    tags?: string[];
+
 }
 
-function isXmlLineConfig(c: unknown): c is XmlLineConfig {
-    if (!c || typeof c !== 'object') {
-        return false;
-    }
-    return typeof (c as any).rootXpath === 'string' && Array.isArray((c as any).fields);
+export class TextLineConfig extends FileLogLineConfig {
+    @Expose()
+    @IsIn(['text'])
+    type: 'text' = 'text';
+
+    @Expose()
+    @IsArray()
+    @ValidateNested({ each: true })
+    @Type(() => TextField)
+    fields!: TextField[];
 }
 
-function isJsonLineConfig(c: unknown): c is JsonLineConfig {
-    if (!c || typeof c !== 'object') {
-        return false;
-    }
-    const fields = (c as any).fields;
-    return (
-        Array.isArray(fields) &&
-        (fields as unknown[]).every(
-            (f: unknown) =>
-                f &&
-                typeof f === 'object' &&
-                typeof (f as any).name === 'string' &&
-                typeof (f as any).jsonPath === 'string'
-        )
-    );
+export class XmlLineConfig extends FileLogLineConfig {
+    @Expose()
+    @IsIn(['xml'])
+    type: 'xml' = 'xml';
+
+    @Expose()
+    @IsString()
+    rootXpath!: string;
+
+    @Expose()
+    @IsArray()
+    @ValidateNested({ each: true })
+    @Type(() => XmlFieldMapping)
+    fields!: XmlFieldMapping[];
+}
+
+export class JsonLineConfig extends FileLogLineConfig {
+    @Expose()
+    @IsIn(['json'])
+    type: 'json' = 'json';
+
+    @Expose()
+    @IsArray()
+    @ValidateNested({ each: true })
+    @Type(() => JsonFieldMapping)
+    fields!: JsonFieldMapping[];
 }

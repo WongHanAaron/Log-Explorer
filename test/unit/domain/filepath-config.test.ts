@@ -1,41 +1,44 @@
-import * as assert from 'assert';
+import * as chai from 'chai';
+import chaiAsPromised from 'chai-as-promised';
+const { expect } = chai;
+chai.use(chaiAsPromised);
 import {
-    isFilepathConfig,
     isKebabName,
     toKebabName,
-    type FilepathConfig
+    FilepathConfig
 } from '../../../src/domain/filepath-config';
+import { assertRoundTrip } from './utils';
 
 describe('FilepathConfig domain', function () {
     // ── isKebabName ───────────────────────────────────────────────────────────
 
     describe('isKebabName', function () {
         it('accepts simple lowercase word', () => {
-            assert.strictEqual(isKebabName('nginx'), true);
+            expect(isKebabName('nginx')).to.be.true;
         });
         it('accepts lowercase-digit compound', () => {
-            assert.strictEqual(isKebabName('app1-logs'), true);
+            expect(isKebabName('app1-logs')).to.be.true;
         });
         it('accepts multi-segment kebab', () => {
-            assert.strictEqual(isKebabName('nginx-access-log'), true);
+            expect(isKebabName('nginx-access-log')).to.be.true;
         });
         it('rejects uppercase', () => {
-            assert.strictEqual(isKebabName('Nginx'), false);
+            expect(isKebabName('Nginx')).to.be.false;
         });
         it('rejects spaces', () => {
-            assert.strictEqual(isKebabName('my name'), false);
+            expect(isKebabName('my name')).to.be.false;
         });
         it('rejects leading hyphen', () => {
-            assert.strictEqual(isKebabName('-foo'), false);
+            expect(isKebabName('-foo')).to.be.false;
         });
         it('rejects trailing hyphen', () => {
-            assert.strictEqual(isKebabName('foo-'), false);
+            expect(isKebabName('foo-')).to.be.false;
         });
         it('rejects double hyphen', () => {
-            assert.strictEqual(isKebabName('foo--bar'), false);
+            expect(isKebabName('foo--bar')).to.be.false;
         });
         it('rejects empty string', () => {
-            assert.strictEqual(isKebabName(''), false);
+            expect(isKebabName('')).to.be.false;
         });
     });
 
@@ -43,84 +46,71 @@ describe('FilepathConfig domain', function () {
 
     describe('toKebabName', function () {
         it('lowercases uppercase chars', () => {
-            assert.strictEqual(toKebabName('NginxAccess'), 'nginxaccess');
+            expect(toKebabName('NginxAccess')).to.equal('nginxaccess');
         });
         it('replaces spaces with hyphens', () => {
-            assert.strictEqual(toKebabName('my app log'), 'my-app-log');
+            expect(toKebabName('my app log')).to.equal('my-app-log');
         });
         it('replaces special chars with hyphens and deduplicates', () => {
-            assert.strictEqual(toKebabName('My.App/Log'), 'my-app-log');
+            expect(toKebabName('My.App/Log')).to.equal('my-app-log');
         });
         it('strips leading and trailing hyphens', () => {
-            assert.strictEqual(toKebabName('  leading-trailing  '), 'leading-trailing');
+            expect(toKebabName('  leading-trailing  ')).to.equal('leading-trailing');
         });
     });
 
-    // ── isFilepathConfig ──────────────────────────────────────────────────────
 
-    describe('isFilepathConfig', function () {
-        const valid: FilepathConfig = {
-            shortName: 'nginx-access',
-            label: 'Nginx Access Log',
-            pathPattern: '/var/log/nginx/access.log'
-        };
+    // ── serialization behaviour ───────────────────────────────────────────────
 
-        it('accepts a valid config', () => {
-            assert.strictEqual(isFilepathConfig(valid), true);
+    describe('serialization/validation', function () {
+        it('round-trips a valid instance', async () => {
+            const cfg = new FilepathConfig();
+            cfg.shortName = 'my-source';
+            cfg.label = 'My Source';
+            cfg.pathPattern = '/var/log/*.log';
+            cfg.description = 'example';
+            cfg.tags = ['foo', 'bar'];
+
+            await assertRoundTrip(FilepathConfig, cfg);
         });
-        it('accepts with optional description', () => {
-            assert.strictEqual(
-                isFilepathConfig({ ...valid, description: 'prod log' }),
-                true
-            );
+
+        it('rejects missing required property', async () => {
+            const json = JSON.stringify({
+                label: 'No name',
+                pathPattern: '/tmp/x'
+            });
+
+            const [cfg, err] = await FilepathConfig.fromJson(json);
+            expect(cfg).to.be.null;
+            expect(err).to.exist;
+            expect(err[0].property).to.equal('shortName');
         });
-        it('accepts with tags array', () => {
-            assert.strictEqual(
-                isFilepathConfig({ ...valid, tags: ['foo', 'bar'] }),
-                true
-            );
+
+        it('rejects invalid shortName format', async () => {
+            const json = JSON.stringify({
+                shortName: 'Bad Name!',
+                label: 'Label',
+                pathPattern: '/tmp/x'
+            });
+
+            const [cfg, err] = await FilepathConfig.fromJson(json);
+            expect(cfg).to.be.null;
+            expect(err).to.exist;
+            expect(err[0].property).to.equal('shortName');
         });
-        it('rejects tags that are not strings', () => {
-            assert.strictEqual(
-                isFilepathConfig({ ...valid, tags: ['good', 123 as any] }),
-                false
-            );
-        });
-        it('rejects tags with empty string', () => {
-            assert.strictEqual(
-                isFilepathConfig({ ...valid, tags: ['ok', '   '] }),
-                false
-            );
-        });
-        it('rejects missing shortName', () => {
-            const { shortName: _, ...rest } = valid;
-            assert.strictEqual(isFilepathConfig(rest), false);
-        });
-        it('rejects non-kebab shortName', () => {
-            assert.strictEqual(
-                isFilepathConfig({ ...valid, shortName: 'My Config' }),
-                false
-            );
-        });
-        it('rejects missing label', () => {
-            const { label: _, ...rest } = valid;
-            assert.strictEqual(isFilepathConfig(rest), false);
-        });
-        it('rejects empty label', () => {
-            assert.strictEqual(isFilepathConfig({ ...valid, label: '   ' }), false);
-        });
-        it('rejects missing pathPattern', () => {
-            const { pathPattern: _, ...rest } = valid;
-            assert.strictEqual(isFilepathConfig(rest), false);
-        });
-        it('rejects empty pathPattern', () => {
-            assert.strictEqual(isFilepathConfig({ ...valid, pathPattern: '' }), false);
-        });
-        it('rejects null input', () => {
-            assert.strictEqual(isFilepathConfig(null), false);
-        });
-        it('rejects non-string description', () => {
-            assert.strictEqual(isFilepathConfig({ ...valid, description: 42 }), false);
+
+        it('rejects extra properties', async () => {
+            const json = JSON.stringify({
+                shortName: 'ok',
+                label: 'Label',
+                pathPattern: '/tmp/x',
+                extra: 42
+            });
+
+            const [cfg, err] = await FilepathConfig.fromJson(json);
+            expect(cfg).to.be.null;
+            expect(err).to.exist;
+            expect(err.some((v: any) => v.property === 'extra')).to.be.true;
         });
     });
 });

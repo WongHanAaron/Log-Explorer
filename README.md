@@ -8,6 +8,12 @@ A VSCode extension for exploring and analyzing log files, featuring a custom sid
 - **VSCode** 1.85+ — [code.visualstudio.com](https://code.visualstudio.com)
 - **Git** — any recent version
 
+The project now uses TypeScript decorators for runtime validation.  Your
+`tsconfig.json` must have `experimentalDecorators` and
+`emitDecoratorMetadata` enabled (the default template already does).  New
+runtime dependencies (`class-transformer`, `class-validator` and
+`reflect-metadata`) are installed automatically by `npm install`.
+
 ## Quick Start
 
 ```bash

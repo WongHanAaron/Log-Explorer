@@ -1,14 +1,44 @@
 import * as assert from 'assert';
 import * as path from 'path';
-import * as vscode from 'vscode';
-import { ConfigStore, ConfigCategory } from '../../../src/services/config-store';
-import { ConfigParser } from '../../../src/services/config-parser';
+import type * as VscTypes from 'vscode';
 
-class FakeFs implements vscode.FileSystem {
+
+// because there is no real `vscode` package available when running under
+// mocha/ts-node, we provide a minimal runtime stub.  We keep the type-only
+// import above so our fake implementation satisfies the expected interfaces.
+const vscode: any = {
+    FileType: { File: 1, Directory: 2 },
+    FileChangeType: { Created: 1, Changed: 2, Deleted: 3 },
+    Disposable: class { constructor(cb: any) { this.dispose = cb; } dispose() { } },
+    EventEmitter: class {
+        listeners: any[] = [];
+        event(l: any) { this.listeners.push(l); return {} as any; }
+        fire(e: any) { for (const l of this.listeners) l(e); }
+    },
+
+    Uri: {
+        joinPath: (base: any, ...parts: string[]) => ({ fsPath: base.fsPath ? base.fsPath + '/' + parts.join('/') : parts.join('/') }),
+        parse: (s: string) => ({ fsPath: s }),
+        file: (f: string) => ({ fsPath: f })
+    },
+    RelativePattern: class { base: any; pattern: string; constructor(base: any, pattern: string) { this.base = base; this.pattern = pattern; } },
+    FileSystemError: { FileNotFound: () => new Error('notfound') }
+};
+
+// import directly from TypeScript sources (ts-node will compile on the fly)
+// @ts-ignore TS5097: allow .ts imports for ts-node loader
+import { ConfigStore, ConfigCategory, vscodeRuntime } from '../../../src/services/config-store.ts';
+
+
+// copy stub into the module's runtime proxy so the implementation can use it
+Object.assign(vscodeRuntime, vscode);
+
+
+class FakeFs implements VscTypes.FileSystem {
     private files = new Map<string, Uint8Array>();
     private dirs = new Set<string>();
-    readonly fileChangeEmitter = new vscode.EventEmitter<vscode.FileChangeEvent[]>();
-    readonly onDidChangeFile: vscode.Event<vscode.FileChangeEvent[]> =
+    readonly fileChangeEmitter = new vscode.EventEmitter();
+    readonly onDidChangeFile: VscTypes.Event<VscTypes.FileChangeEvent[]> =
         this.fileChangeEmitter.event;
 
     // helpers
@@ -17,7 +47,7 @@ class FakeFs implements vscode.FileSystem {
     }
 
     // additional members required by vscode.FileSystem
-    copy(source: vscode.Uri, target: vscode.Uri, options?: { overwrite?: boolean }): Thenable<void> {
+    copy(source: VscTypes.Uri, target: VscTypes.Uri, options?: { overwrite?: boolean }): Thenable<void> {
         // no-op for tests
         return Promise.resolve();
     }
@@ -26,12 +56,12 @@ class FakeFs implements vscode.FileSystem {
         return true;
     }
 
-    watch(_uri: vscode.Uri): vscode.Disposable {
+    watch(_uri: VscTypes.Uri): VscTypes.Disposable {
         // no-op watcher
         return new vscode.Disposable(() => { });
     }
 
-    stat(uri: vscode.Uri): Thenable<vscode.FileStat> {
+    stat(uri: VscTypes.Uri): Thenable<VscTypes.FileStat> {
         const p = this.normalize(uri.fsPath);
         if (this.files.has(p)) {
             return Promise.resolve({ type: vscode.FileType.File, ctime: 0, mtime: 0, size: this.files.get(p)!.length });
@@ -42,16 +72,17 @@ class FakeFs implements vscode.FileSystem {
         return Promise.reject(vscode.FileSystemError.FileNotFound());
     }
 
-    readDirectory(uri: vscode.Uri): Thenable<[string, vscode.FileType][]> {
+    readDirectory(uri: VscTypes.Uri): Thenable<[string, VscTypes.FileType][]> {
         const p = this.normalize(uri.fsPath);
-        const entries = new Map<string, vscode.FileType>();
-        for (const fp of this.files.keys()) {
+        // map value type is the *type* from vscode; use stub for runtime values
+        const entries = new Map<string, VscTypes.FileType>();
+        for (const fp of Array.from(this.files.keys())) {
             const dir = path.posix.dirname(fp);
             if (dir === p) {
                 entries.set(path.posix.basename(fp), vscode.FileType.File);
             }
         }
-        for (const dp of this.dirs) {
+        for (const dp of Array.from(this.dirs)) {
             const parent = path.posix.dirname(dp);
             if (parent === p) {
                 entries.set(path.posix.basename(dp), vscode.FileType.Directory);
@@ -60,12 +91,12 @@ class FakeFs implements vscode.FileSystem {
         return Promise.resolve(Array.from(entries));
     }
 
-    createDirectory(uri: vscode.Uri): Thenable<void> {
+    createDirectory(uri: VscTypes.Uri): Thenable<void> {
         this.dirs.add(this.normalize(uri.fsPath));
         return Promise.resolve();
     }
 
-    readFile(uri: vscode.Uri): Thenable<Uint8Array> {
+    readFile(uri: VscTypes.Uri): Thenable<Uint8Array> {
         const p = this.normalize(uri.fsPath);
         const contents = this.files.get(p);
         if (!contents) {
@@ -74,7 +105,7 @@ class FakeFs implements vscode.FileSystem {
         return Promise.resolve(contents);
     }
 
-    writeFile(uri: vscode.Uri, content: Uint8Array): Thenable<void> {
+    writeFile(uri: VscTypes.Uri, content: Uint8Array): Thenable<void> {
         const p = this.normalize(uri.fsPath);
         const existed = this.files.has(p);
         // ensure parent directory exists
@@ -92,7 +123,7 @@ class FakeFs implements vscode.FileSystem {
         return Promise.resolve();
     }
 
-    delete(uri: vscode.Uri, _options?: { recursive?: boolean }): Thenable<void> {
+    delete(uri: VscTypes.Uri, _options?: { recursive?: boolean }): Thenable<void> {
         const p = this.normalize(uri.fsPath);
         const existed = this.files.delete(p);
         // note: directories are not removed for simplicity
@@ -107,7 +138,7 @@ class FakeFs implements vscode.FileSystem {
         return Promise.resolve();
     }
 
-    rename(oldUri: vscode.Uri, newUri: vscode.Uri, _options?: { overwrite?: boolean }): Thenable<void> {
+    rename(oldUri: VscTypes.Uri, newUri: VscTypes.Uri, _options?: { overwrite?: boolean }): Thenable<void> {
         const oldp = this.normalize(oldUri.fsPath);
         const newp = this.normalize(newUri.fsPath);
         const data = this.files.get(oldp);
@@ -135,84 +166,97 @@ describe('ConfigStore (pure parsing)', function () {
 
     describe('configFilename', function () {
         it('appends .json to the short name', () => {
-            assert.strictEqual(ConfigParser.configFilename('nginx-access'), 'nginx-access.json');
+            assert.strictEqual(ConfigStore.configFilename('nginx-access'), 'nginx-access.json');
         });
         it('works for single-word names', () => {
-            assert.strictEqual(ConfigParser.configFilename('app'), 'app.json');
+            assert.strictEqual(ConfigStore.configFilename('app'), 'app.json');
         });
     });
 
     // ── parseFilepathConfig ───────────────────────────────────────────────────
 
     describe('parseFilepathConfig', function () {
-        it('returns a valid FilepathConfig on valid JSON', () => {
+        it('returns a valid FilepathConfig on valid JSON', async () => {
             const json = JSON.stringify({
                 shortName: 'my-log',
                 label: 'My Log',
                 pathPattern: '/var/log/app.log'
             });
-            const cfg = ConfigParser.parseFilepathConfig(json);
-            assert.strictEqual(cfg.shortName, 'my-log');
-            assert.strictEqual(cfg.label, 'My Log');
-            assert.strictEqual(cfg.pathPattern, '/var/log/app.log');
+            const [cfg, err] = await (await import('../../../src/domain/filepath-config')).FilepathConfig.fromJson(json);
+            assert.strictEqual(cfg?.shortName, 'my-log');
+            assert.strictEqual(cfg?.label, 'My Log');
+            assert.strictEqual(cfg?.pathPattern, '/var/log/app.log');
         });
 
-        it('throws on malformed JSON', () => {
-            assert.throws(() => ConfigParser.parseFilepathConfig('{invalid'), /malformed/i);
+        it('throws on malformed JSON', async () => {
+            const json = '{invalid';
+            const [cfg, err] = await (await import('../../../src/domain/filepath-config')).FilepathConfig.fromJson(json);
+            assert.strictEqual(cfg, null);
+            assert.ok(err);
         });
 
-        it('throws on valid JSON but invalid schema', () => {
+        it('throws on valid JSON but invalid schema', async () => {
             const json = JSON.stringify({ shortName: 'INVALID NAME', label: 'X', pathPattern: 'y' });
-            assert.throws(() => ConfigParser.parseFilepathConfig(json), /invalid.*filepath/i);
+            const [cfg, err] = await (await import('../../../src/domain/filepath-config')).FilepathConfig.fromJson(json);
+            assert.strictEqual(cfg, null);
+            assert.ok(err);
+            assert.strictEqual(err[0].property, 'shortName');
         });
 
-        it('preserves optional description field', () => {
+        it('preserves optional description field', async () => {
             const json = JSON.stringify({
                 shortName: 'app',
                 label: 'App',
                 pathPattern: '*.log',
                 description: 'main app'
             });
-            const cfg = ConfigParser.parseFilepathConfig(json);
-            assert.strictEqual(cfg.description, 'main app');
+            const [cfg, err] = await (await import('../../../src/domain/filepath-config')).FilepathConfig.fromJson(json);
+            assert.strictEqual(cfg?.description, 'main app');
         });
     });
 
     // ── parseFileLogLineConfig ────────────────────────────────────────────────
 
     describe('parseFileLogLineConfig', function () {
-        it('returns TextLineConfig on valid text JSON', () => {
+        it('returns TextLineConfig on valid text JSON', async () => {
             const json = JSON.stringify({
                 type: 'text',
                 shortName: 'iis',
                 label: 'IIS',
                 fields: [{ name: 'ts', extraction: { kind: 'prefix-suffix', prefix: '[', suffix: ']' } }]
             });
-            const cfg = ConfigParser.parseFileLogLineConfig(json);
-            assert.strictEqual(cfg.type, 'text');
-            assert.strictEqual(cfg.shortName, 'iis');
+            const [cfg, err] = await (await import('../../../src/domain/filelog-config')).TextLineConfig.fromJson(json);
+            assert.strictEqual(cfg?.type, 'text');
+            assert.strictEqual(cfg?.shortName, 'iis');
         });
 
-        it('returns JsonLineConfig on valid json-type JSON', () => {
+        it('returns JsonLineConfig on valid json-type JSON', async () => {
             const json = JSON.stringify({
                 type: 'json',
                 shortName: 'structured',
                 label: 'Structured',
                 fields: [{ name: 'level', jsonPath: 'level' }]
             });
-            const cfg = ConfigParser.parseFileLogLineConfig(json);
-            assert.strictEqual(cfg.type, 'json');
+            const [cfg, err] = await (await import('../../../src/domain/filelog-config')).JsonLineConfig.fromJson(json);
+            assert.strictEqual(cfg?.type, 'json');
         });
 
         it('throws on malformed JSON', () => {
-            assert.throws(() => ConfigParser.parseFileLogLineConfig('{{'), /malformed/i);
+            assert.throws(async () => {
+                const [cfg, err] = await (await import('../../../src/domain/filelog-config')).TextLineConfig.fromJson('{{');
+                if (!err) throw new Error('expected error');
+            }, /malformed/i);
         });
 
         it('throws on valid JSON but invalid schema', () => {
             const json = JSON.stringify({ type: 'unknown', shortName: 'x', label: 'X', fields: [] });
-            assert.throws(() => ConfigParser.parseFileLogLineConfig(json), /invalid.*filelog/i);
+            assert.throws(async () => {
+                // choose TextLineConfig arbitrarily – it will reject due to type
+                const [cfg, err] = await (await import('../../../src/domain/filelog-config')).TextLineConfig.fromJson(json);
+                if (!err) throw new Error('expected error');
+            }, /Invalid FileLogLineConfig/);
         });
-        it('accepts tags in filelog JSON', () => {
+        it('accepts tags in filelog JSON', async () => {
             const json = JSON.stringify({
                 type: 'text',
                 shortName: 'foo',
@@ -220,8 +264,8 @@ describe('ConfigStore (pure parsing)', function () {
                 fields: [],
                 tags: ['a', 'b']
             });
-            const cfg = ConfigParser.parseFileLogLineConfig(json);
-            assert.deepStrictEqual(cfg.tags, ['a', 'b']);
+            const [cfg, err] = await (await import('../../../src/domain/filelog-config')).TextLineConfig.fromJson(json);
+            assert.deepStrictEqual(cfg?.tags, ['a', 'b']);
         });
     });
 
@@ -235,23 +279,23 @@ describe('ConfigStore (filesystem interactions)', function () {
 
     // helper factory that creates a watcher forwarding fs change events matching
     // the relative glob pattern (simplified for tests).
-    function makeWatcherFactory(fs: FakeFs, root: vscode.Uri) {
-        return (pattern: vscode.GlobPattern): vscode.FileSystemWatcher => {
-            const emitter = new vscode.EventEmitter<vscode.Uri>();
-            const w: vscode.FileSystemWatcher = {
+    function makeWatcherFactory(fs: FakeFs, root: VscTypes.Uri) {
+        return (pattern: VscTypes.GlobPattern): VscTypes.FileSystemWatcher => {
+            const emitter = new vscode.EventEmitter();
+            const w: VscTypes.FileSystemWatcher = {
                 onDidCreate: emitter.event,
                 onDidChange: emitter.event,
                 onDidDelete: emitter.event,
                 dispose: () => emitter.dispose(),
             } as any;
-            fs.fileChangeEmitter.event((changes) => {
+            fs.fileChangeEmitter.event((changes: VscTypes.FileChangeEvent[]) => {
                 for (const c of changes) {
                     if (c.type !== vscode.FileChangeType.Created) {
                         continue;
                     }
                     // pattern is RelativePattern, use its pattern portion to
                     // check inclusion; this is a simple substring check.
-                    const pat = (pattern as vscode.RelativePattern).pattern.replace('*', '');
+                    const pat = (pattern as VscTypes.RelativePattern).pattern.replace('*', '');
                     if (c.uri.path.includes(pat)) {
                         emitter.fire(c.uri);
                     }
@@ -268,7 +312,7 @@ describe('ConfigStore (filesystem interactions)', function () {
     });
 
     it('can write, list and read a filepath config', async () => {
-        const cfg = { shortName: 'foo', label: 'Foo', pathPattern: '/tmp/foo.log' };
+        const cfg: any = { shortName: 'foo', label: 'Foo', pathPattern: '/tmp/foo.log' };
         await store.writeConfig(ConfigCategory.Filepath, 'foo', cfg);
         const names = await store.listConfigNames(ConfigCategory.Filepath);
         assert.deepStrictEqual(names, ['foo']);
@@ -284,8 +328,8 @@ describe('ConfigStore (filesystem interactions)', function () {
     });
 
     it('deleteConfig removes existing file and leaves others untouched', async () => {
-        const cfg1 = { shortName: 'a', label: 'A', pathPattern: 'x' };
-        const cfg2 = { shortName: 'b', label: 'B', pathPattern: 'y' };
+        const cfg1: any = { shortName: 'a', label: 'A', pathPattern: 'x' };
+        const cfg2: any = { shortName: 'b', label: 'B', pathPattern: 'y' };
         await store.writeConfig(ConfigCategory.Filepath, 'a', cfg1);
         await store.writeConfig(ConfigCategory.Filepath, 'b', cfg2);
         await store.deleteConfig(ConfigCategory.Filepath, 'a');
@@ -298,7 +342,7 @@ describe('ConfigStore (filesystem interactions)', function () {
             await store.configExists(ConfigCategory.Filepath, 'none'),
             false
         );
-        await store.writeConfig(ConfigCategory.Filepath, 'z', { shortName: 'z', label: 'Z', pathPattern: 'p' });
+        await store.writeConfig(ConfigCategory.Filepath, 'z', { shortName: 'z', label: 'Z', pathPattern: 'p' } as any);
         assert.strictEqual(
             await store.configExists(ConfigCategory.Filepath, 'z'),
             true

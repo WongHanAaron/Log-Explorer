@@ -1,7 +1,22 @@
-import * as vscode from 'vscode';
-import { FilepathConfig, isFilepathConfig } from '../domain/filepath-config';
+import type * as vscode from 'vscode';
+
+// runtime proxy: when running inside actual VSCode the real module is
+// available, but during unit tests there is no such package.  We lazily
+// require it and fall back to an empty object so that tests can supply their
+// own substitutes (e.g. fake FileType, FileSystemError, Uri, etc.) via
+// augmentation or by mutating this object.
+export const vscodeRuntime: Partial<typeof vscode> = (() => {
+    try {
+        // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-unsafe-return
+        return require('vscode');
+    } catch {
+        return {} as any;
+    }
+})();
+
+import { FilepathConfig } from '../domain/filepath-config';
 import { FileLogLineConfig } from '../domain/filelog-config';
-import { ConfigParser } from './config-parser';
+
 
 // small abstraction so callers can inject a fake in tests.  The real
 // workspace API exposes a `FileSystem` object which extends
@@ -20,10 +35,15 @@ export type WatcherFactory = (
  * Represents one of the two supported configuration categories.
  * Used throughout the public API to avoid magic strings.
  */
-export enum ConfigCategory {
-    Filepath = 'filepath',
-    Filelog = 'filelog',
-}
+// Use a plain const object and string union instead of a TypeScript enum.
+// ts-node in "strip-only" mode had trouble with enums during tests, so this
+// pattern keeps the runtime values available while avoiding the enum syntax.
+export const ConfigCategory = {
+    Filepath: 'filepath',
+    Filelog: 'filelog',
+} as const;
+export type ConfigCategory = typeof ConfigCategory[keyof typeof ConfigCategory];
+
 
 /**
  * Returns the workspace-relative directory URI for the given category.
@@ -36,7 +56,7 @@ function getConfigDir(
         category === ConfigCategory.Filepath
             ? 'filepath-configs'
             : 'filelog-configs';
-    return vscode.Uri.joinPath(workspaceRoot, '.logex', subdir);
+    return (vscodeRuntime.Uri as any).joinPath(workspaceRoot, '.logex', subdir);
 }
 
 
@@ -47,25 +67,29 @@ export type ConfigAddedCallback = (shortName: string) => void;
 class ConfigSubscriptionRegistry implements vscode.Disposable {
     private subscribers = new Map<ConfigCategory, Set<ConfigAddedCallback>>();
     private readonly watchers: vscode.FileSystemWatcher[] = [];
+    private workspaceRoot: vscode.Uri;
+    private watcherFactory: WatcherFactory;
 
     constructor(
-        private workspaceRoot: vscode.Uri,
+        workspaceRoot: vscode.Uri,
         watcherFactory: WatcherFactory
     ) {
+        this.workspaceRoot = workspaceRoot;
+        this.watcherFactory = watcherFactory;
         // create watchers for both category directories
-        const fpPattern = new vscode.RelativePattern(
-            workspaceRoot,
+        const fpPattern = new (vscodeRuntime.RelativePattern as any)(
+            this.workspaceRoot,
             '.logex/filepath-configs/*.json'
         );
-        const flPattern = new vscode.RelativePattern(
-            workspaceRoot,
+        const flPattern = new (vscodeRuntime.RelativePattern as any)(
+            this.workspaceRoot,
             '.logex/filelog-configs/*.json'
         );
-        this.watchers.push(watcherFactory(fpPattern));
-        this.watchers.push(watcherFactory(flPattern));
+        this.watchers.push(this.watcherFactory(fpPattern));
+        this.watchers.push(this.watcherFactory(flPattern));
 
         for (const w of this.watchers) {
-            w.onDidCreate((uri) => this.handleFileChanges([{ type: vscode.FileChangeType.Created, uri }]));
+            w.onDidCreate((uri) => this.handleFileChanges([{ type: (vscodeRuntime.FileChangeType as any).Created, uri }]));
         }
     }
 
@@ -89,7 +113,7 @@ class ConfigSubscriptionRegistry implements vscode.Disposable {
         set.add(cb);
 
         let disposed = false;
-        return new vscode.Disposable(() => {
+        return new (vscodeRuntime.Disposable as any)(() => {
             if (disposed) {
                 return;
             }
@@ -100,7 +124,7 @@ class ConfigSubscriptionRegistry implements vscode.Disposable {
 
     private handleFileChanges(changes: readonly vscode.FileChangeEvent[]): void {
         for (const change of changes) {
-            if (change.type !== vscode.FileChangeType.Created) {
+            if (change.type !== (vscodeRuntime.FileChangeType as any).Created) {
                 continue;
             }
 
@@ -150,7 +174,7 @@ class ConfigSubscriptionRegistry implements vscode.Disposable {
             return;
         }
 
-        for (const cb of set) {
+        for (const cb of Array.from(set)) {
             try {
                 cb(shortName);
             } catch (err) {
@@ -180,13 +204,35 @@ const ENCODING = 'utf-8';
  */
 export class ConfigStore {
     private readonly subscriptions: ConfigSubscriptionRegistry;
+    private workspaceRoot: vscode.Uri;
+    private fs: FsProvider;
+    private watcherFactory: WatcherFactory;
+
+    // formerly the standalone helper
+    static configFilename(shortName: string): string {
+        return `${shortName}.json`;
+    }
 
     constructor(
-        private workspaceRoot: vscode.Uri,
-        private fs: FsProvider = vscode.workspace.fs,
-        watcherFactory: WatcherFactory = vscode.workspace.createFileSystemWatcher.bind(vscode.workspace)
+        workspaceRoot: vscode.Uri,
+        fs?: FsProvider,
+        watcherFactory?: WatcherFactory
     ) {
-        this.subscriptions = new ConfigSubscriptionRegistry(workspaceRoot, watcherFactory);
+        // Determine real vscode module if available (in extension runtime); fall
+        // back to the injected runtime proxy used for testing.
+        const realVscode: any = (() => {
+            try {
+                return require('vscode');
+            } catch {
+                return vscodeRuntime;
+            }
+        })();
+
+        this.workspaceRoot = workspaceRoot;
+        this.fs = fs ?? realVscode.workspace.fs;
+        // bind watcher factory to workspace since callers expect that signature
+        this.watcherFactory = watcherFactory ?? realVscode.workspace.createFileSystemWatcher.bind(realVscode.workspace);
+        this.subscriptions = new ConfigSubscriptionRegistry(workspaceRoot, this.watcherFactory);
     }
 
     dispose(): void {
@@ -204,7 +250,7 @@ export class ConfigStore {
             const entries = await this.fs.readDirectory(dir);
             return entries
                 .filter(([name, type]) =>
-                    type === vscode.FileType.File && name.endsWith('.json')
+                    type === (vscodeRuntime.FileType as any).File && name.endsWith('.json')
                 )
                 .map(([name]) => name.slice(0, -5));
         } catch {
@@ -216,20 +262,55 @@ export class ConfigStore {
         dir: vscode.Uri,
         shortName: string
     ): Promise<FilepathConfig> {
-        const uri = vscode.Uri.joinPath(dir, ConfigParser.configFilename(shortName));
+        const uri = (vscodeRuntime.Uri as any).joinPath(dir, ConfigStore.configFilename(shortName));
         const bytes = await this.fs.readFile(uri);
         const json = Buffer.from(bytes).toString(ENCODING);
-        return ConfigParser.parseFilepathConfig(json);
+        const [cfg, err] = await FilepathConfig.fromJson(json);
+        if (err) {
+            if (err instanceof SyntaxError) {
+                throw new Error(`Malformed JSON: could not parse filepath config`);
+            }
+            throw err;
+        }
+        return cfg as FilepathConfig;
     }
 
     private async readFileLogLineConfig(
         dir: vscode.Uri,
         shortName: string
     ): Promise<FileLogLineConfig> {
-        const uri = vscode.Uri.joinPath(dir, ConfigParser.configFilename(shortName));
+        const uri = (vscodeRuntime.Uri as any).joinPath(dir, ConfigStore.configFilename(shortName));
         const bytes = await this.fs.readFile(uri);
         const json = Buffer.from(bytes).toString(ENCODING);
-        return ConfigParser.parseFileLogLineConfig(json);
+
+        // mirror the dispatch logic from the old parser
+        let plain: any;
+        try {
+            plain = JSON.parse(json);
+        } catch {
+            throw new Error(`Malformed JSON: could not parse filelog config`);
+        }
+
+        let tuple: [FileLogLineConfig | null, any | null];
+        switch (plain.type) {
+            case 'text':
+                tuple = await (require('../domain/filelog-config').TextLineConfig as any).fromJson(json);
+                break;
+            case 'xml':
+                tuple = await (require('../domain/filelog-config').XmlLineConfig as any).fromJson(json);
+                break;
+            case 'json':
+                tuple = await (require('../domain/filelog-config').JsonLineConfig as any).fromJson(json);
+                break;
+            default:
+                throw new Error(`Invalid FileLogLineConfig: unknown type`);
+        }
+
+        const [cfg, err] = tuple;
+        if (err) {
+            throw err;
+        }
+        return cfg as FileLogLineConfig;
     }
 
     private async writeConfigInternal(
@@ -237,8 +318,15 @@ export class ConfigStore {
         shortName: string,
         data: FilepathConfig | FileLogLineConfig
     ): Promise<void> {
-        const uri = vscode.Uri.joinPath(dir, ConfigParser.configFilename(shortName));
-        const json = JSON.stringify(data, null, 4);
+        const uri = (vscodeRuntime.Uri as any).joinPath(dir, ConfigStore.configFilename(shortName));
+        // if the object has a toJson method use it; otherwise fall back to
+        // JSON.stringify (this lets us write plain objects during migration).
+        let json: string;
+        if (typeof (data as any).toJson === 'function') {
+            json = (data as any).toJson();
+        } else {
+            json = JSON.stringify(data, null, 4);
+        }
         // `vscode.FileSystem.writeFile` accepts only uri and content on
         // current versions of the API (options are not needed).
         await this.fs.writeFile(uri, Buffer.from(json, ENCODING));
@@ -248,7 +336,7 @@ export class ConfigStore {
         dir: vscode.Uri,
         shortName: string
     ): Promise<void> {
-        const uri = vscode.Uri.joinPath(dir, ConfigParser.configFilename(shortName));
+        const uri = (vscodeRuntime.Uri as any).joinPath(dir, ConfigStore.configFilename(shortName));
         try {
             await this.fs.delete(uri);
         } catch {
@@ -260,7 +348,7 @@ export class ConfigStore {
         dir: vscode.Uri,
         shortName: string
     ): Promise<boolean> {
-        const uri = vscode.Uri.joinPath(dir, ConfigParser.configFilename(shortName));
+        const uri = (vscodeRuntime.Uri as any).joinPath(dir, ConfigStore.configFilename(shortName));
         try {
             await this.fs.stat(uri);
             return true;

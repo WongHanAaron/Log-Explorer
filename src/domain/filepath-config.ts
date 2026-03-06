@@ -1,20 +1,55 @@
+import { Expose } from 'class-transformer';
+import { IsString, IsOptional, IsArray, Matches } from 'class-validator';
+import { IsSerializable } from './serializable';
+
 /**
- * FilepathConfig domain object and validators.
+ * FilepathConfig domain object.
  * Stored at: .logex/filepath-configs/{shortName}.json
+ *
+ * This class replaces the previous interface and validation helpers.  By
+ * extending `IsSerializable` and applying decorators we get automatic
+ * serialization and runtime validation.
  */
-export interface FilepathConfig {
+export class FilepathConfig extends IsSerializable {
     /** Kebab-case identifier; must match the filename (without .json) */
-    shortName: string;
+    @Expose()
+    // @ts-ignore Property decorator signature mismatch with TS5 types
+    @IsString()
+    // @ts-ignore
+    @Matches(/^[a-z0-9]+(-[a-z0-9]+)*$/)
+    shortName!: string;
+
     /** Display-friendly label shown in the UI */
-    label: string;
+    @Expose()
+    // @ts-ignore
+    @IsString()
+    label!: string;
+
     /**
      * Glob pattern or absolute/relative path to the log file(s).
      * Relative paths are resolved from the workspace root.
      */
-    pathPattern: string;
+    @Expose()
+    // @ts-ignore
+    @IsString()
+    pathPattern!: string;
+
     /** Optional description / note for the user */
+    @Expose()
+    // @ts-ignore
+    @IsOptional()
+    // @ts-ignore
+    @IsString()
     description?: string;
+
     /** Optional tag list for categorizing the source */
+    @Expose()
+    // @ts-ignore
+    @IsOptional()
+    // @ts-ignore
+    @IsArray()
+    // @ts-ignore
+    @IsString({ each: true })
     tags?: string[];
 }
 
@@ -39,35 +74,4 @@ export function toKebabName(raw: string): string {
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/^-|-$/g, '');
-}
-
-/**
- * Type guard — returns true only when `obj` is a structurally valid `FilepathConfig`.
- */
-export function isFilepathConfig(obj: unknown): obj is FilepathConfig {
-    const c = obj as Record<string, unknown>;
-    if (!c || typeof c !== 'object') {
-        return false;
-    }
-    if (typeof c.shortName !== 'string' || !isKebabName(c.shortName)) {
-        return false;
-    }
-    if (typeof c.label !== 'string' || c.label.trim().length === 0) {
-        return false;
-    }
-    if (typeof c.pathPattern !== 'string' || c.pathPattern.trim().length === 0) {
-        return false;
-    }
-    if (c.description !== undefined && typeof c.description !== 'string') {
-        return false;
-    }
-    if (c.tags !== undefined) {
-        if (!Array.isArray(c.tags)) { return false; }
-        for (const t of c.tags) {
-            if (typeof t !== 'string' || t.trim().length === 0) {
-                return false;
-            }
-        }
-    }
-    return true;
 }

@@ -1,4 +1,4 @@
-# LogExplorer Development Guidelines
+﻿# LogExplorer Development Guidelines
 
 Auto-generated from all feature plans. Last updated: 2026-02-28
 
@@ -20,6 +20,8 @@ Auto-generated from all feature plans. Last updated: 2026-02-28
 - configuration files stored on local filesystem; tags are a simple (001-tag-component)
 - TypeScript (ES2021) with React 18 and TailwindCSS. + `vscode` extension API, React, `@testing-library/react`, `ts-node`/Mocha for unit tests. (004-logfile-source-save)
 - File system under workspace (`.logex/filepath-configs/*.json`) via `vscode.workspace.fs` and `ConfigStore`. (004-logfile-source-save)
+- TypeScript 5.x targeting ES2020; Node 18 runtime in VSCode extension host.  Decorators are not currently enabled in tsconfig. + existing dependencies plus new packages for serialization/validation (likely `class-transformer` and `class-validator` or similar).  Also `reflect-metadata` may be required. (005-config-model-serialization)
+- JSON files under `.logex/*-configs` accessed via `ConfigStore` (file system through vscode.workspace.fs). (005-config-model-serialization)
 
 - TypeScript 5.x, Node.js 18+ + @types/vscode (extension API types), esbuild (bundler) (001-vscode-extension-setup)
 
@@ -53,9 +55,9 @@ rules on file/class isolation, exports, dependency injection, etc.
 When authoring UI code, consult the 'docs/react-ui-guidelines.md' for our conventions on webview structure, messaging, styling, and documentation.
 
 ## Recent Changes
+- 005-config-model-serialization: Added TypeScript 5.x targeting ES2020; Node 18 runtime in VSCode extension host.  Decorators are not currently enabled in tsconfig. + existing dependencies plus new packages for serialization/validation (likely `class-transformer` and `class-validator` or similar).  Also `reflect-metadata` may be required.
+- 005-config-model-serialization: Added TypeScript 5.x targeting ES2020; Node 18 runtime in VSCode extension host.  Decorators are not currently enabled in tsconfig. + existing dependencies plus new packages for serialization/validation (likely `class-transformer` and `class-validator` or similar).  Also `reflect-metadata` may be required.
 - 004-logfile-source-save: Added TypeScript (ES2021) with React 18 and TailwindCSS. + `vscode` extension API, React, `@testing-library/react`, `ts-node`/Mocha for unit tests.
-- 001-tag-component: Added TypeScript (ES2021 w/ React 18) + VSCode Extension API, React, Tailwind CSS, existing
-- 001-react-logfile-source: Added [e.g., Python 3.11, Swift 5.9, Rust 1.75 or NEEDS CLARIFICATION] + [e.g., FastAPI, UIKit, LLVM or NEEDS CLARIFICATION]
 
 
 <!-- MANUAL ADDITIONS START -->

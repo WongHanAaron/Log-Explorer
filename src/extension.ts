@@ -1,3 +1,4 @@
+import 'reflect-metadata';
 import * as vscode from 'vscode';
 import { LogExplorerPanel } from './panels/LogExplorerPanel';
 import { SessionToolsViewProvider } from './panels/views/SessionToolsViewProvider';

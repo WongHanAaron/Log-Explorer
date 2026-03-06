@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { getReactWebviewHtml } from '../../utils/reactWebview';
 import { ConfigStore, ConfigCategory } from '../../services/config-store';
-import { isFileLogLineConfig } from '../../domain/filelog-config';
+import { FileLogLineConfig } from '../../domain/filelog-config';
 import type {
     FilelogConfigSaveMessage,
     FilelogConfigTestRegexMessage,
@@ -124,16 +124,13 @@ export class LogFileLinesPanel {
             }
             case 'filelog-config:save': {
                 const { config } = msg as FilelogConfigSaveMessage;
-                if (!isFileLogLineConfig(config)) {
-                    this._panel.webview.postMessage({
-                        type: 'filelog-config:save-result', success: false, errorMessage: 'Invalid config.'
-                    });
-                    return;
-                }
                 try {
-                    // ensure directory exists
+                    const [valid, err] = await FileLogLineConfig.fromJson(config.toJson());
+                    if (err || !valid) {
+                        throw err || new Error('validation failed');
+                    }
                     await vscode.workspace.fs.createDirectory(this._configDirUri);
-                    await this._store.writeConfig(ConfigCategory.Filelog, config.shortName, config);
+                    await this._store.writeConfig(ConfigCategory.Filelog, valid.shortName, valid);
                     this._panel.webview.postMessage({ type: 'filelog-config:save-result', success: true });
                 } catch (err) {
                     this._panel.webview.postMessage({

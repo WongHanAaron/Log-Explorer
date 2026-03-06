@@ -146,6 +146,8 @@
         "@tanstack/react-table": "^8.21.3",
         "@testing-library/jest-dom": "^6.9.1",
         "@testing-library/react": "^16.3.2",
+        "@types/chai": "^5.2.3",
+        "@types/chai-as-promised": "^8.0.2",
         "@types/glob": "^8.1.0",
         "@types/mocha": "^10.0.10",
         "@types/node": "^25.3.2",
@@ -156,6 +158,8 @@
         "@vscode/test-cli": "^0.0.12",
         "@vscode/test-electron": "^2.5.2",
         "@vscode/vsce": "^3.7.1",
+        "chai": "^6.2.2",
+        "chai-as-promised": "^8.0.2",
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
         "esbuild": "^0.27.3",
@@ -169,5 +173,10 @@
         "tailwindcss": "^4.2.1",
         "ts-node": "^10.9.2",
         "typescript": "^5.9.3"
+    },
+    "dependencies": {
+        "class-transformer": "^0.5.1",
+        "class-validator": "^0.15.1",
+        "reflect-metadata": "^0.2.2"
     }
 }

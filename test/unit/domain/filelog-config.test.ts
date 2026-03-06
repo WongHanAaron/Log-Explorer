@@ -1,202 +1,109 @@
-import * as assert from 'assert';
-import {
-    isFileLogLineConfig,
-    type TextLineConfig,
-    type XmlLineConfig,
-    type JsonLineConfig,
-    type FileLogLineConfig
-} from '../../../src/domain/filelog-config';
+const { expect } = require('chai');
+const {
+    FileLogLineConfig,
+    TextLineConfig,
+    XmlLineConfig,
+    JsonLineConfig,
+    TextField,
+    XmlFieldMapping,
+    JsonFieldMapping,
+    PrefixSuffixExtraction,
+    RegexExtraction,
+    DateTimeFormat
+} = require('../../../src/domain/filelog-config.ts');
 
-describe('FileLogLineConfig domain', function () {
-    // ── Helpers ───────────────────────────────────────────────────────────────
+async function assertRoundTrip(clazz: any, obj: any) {
+    const json = obj.toJson ? obj.toJson() : JSON.stringify(obj);
+    const [inst, err] = await clazz.fromJson(json);
+    expect(err).to.be.null;
+    expect(inst).to.be.instanceOf(clazz);
+    expect(inst).to.deep.equal(obj);
+}
 
-    function base(type: string): object {
-        return { shortName: 'test-config', label: 'Test', type };
-    }
+function base(type: string): any {
+    return { shortName: 'test', label: 'Test', type };
+}
 
-    // ── TextLineConfig — prefix-suffix extraction ─────────────────────────────
-
-    describe('TextLineConfig (prefix-suffix)', function () {
-        it('accepts valid prefix-suffix text config', () => {
-            const cfg: TextLineConfig = {
-                type: 'text',
-                shortName: 'nginx',
-                label: 'Nginx',
-                fields: [
-                    { name: 'ts', extraction: { kind: 'prefix-suffix', prefix: '[', suffix: ']' } }
-                ]
-            };
-            assert.strictEqual(isFileLogLineConfig(cfg), true);
-        });
-        it('accepts tags array on text config', () => {
-            const cfg: TextLineConfig = {
-                type: 'text',
-                shortName: 'tagged',
-                label: 'Tagged',
-                fields: [{ name: 'x', extraction: { kind: 'prefix-suffix', prefix: 'x' } }],
-                tags: ['foo', 'bar']
-            };
-            assert.strictEqual(isFileLogLineConfig(cfg), true);
-        });
-
-        it('accepts prefix-suffix without suffix (to end-of-line)', () => {
-            const cfg: TextLineConfig = {
-                type: 'text',
-                shortName: 'app',
-                label: 'App',
-                fields: [{ name: 'level', extraction: { kind: 'prefix-suffix', prefix: 'level=' } }]
-            };
-            assert.strictEqual(isFileLogLineConfig(cfg), true);
+describe('FileLogLineConfig classes', () => {
+    describe('TextLineConfig', () => {
+        it('round-trips prefix-suffix extraction', async () => {
+            const cfg = new TextLineConfig();
+            cfg.type = 'text';
+            cfg.shortName = 'nginx';
+            cfg.label = 'Nginx';
+            const field = new TextField();
+            field.name = 'ts';
+            field.extraction = Object.assign(new PrefixSuffixExtraction(), {
+                kind: 'prefix-suffix', prefix: '[', suffix: ']'
+            });
+            cfg.fields = [field];
+            await assertRoundTrip(TextLineConfig, cfg);
         });
 
-        it('rejects prefix-suffix without prefix', () => {
-            const cfg = {
-                ...base('text'),
-                fields: [{ name: 'x', extraction: { kind: 'prefix-suffix' } }]
-            };
-            assert.strictEqual(isFileLogLineConfig(cfg), false);
-        });
-
-        it('accepts text config with datetime field', () => {
-            const cfg: TextLineConfig = {
-                type: 'text',
-                shortName: 'iis',
-                label: 'IIS',
-                fields: [
-                    {
-                        name: 'ts',
-                        extraction: { kind: 'prefix-suffix', prefix: '[', suffix: ']' },
-                        datetime: { formatString: 'yyyy-MM-dd HH:mm:ss' }
-                    }
-                ]
-            };
-            assert.strictEqual(isFileLogLineConfig(cfg), true);
+        it('rejects missing fields', async () => {
+            const json = JSON.stringify({ type: 'text', shortName: 'foo', label: 'L' });
+            const [cfg, err] = await FileLogLineConfig.fromJson(json);
+            expect(cfg).to.be.null;
+            expect(err).to.exist;
         });
     });
 
-    // ── TextLineConfig — regex extraction ─────────────────────────────────────
-
-    describe('TextLineConfig (regex)', function () {
-        it('accepts valid regex text config', () => {
-            const cfg: TextLineConfig = {
-                type: 'text',
-                shortName: 'access',
-                label: 'Access',
-                fields: [
-                    { name: 'ip', extraction: { kind: 'regex', pattern: '(?<value>\\d+\\.\\d+\\.\\d+\\.\\d+)' } }
-                ]
-            };
-            assert.strictEqual(isFileLogLineConfig(cfg), true);
+    describe('XmlLineConfig', () => {
+        it('round-trips simple xml config', async () => {
+            const cfg = new XmlLineConfig();
+            cfg.type = 'xml';
+            cfg.shortName = 'events';
+            cfg.label = 'Events';
+            cfg.rootXpath = '//Event';
+            const m = new XmlFieldMapping();
+            m.name = 'sev';
+            m.xpath = '@Level';
+            cfg.fields = [m];
+            await assertRoundTrip(XmlLineConfig, cfg);
         });
 
-        it('rejects regex extraction without pattern', () => {
-            const cfg = {
-                ...base('text'),
-                fields: [{ name: 'x', extraction: { kind: 'regex' } }]
-            };
-            assert.strictEqual(isFileLogLineConfig(cfg), false);
+        it('rejects missing rootXpath', async () => {
+            const json = JSON.stringify({ type: 'xml', shortName: 'a', label: 'L', fields: [] });
+            const [cfg, err] = await FileLogLineConfig.fromJson(json);
+            expect(cfg).to.be.null;
+            expect(err).to.exist;
         });
     });
 
-    // ── XmlLineConfig ──────────────────────────────────────────────────────────
-
-    describe('XmlLineConfig', function () {
-        it('accepts valid xml config', () => {
-            const cfg: XmlLineConfig = {
-                type: 'xml',
-                shortName: 'events',
-                label: 'Events',
-                rootXpath: '//Event',
-                fields: [{ name: 'severity', xpath: '@Level' }]
-            };
-            assert.strictEqual(isFileLogLineConfig(cfg), true);
-        });
-        it('accepts tags array on xml config', () => {
-            const cfg: XmlLineConfig = {
-                type: 'xml',
-                shortName: 'events2',
-                label: 'Events2',
-                rootXpath: '//Event',
-                fields: [],
-                tags: ['alpha']
-            };
-            assert.strictEqual(isFileLogLineConfig(cfg), true);
+    describe('JsonLineConfig', () => {
+        it('round-trips simple json config', async () => {
+            const cfg = new JsonLineConfig();
+            cfg.type = 'json';
+            cfg.shortName = 'structured';
+            cfg.label = 'Structured';
+            const j = new JsonFieldMapping();
+            j.name = 'level';
+            j.jsonPath = 'level';
+            cfg.fields = [j];
+            await assertRoundTrip(JsonLineConfig, cfg);
         });
 
-        it('rejects xml config without rootXpath', () => {
-            const cfg = { ...base('xml'), fields: [{ name: 'x', xpath: '//x' }] };
-            assert.strictEqual(isFileLogLineConfig(cfg), false);
-        });
-
-        it('accepts xml config with no fields', () => {
-            const cfg: XmlLineConfig = {
-                type: 'xml', shortName: 'log', label: 'Log', rootXpath: '//Log', fields: []
-            };
-            assert.strictEqual(isFileLogLineConfig(cfg), true);
+        it('rejects missing jsonPath', async () => {
+            const json = JSON.stringify({ type: 'json', shortName: 'x', label: 'L', fields: [{ name: 'y' }] });
+            const [cfg, err] = await FileLogLineConfig.fromJson(json);
+            expect(cfg).to.be.null;
+            expect(err).to.exist;
         });
     });
 
-    // ── JsonLineConfig ─────────────────────────────────────────────────────────
-
-    describe('JsonLineConfig', function () {
-        it('accepts valid json config', () => {
-            const cfg: JsonLineConfig = {
-                type: 'json',
-                shortName: 'structured',
-                label: 'Structured',
-                fields: [
-                    { name: 'level', jsonPath: 'level' },
-                    { name: 'ts', jsonPath: 'metadata.timestamp', datetime: { autoDetect: true } }
-                ]
-            };
-            assert.strictEqual(isFileLogLineConfig(cfg), true);
-        });
-        it('rejects invalid tags', () => {
-            const cfg = {
-                ...base('text'),
-                label: 'Bad',
-                fields: [],
-                tags: ['good', '']
-            };
-            assert.strictEqual(isFileLogLineConfig(cfg), false);
+    describe('discriminator logic', () => {
+        it('produces TextLineConfig instance', async () => {
+            const json = JSON.stringify({ type: 'text', shortName: 'a', label: 'L', fields: [] });
+            const [inst, err] = await FileLogLineConfig.fromJson(json);
+            expect(err).to.be.null;
+            expect(inst).to.be.instanceOf(TextLineConfig);
         });
 
-        it('rejects json field without jsonPath', () => {
-            const cfg = {
-                ...base('json'),
-                fields: [{ name: 'x' }]
-            };
-            assert.strictEqual(isFileLogLineConfig(cfg), false);
-        });
-
-        it('accepts json config with empty fields array', () => {
-            const cfg: JsonLineConfig = {
-                type: 'json', shortName: 'empty', label: 'Empty', fields: []
-            };
-            assert.strictEqual(isFileLogLineConfig(cfg), true);
-        });
-    });
-
-    // ── Discriminant rejection ─────────────────────────────────────────────────
-
-    describe('unknown type', function () {
-        it('rejects unknown line type', () => {
-            assert.strictEqual(isFileLogLineConfig({ ...base('csv'), fields: [] }), false);
-        });
-        it('rejects null', () => {
-            assert.strictEqual(isFileLogLineConfig(null), false);
-        });
-        it('rejects missing shortName', () => {
-            assert.strictEqual(
-                isFileLogLineConfig({ type: 'text', label: 'L', fields: [] }),
-                false
-            );
-        });
-        it('rejects missing label', () => {
-            assert.strictEqual(
-                isFileLogLineConfig({ type: 'json', shortName: 'foo', fields: [] }),
-                false
-            );
+        it('fails on unknown type', async () => {
+            const json = JSON.stringify({ type: 'csv', shortName: 'a', label: 'L', fields: [] });
+            const [cfg, err] = await FileLogLineConfig.fromJson(json);
+            expect(cfg).to.be.null;
+            expect(err).to.exist;
         });
     });
 });

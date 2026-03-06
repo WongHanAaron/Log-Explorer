@@ -18,7 +18,9 @@
         "allowImportingTsExtensions": true,
         "noEmit": true,
         "declaration": true,
-        "declarationMap": true
+        "declarationMap": true,
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true
     },
     "include": [
         "src/**/*"
