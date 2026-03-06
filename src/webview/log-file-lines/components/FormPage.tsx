@@ -41,10 +41,8 @@ export interface FormPageProps {
     onRemoveTag: (index: number) => void;
     lineType: "text" | "xml" | "json";
     setLineType: (v: "text" | "xml" | "json") => void;
-    rootXpath: string;
-    setRootXpath: (v: string) => void;
-    textFields: TextField[];
-    setTextFields: React.Dispatch<React.SetStateAction<TextField[]>>;
+    fields: TextField[];
+    setFields: React.Dispatch<React.SetStateAction<TextField[]>>;
     xmlFields: XmlField[];
     setXmlFields: React.Dispatch<React.SetStateAction<XmlField[]>>;
     jsonFields: JsonField[];
@@ -69,10 +67,8 @@ export function FormPage({
     onRemoveTag,
     lineType,
     setLineType,
-    rootXpath,
-    setRootXpath,
-    textFields,
-    setTextFields,
+    fields,
+    setFields,
     xmlFields,
     setXmlFields,
     jsonFields,
@@ -85,14 +81,14 @@ export function FormPage({
     onSave,
 }: FormPageProps) {
     // helper functions for field manipulation
-    const addTextField = () => {
-        setTextFields((prev: TextField[]) => [...prev, { name: "", extraction: { kind: "prefix-suffix", prefix: "" } }]);
+    const addField = () => {
+        setFields((prev: TextField[]) => [...prev, { name: "", extraction: { kind: "prefix-suffix", prefix: "" } }]);
     };
-    const removeTextField = (i: number) => {
-        setTextFields((prev: TextField[]) => prev.filter((_, idx) => idx !== i));
+    const removeField = (i: number) => {
+        setFields((prev: TextField[]) => prev.filter((_, idx) => idx !== i));
     };
-    const updateTextField = (i: number, field: Partial<TextField>) => {
-        setTextFields((prev: TextField[]) => {
+    const updateField = (i: number, field: Partial<TextField>) => {
+        setFields((prev: TextField[]) => {
             const copy = [...prev];
             copy[i] = { ...copy[i], ...field };
             return copy;
@@ -151,42 +147,36 @@ export function FormPage({
                         <option value="json">JSON</option>
                     </select>
                 </div>
-                {lineType === "xml" && (
-                    <div className="flex flex-col gap-1 mb-3">
-                        <Label htmlFor="rootXpath">Root XPath <span className="text-destructive-foreground">*</span></Label>
-                        <Input id="rootXpath" value={rootXpath} onChange={e => setRootXpath(e.target.value)} autoComplete="off" placeholder="e.g. //Event" />
-                    </div>
-                )}
 
                 {/* Fields sections */}
                 {lineType === "text" && (
                     <section className="mb-4">
                         <div className="flex justify-between items-center mb-2">
                             <span>Fields</span>
-                            <Button size="sm" onClick={addTextField}>+ Add Field</Button>
+                            <Button size="sm" onClick={addField}>+ Add Field</Button>
                         </div>
-                        {textFields.map((f, i) => (
+                        {fields.map((f, i) => (
                             <div key={i} className="border border-border rounded-sm p-2 mb-2">
                                 <div className="flex gap-2 items-center mb-1">
-                                    <Input placeholder="Name" value={f.name} onChange={e => updateTextField(i, { name: e.target.value })} className="flex-1" />
-                                    <Button variant="secondary" size="sm" onClick={() => removeTextField(i)}>Remove</Button>
+                                    <Input placeholder="Name" value={f.name} onChange={e => updateField(i, { name: e.target.value })} className="flex-1" />
+                                    <Button variant="secondary" size="sm" onClick={() => removeField(i)}>Remove</Button>
                                 </div>
                                 <div className="flex gap-2 mb-1">
-                                    <select value={f.extraction.kind} onChange={e => updateTextField(i, { extraction: { ...f.extraction, kind: e.target.value as ExtractionKind } })} className="border border-[--input-border] bg-[--input-bg] px-2 py-1">
+                                    <select value={f.extraction.kind} onChange={e => updateField(i, { extraction: { ...f.extraction, kind: e.target.value as ExtractionKind } })} className="border border-[--input-border] bg-[--input-bg] px-2 py-1">
                                         <option value="prefix-suffix">Prefix / Suffix</option>
                                         <option value="regex">Regex</option>
                                     </select>
                                 </div>
                                 {f.extraction.kind === "prefix-suffix" ? (
                                     <div className="flex gap-2 mb-1">
-                                        <Input placeholder="Prefix" value={f.extraction.prefix} onChange={e => updateTextField(i, { extraction: { ...f.extraction, prefix: e.target.value } })} />
-                                        <Input placeholder="Suffix" value={f.extraction.suffix} onChange={e => updateTextField(i, { extraction: { ...f.extraction, suffix: e.target.value } })} />
+                                        <Input placeholder="Prefix" value={f.extraction.prefix} onChange={e => updateField(i, { extraction: { ...f.extraction, prefix: e.target.value } })} />
+                                        <Input placeholder="Suffix" value={f.extraction.suffix} onChange={e => updateField(i, { extraction: { ...f.extraction, suffix: e.target.value } })} />
                                     </div>
                                 ) : (
                                     <div className="flex flex-col gap-1 mb-1">
-                                        <Input placeholder="Pattern" value={f.extraction.pattern} onChange={e => updateTextField(i, { extraction: { ...f.extraction, pattern: e.target.value } })} />
+                                        <Input placeholder="Pattern" value={f.extraction.pattern} onChange={e => updateField(i, { extraction: { ...f.extraction, pattern: e.target.value } })} />
                                         <div className="flex gap-2 items-center">
-                                            <Input placeholder="Sample log line" value={f.sample} onChange={e => updateTextField(i, { sample: e.target.value })} />
+                                            <Input placeholder="Sample log line" value={f.sample} onChange={e => updateField(i, { sample: e.target.value })} />
                                             <Button size="sm" onClick={() => onTestRegex(i)}>Test</Button>
                                         </div>
                                         {f.regexResult && (

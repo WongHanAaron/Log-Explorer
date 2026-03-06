@@ -20,7 +20,7 @@ services before UI.
 
 - [ ] T001 [US2] Create `test/unit/domain/filepath-config.test.ts` — tests: `isFilepathConfig` accepts valid object; rejects missing shortName; rejects non-kebab shortName; rejects empty label; rejects empty pathPattern; `isKebabName` pattern edge cases; `toKebabName` lowercases and strips special chars
 - [ ] T002 [US2] Create `src/domain/filepath-config.ts` — `FilepathConfig` interface, `isFilepathConfig`, `isKebabName`, `toKebabName` — make T001 pass
-- [ ] T003 [US3] Create `test/unit/domain/filelog-config.test.ts` — tests: `isFileLogLineConfig` dispatches correctly for `text`/`xml`/`json`; rejects unknown type; `TextLineConfig` with prefix-suffix extraction; `TextLineConfig` with regex extraction; `JsonLineConfig` with field mappings; `XmlLineConfig` with rootXpath
+- [ ] T003 [US3] Create `test/unit/domain/filelog-config.test.ts` — tests: `isFileLogLineConfig` dispatches correctly for `text`/`xml`/`json`; rejects unknown type; `TextLineConfig` with prefix-suffix extraction; `TextLineConfig` with regex extraction; `JsonLineConfig` with field mappings; `XmlLineConfig` with fields
 - [ ] T004 [US3] Create `src/domain/filelog-config.ts` — all interfaces and validators from data-model.md — make T003 pass
 
 **Checkpoint**: `npm run test:unit` passes for all domain tests.
@@ -77,7 +77,7 @@ services before UI.
 
 - [ ] T012 [P] [US3] Create `src/webview/filelog-editor/index.html` — form with: shortName, label, description, type selector (text/xml/json); dynamic section that shows relevant fields per type:
   - Text: extraction kind selector (prefix-suffix / regex), field list with add/remove, per-field: name, extraction inputs, optional datetime format
-  - XML: rootXpath input, field list with name + xpath
+  - XML: field list with name + xpath (no rootXPath needed)
   - JSON: field list with name + jsonPath
   - Regex fields include a "Test" button that sends `filelog-config:test-regex`
 - [ ] T013 [P] [US3] Create `src/webview/filelog-editor/main.ts` — handle `filelog-config:load`; dynamic field rendering on type change; Save posts `filelog-config:save`; Test Regex posts `filelog-config:test-regex`; handle `filelog-config:regex-test-result` to display match/error; handle `filelog-config:save-result`

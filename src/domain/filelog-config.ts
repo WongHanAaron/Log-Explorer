@@ -116,9 +116,6 @@ export abstract class FileLogLineConfig extends IsSerializable {
     @IsString()
     shortName!: string;
 
-    @Expose()
-    @IsString()
-    label!: string;
 
     @Expose()
     @IsOptional()
@@ -150,10 +147,8 @@ export class XmlLineConfig extends FileLogLineConfig {
     @IsIn(['xml'])
     type: 'xml' = 'xml';
 
-    @Expose()
-    @IsString()
-    rootXpath!: string;
-
+    // `rootXpath` was removed because the payload no longer requires a separate
+    // root‑XPath; the matching engine will operate on the document root.
     @Expose()
     @IsArray()
     @ValidateNested({ each: true })

@@ -42,7 +42,6 @@ This union of three variants is replaced with a class hierarchy:
 - **TextLineConfig** (extends `FileLogLineConfig`)
   - `fields: TextField[]`
 - **XmlLineConfig** (extends `FileLogLineConfig`)
-  - `rootXpath: string`
   - `fields: XmlFieldMapping[]`
 - **JsonLineConfig** (extends `FileLogLineConfig`)
   - `fields: JsonFieldMapping[]`

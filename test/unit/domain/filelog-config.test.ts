@@ -21,7 +21,7 @@ async function assertRoundTrip(clazz: any, obj: any) {
 }
 
 function base(type: string): any {
-    return { shortName: 'test', label: 'Test', type };
+    return { shortName: 'test', type };
 }
 
 describe('FileLogLineConfig classes', () => {
@@ -30,7 +30,6 @@ describe('FileLogLineConfig classes', () => {
             const cfg = new TextLineConfig();
             cfg.type = 'text';
             cfg.shortName = 'nginx';
-            cfg.label = 'Nginx';
             const field = new TextField();
             field.name = 'ts';
             field.extraction = Object.assign(new PrefixSuffixExtraction(), {
@@ -41,7 +40,7 @@ describe('FileLogLineConfig classes', () => {
         });
 
         it('rejects missing fields', async () => {
-            const json = JSON.stringify({ type: 'text', shortName: 'foo', label: 'L' });
+            const json = JSON.stringify({ type: 'text', shortName: 'foo' });
             const [cfg, err] = await FileLogLineConfig.fromJson(json);
             expect(cfg).to.be.null;
             expect(err).to.exist;
@@ -53,8 +52,6 @@ describe('FileLogLineConfig classes', () => {
             const cfg = new XmlLineConfig();
             cfg.type = 'xml';
             cfg.shortName = 'events';
-            cfg.label = 'Events';
-            cfg.rootXpath = '//Event';
             const m = new XmlFieldMapping();
             m.name = 'sev';
             m.xpath = '@Level';
@@ -62,12 +59,9 @@ describe('FileLogLineConfig classes', () => {
             await assertRoundTrip(XmlLineConfig, cfg);
         });
 
-        it('rejects missing rootXpath', async () => {
-            const json = JSON.stringify({ type: 'xml', shortName: 'a', label: 'L', fields: [] });
-            const [cfg, err] = await FileLogLineConfig.fromJson(json);
-            expect(cfg).to.be.null;
-            expect(err).to.exist;
-        });
+        // no longer validate presence of rootXpath – it was removed from the model
+        // because XML extraction always operates on the whole document
+        
     });
 
     describe('JsonLineConfig', () => {
@@ -75,7 +69,6 @@ describe('FileLogLineConfig classes', () => {
             const cfg = new JsonLineConfig();
             cfg.type = 'json';
             cfg.shortName = 'structured';
-            cfg.label = 'Structured';
             const j = new JsonFieldMapping();
             j.name = 'level';
             j.jsonPath = 'level';
@@ -84,7 +77,7 @@ describe('FileLogLineConfig classes', () => {
         });
 
         it('rejects missing jsonPath', async () => {
-            const json = JSON.stringify({ type: 'json', shortName: 'x', label: 'L', fields: [{ name: 'y' }] });
+            const json = JSON.stringify({ type: 'json', shortName: 'x', fields: [{ name: 'y' }] });
             const [cfg, err] = await FileLogLineConfig.fromJson(json);
             expect(cfg).to.be.null;
             expect(err).to.exist;
@@ -93,14 +86,14 @@ describe('FileLogLineConfig classes', () => {
 
     describe('discriminator logic', () => {
         it('produces TextLineConfig instance', async () => {
-            const json = JSON.stringify({ type: 'text', shortName: 'a', label: 'L', fields: [] });
+            const json = JSON.stringify({ type: 'text', shortName: 'a', fields: [] });
             const [inst, err] = await FileLogLineConfig.fromJson(json);
             expect(err).to.be.null;
             expect(inst).to.be.instanceOf(TextLineConfig);
         });
 
         it('fails on unknown type', async () => {
-            const json = JSON.stringify({ type: 'csv', shortName: 'a', label: 'L', fields: [] });
+            const json = JSON.stringify({ type: 'csv', shortName: 'a', fields: [] });
             const [cfg, err] = await FileLogLineConfig.fromJson(json);
             expect(cfg).to.be.null;
             expect(err).to.exist;

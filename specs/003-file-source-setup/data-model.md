@@ -167,7 +167,6 @@ export interface XmlLineConfig {
     label: string;
     description?: string;
     /** XPath to the repeating element that represents one log entry */
-    rootXpath: string;
     fields: XmlFieldMapping[];
 }
 
@@ -229,7 +228,7 @@ function isFieldExtraction(e: any): e is FieldExtraction {
 }
 
 function isXmlLineConfig(c: any): c is XmlLineConfig {
-    return typeof c.rootXpath === 'string' && Array.isArray(c.fields);
+    return Array.isArray(c.fields);
 }
 
 function isJsonLineConfig(c: any): c is JsonLineConfig {
@@ -318,6 +317,5 @@ function isJsonLineConfig(c: any): c is JsonLineConfig {
 | `TextField.name` | Required; non-empty string |
 | `PrefixSuffixExtraction.prefix` | Required; non-empty string |
 | `RegexExtraction.pattern` | Required; must compile via `new RegExp(pattern)` without error |
-| `XmlLineConfig.rootXpath` | Required; non-empty string |
 | `XmlFieldMapping.xpath` | Required; non-empty string |
 | `JsonFieldMapping.jsonPath` | Required; non-empty string; dot-notation |

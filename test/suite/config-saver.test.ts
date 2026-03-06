@@ -4,16 +4,9 @@ import * as os from 'os';
 import * as path from 'path';
 import * as fs from 'fs';
 import { ConfigStore, ConfigCategory } from '../../src/services/config-store';
-import { ConfigSaver } from '../../src/panels/editors/ConfigSaver';
+import { ConfigSaver } from '../../src/services/config-saver';
 import { FilepathConfig } from '../../src/domain/filepath-config';
-import { FileLogLineConfig } from '../../src/domain/filelog-config';
-
-class DummyPanel {
-    public messages: any[] = [];
-    public webview = {
-        postMessage: (m: any) => { this.messages.push(m); return Promise.resolve(true); }
-    };
-}
+import { TextLineConfig } from '../../src/domain/filelog-config';
 
 describe('ConfigSaver', () => {
     let tmpFolder: vscode.Uri;
@@ -27,40 +20,40 @@ describe('ConfigSaver', () => {
     });
 
     it('successfully saves a filepath config object and reports success', async () => {
-        const panel = new DummyPanel() as unknown as vscode.WebviewPanel;
         const cfg = new FilepathConfig();
         cfg.shortName = 'foo';
         cfg.pathPattern = '/var/log/foo';
 
-        await ConfigSaver.save(cfg, FilepathConfig, store, ConfigCategory.Filepath, vscode.Uri.joinPath(tmpFolder, '.logex', 'filepath-configs'), panel, 'fp-res');
+        const result = await ConfigSaver.save(
+            cfg,
+            FilepathConfig,
+            store,
+            ConfigCategory.Filepath,
+            vscode.Uri.joinPath(tmpFolder, '.logex', 'filepath-configs'),
+            'fp-res'
+        );
         // verify store wrote file
         const names = await store.listConfigNames(ConfigCategory.Filepath);
         assert.deepStrictEqual(names, ['foo']);
-        assert.deepStrictEqual(panel.messages, [{ type: 'fp-res', success: true }]);
+        assert.deepStrictEqual(result, { type: 'fp-res', success: true });
     });
 
-    it('propagates validation errors back to panel', async () => {
-        const panel = new DummyPanel() as unknown as vscode.WebviewPanel;
+    it('propagates validation errors back to caller', async () => {
         // invalid because shortName missing
         const raw = { pathPattern: 'x' };
-        await ConfigSaver.save(raw as any, FilepathConfig, store, ConfigCategory.Filepath, vscode.Uri.joinPath(tmpFolder, '.logex', 'filepath-configs'), panel, 'fp-res');
-        assert.strictEqual(panel.messages.length, 1);
-        const msg = panel.messages[0];
-        assert.strictEqual(msg.type, 'fp-res');
-        assert.strictEqual(msg.success, false);
-        assert.ok(typeof msg.errorMessage === 'string' && msg.errorMessage.length > 0);
+        const result = await ConfigSaver.save(raw as any, FilepathConfig, store, ConfigCategory.Filepath, vscode.Uri.joinPath(tmpFolder, '.logex', 'filepath-configs'), 'fp-res');
+        assert.strictEqual(result.type, 'fp-res');
+        assert.strictEqual(result.success, false);
+        assert.ok(typeof result.errorMessage === 'string' && result.errorMessage.length > 0);
     });
 
-    it('works with filelog config class as well', async () => {
-        const panel = new DummyPanel() as unknown as vscode.WebviewPanel;
-        const cfg = new FileLogLineConfig();
-        cfg.shortName = 'bar';
-        cfg.type = 'text';
-        cfg.textFields = [];
+    it('works with filelog config subclass as well', async () => {
+        // use concrete subclass rather than abstract base
+        const cfg: any = { type: 'text', shortName: 'bar', fields: [] };
 
-        await ConfigSaver.save(cfg, FileLogLineConfig, store, ConfigCategory.Filelog, vscode.Uri.joinPath(tmpFolder, '.logex', 'filelog-configs'), panel, 'fl-res');
+        const result = await ConfigSaver.save(cfg, TextLineConfig, store, ConfigCategory.Filelog, vscode.Uri.joinPath(tmpFolder, '.logex', 'filelog-configs'), 'fl-res');
         const names = await store.listConfigNames(ConfigCategory.Filelog);
         assert.deepStrictEqual(names, ['bar']);
-        assert.deepStrictEqual(panel.messages, [{ type: 'fl-res', success: true }]);
+        assert.deepStrictEqual(result, { type: 'fl-res', success: true });
     });
 });
