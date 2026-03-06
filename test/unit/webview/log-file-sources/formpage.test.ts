@@ -24,6 +24,7 @@ const baseProps = {
     onSubmit: (_: React.FormEvent) => { },
     onCancel: () => { },
     originalShortName: null,
+    canSave: false,
 };
 
 describe('LogFileSources FormPage', () => {
@@ -32,5 +33,16 @@ describe('LogFileSources FormPage', () => {
         // the old "Label" field should no longer exist
         const labelInput = screen.queryByLabelText(/Label/i);
         assert.strictEqual(labelInput, null);
+    });
+
+    it('only shows Save button when canSave is true', () => {
+        // when canSave is false it should not render
+        render(React.createElement(FormPage, { ...baseProps, canSave: false }));
+        assert.strictEqual(screen.queryByText(/save/i), null);
+
+        // re-render with canSave true and button should appear
+        render(React.createElement(FormPage, { ...baseProps, canSave: true }));
+        const saveBtn = screen.getByText(/save/i);
+        assert.ok(saveBtn);
     });
 });

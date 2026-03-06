@@ -23,6 +23,7 @@ export interface FormPageProps {
     onSubmit: (e: React.FormEvent) => void;
     onCancel: () => void;
     originalShortName: string | null;
+    canSave: boolean;
 }
 
 export function FormPage({
@@ -44,6 +45,7 @@ export function FormPage({
     onSubmit,
     onCancel,
     originalShortName,
+    canSave,
 }: FormPageProps) {
     return (
         <div className="p-4">
@@ -104,9 +106,11 @@ export function FormPage({
                     />
                 </div>
                 <div className="flex gap-2 mb-3">
-                    <Button type="submit" variant="default" size="default">
-                        Save
-                    </Button>
+                    {canSave && (
+                        <Button type="submit" variant="default" size="default">
+                            Save
+                        </Button>
+                    )}
                     <Button type="button" variant="secondary" size="default" onClick={onCancel}>
                         Cancel
                     </Button>

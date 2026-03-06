@@ -22,6 +22,20 @@ export function App() {
     const [originalShortName, setOriginalShortName] = useState<string | null>(null);
     const [errors, setErrors] = useState({ shortName: "", pathPattern: "" });
     const [status, setStatus] = useState<{ text: string; kind: "info" | "success" | "error" } | null>(null);
+    const [nameAvailable, setNameAvailable] = useState(true);
+    // snapshot of the last successfully saved values.  We keep this so we can
+    // detect whether the form is "dirty" (i.e. user made changes after the last
+    // save) and therefore control the visibility of the Save button.
+    const [savedConfig, setSavedConfig] = useState<{
+        shortName: string;
+        pathPattern: string;
+        description: string;
+        tags: string[];
+    } | null>(null);
+    // derived boolean computed in an effect below.  `canSave` is true when the
+    // current form passes basic validation and differs from `savedConfig`.  It's
+    // passed to <FormPage> which simply renders the Save button when truthy.
+    const [canSave, setCanSave] = useState(false);
 
     const KEBAB_RE = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 
@@ -38,18 +52,26 @@ export function App() {
                         setDescription(cfg.description ?? "");
                         setTags(cfg.tags || []);
                         setOriginalShortName(cfg.shortName);
+                        setSavedConfig({
+                            shortName: cfg.shortName,
+                            pathPattern: cfg.pathPattern,
+                            description: cfg.description ?? "",
+                            tags: cfg.tags || [],
+                        });
                     } else {
                         setShortName("");
                         setPathPattern("");
                         setDescription("");
                         setTags([]);
                         setOriginalShortName(null);
+                        setSavedConfig(null);
                     }
                     break;
                 }
                 case "filepath-config:name-available": {
-                    if (!msg.available) {
-                        setErrors(prev => ({ ...prev, shortName: "A config with this name already exists." }));
+                    setNameAvailable(msg.available);
+                    if (!msg.available && (isNew || shortName.trim() !== originalShortName)) {
+                        setStatus({ text: "A configuration with that name already exists. Saving will overwrite.", kind: "info" });
                     }
                     break;
                 }
@@ -60,6 +82,13 @@ export function App() {
                             setIsNew(false);
                             setOriginalShortName(shortName);
                         }
+                        // mark current state as saved
+                        setSavedConfig({
+                            shortName: shortName.trim(),
+                            pathPattern: pathPattern.trim(),
+                            description: description.trim(),
+                            tags,
+                        });
                     } else {
                         setStatus({ text: `Error: ${msg.errorMessage ?? "Save failed."}`, kind: "error" });
                     }
@@ -70,10 +99,6 @@ export function App() {
         window.addEventListener("message", handler);
         return () => window.removeEventListener("message", handler);
     }, [isNew, shortName]);
-
-    useEffect(() => {
-        vscode.postMessage({ type: "ready" });
-    }, []);
 
     const validateForm = useCallback(() => {
         let valid = true;
@@ -93,6 +118,28 @@ export function App() {
         return valid;
     }, [shortName, pathPattern]);
 
+    // whenever form fields or savedConfig change, re-run validation and dirty check
+    useEffect(() => {
+        const valid = validateForm();
+        const trimmed = {
+            shortName: shortName.trim(),
+            pathPattern: pathPattern.trim(),
+            description: description.trim(),
+            tags,
+        };
+        const dirty = !savedConfig ||
+            savedConfig.shortName !== trimmed.shortName ||
+            savedConfig.pathPattern !== trimmed.pathPattern ||
+            savedConfig.description !== trimmed.description ||
+            savedConfig.tags.length !== trimmed.tags.length ||
+            savedConfig.tags.some((t, i) => t !== trimmed.tags[i]);
+        setCanSave(valid && dirty);
+    }, [shortName, pathPattern, description, tags, savedConfig, validateForm]);
+
+    useEffect(() => {
+        vscode.postMessage({ type: "ready" });
+    }, []);
+
     const onShortNameBlur = () => {
         const name = shortName.trim();
         if (!name || !KEBAB_RE.test(name)) return;
@@ -104,11 +151,23 @@ export function App() {
     const onSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!validateForm()) return;
+
+        const name = shortName.trim();
+        // if name conflicts with another file (and is not simply saving the same object), confirm
+        if (!nameAvailable && (isNew || name !== originalShortName)) {
+            const proceed = window.confirm(
+                "A config with this name already exists. Do you want to overwrite it?"
+            );
+            if (!proceed) {
+                return;
+            }
+        }
+
         setStatus({ text: "Saving…", kind: "info" });
         vscode.postMessage({
             type: "filepath-config:save",
             config: {
-                shortName: shortName.trim(),
+                shortName: name,
                 pathPattern: pathPattern.trim(),
                 ...(description.trim() ? { description: description.trim() } : {}),
                 tags,
@@ -144,6 +203,7 @@ export function App() {
             onSubmit={onSubmit}
             onCancel={onCancel}
             originalShortName={originalShortName}
+            canSave={canSave}
         />
     );
 }

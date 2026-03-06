@@ -61,6 +61,22 @@ suite('LogExplorer Extension', function () {
         // caused a missing filesystem method error during panel creation.
         await vscode.commands.executeCommand('logexplorer.editLogFileSourceConfig');
     });
+
+    test('saving via panel message writes config file through ConfigStore', async () => {
+        // open panel
+        await vscode.commands.executeCommand('logexplorer.editLogFileSourceConfig');
+        // access internal current panel instance
+        const panelClass: any = require('../../src/panels/editors/LogFileSourcesPanel').LogFileSourcesPanel;
+        const panelInstance = panelClass?.currentPanel;
+        assert.ok(panelInstance, 'panel instance should be available');
+        // send save message as if coming from webview
+        await panelInstance._handleMessage({ type: 'filepath-config:save', config: { shortName: 'int', pathPattern: 'pattern' } });
+        // give some time for fs write
+        await new Promise(r => setTimeout(r, 50));
+        const store = new ConfigStore(root);
+        const names = await store.listConfigNames(ConfigCategory.Filepath);
+        assert.deepStrictEqual(names, ['int']);
+    });
 });
 
 suite('config store I/O', () => {
