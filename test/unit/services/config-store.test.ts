@@ -179,12 +179,10 @@ describe('ConfigStore (pure parsing)', function () {
         it('returns a valid FilepathConfig on valid JSON', async () => {
             const json = JSON.stringify({
                 shortName: 'my-log',
-                label: 'My Log',
                 pathPattern: '/var/log/app.log'
             });
             const [cfg, err] = await (await import('../../../src/domain/filepath-config')).FilepathConfig.fromJson(json);
             assert.strictEqual(cfg?.shortName, 'my-log');
-            assert.strictEqual(cfg?.label, 'My Log');
             assert.strictEqual(cfg?.pathPattern, '/var/log/app.log');
         });
 
@@ -196,7 +194,7 @@ describe('ConfigStore (pure parsing)', function () {
         });
 
         it('throws on valid JSON but invalid schema', async () => {
-            const json = JSON.stringify({ shortName: 'INVALID NAME', label: 'X', pathPattern: 'y' });
+            const json = JSON.stringify({ shortName: 'INVALID NAME', pathPattern: 'y' });
             const [cfg, err] = await (await import('../../../src/domain/filepath-config')).FilepathConfig.fromJson(json);
             assert.strictEqual(cfg, null);
             assert.ok(err);
@@ -206,7 +204,6 @@ describe('ConfigStore (pure parsing)', function () {
         it('preserves optional description field', async () => {
             const json = JSON.stringify({
                 shortName: 'app',
-                label: 'App',
                 pathPattern: '*.log',
                 description: 'main app'
             });
@@ -222,7 +219,6 @@ describe('ConfigStore (pure parsing)', function () {
             const json = JSON.stringify({
                 type: 'text',
                 shortName: 'iis',
-                label: 'IIS',
                 fields: [{ name: 'ts', extraction: { kind: 'prefix-suffix', prefix: '[', suffix: ']' } }]
             });
             const [cfg, err] = await (await import('../../../src/domain/filelog-config')).TextLineConfig.fromJson(json);
@@ -234,7 +230,6 @@ describe('ConfigStore (pure parsing)', function () {
             const json = JSON.stringify({
                 type: 'json',
                 shortName: 'structured',
-                label: 'Structured',
                 fields: [{ name: 'level', jsonPath: 'level' }]
             });
             const [cfg, err] = await (await import('../../../src/domain/filelog-config')).JsonLineConfig.fromJson(json);
@@ -249,7 +244,7 @@ describe('ConfigStore (pure parsing)', function () {
         });
 
         it('throws on valid JSON but invalid schema', () => {
-            const json = JSON.stringify({ type: 'unknown', shortName: 'x', label: 'X', fields: [] });
+            const json = JSON.stringify({ type: 'unknown', shortName: 'x', fields: [] });
             assert.throws(async () => {
                 // choose TextLineConfig arbitrarily – it will reject due to type
                 const [cfg, err] = await (await import('../../../src/domain/filelog-config')).TextLineConfig.fromJson(json);
@@ -260,7 +255,7 @@ describe('ConfigStore (pure parsing)', function () {
             const json = JSON.stringify({
                 type: 'text',
                 shortName: 'foo',
-                label: 'Foo',
+
                 fields: [],
                 tags: ['a', 'b']
             });
@@ -312,7 +307,7 @@ describe('ConfigStore (filesystem interactions)', function () {
     });
 
     it('can write, list and read a filepath config', async () => {
-        const cfg: any = { shortName: 'foo', label: 'Foo', pathPattern: '/tmp/foo.log' };
+        const cfg: any = { shortName: 'foo', pathPattern: '/tmp/foo.log' };
         await store.writeConfig(ConfigCategory.Filepath, 'foo', cfg);
         const names = await store.listConfigNames(ConfigCategory.Filepath);
         assert.deepStrictEqual(names, ['foo']);
@@ -328,8 +323,8 @@ describe('ConfigStore (filesystem interactions)', function () {
     });
 
     it('deleteConfig removes existing file and leaves others untouched', async () => {
-        const cfg1: any = { shortName: 'a', label: 'A', pathPattern: 'x' };
-        const cfg2: any = { shortName: 'b', label: 'B', pathPattern: 'y' };
+        const cfg1: any = { shortName: 'a', pathPattern: 'x' };
+        const cfg2: any = { shortName: 'b', pathPattern: 'y' };
         await store.writeConfig(ConfigCategory.Filepath, 'a', cfg1);
         await store.writeConfig(ConfigCategory.Filepath, 'b', cfg2);
         await store.deleteConfig(ConfigCategory.Filepath, 'a');
@@ -342,7 +337,7 @@ describe('ConfigStore (filesystem interactions)', function () {
             await store.configExists(ConfigCategory.Filepath, 'none'),
             false
         );
-        await store.writeConfig(ConfigCategory.Filepath, 'z', { shortName: 'z', label: 'Z', pathPattern: 'p' } as any);
+        await store.writeConfig(ConfigCategory.Filepath, 'z', { shortName: 'z', pathPattern: 'p' } as any);
         assert.strictEqual(
             await store.configExists(ConfigCategory.Filepath, 'z'),
             true
@@ -359,7 +354,7 @@ describe('ConfigStore (filesystem interactions)', function () {
         await store.writeConfig(ConfigCategory.Filelog, 'x', {
             type: 'text',
             shortName: 'x',
-            label: 'X',
+
             fields: []
         } as any);
         // our fake watcher should fire asynchronously; allow a tick

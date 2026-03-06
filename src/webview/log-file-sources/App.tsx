@@ -36,6 +36,9 @@ export function App() {
     // current form passes basic validation and differs from `savedConfig`.  It's
     // passed to <FormPage> which simply renders the Save button when truthy.
     const [canSave, setCanSave] = useState(false);
+    // we no longer use the old form-based submit flow; saving is triggered
+    // explicitly by clicking the Save button.  This lets us drop the
+    // suppression logic that prevented tag-enter from firing a save.
 
     const KEBAB_RE = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 
@@ -148,21 +151,16 @@ export function App() {
         }
     };
 
-    const onSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
+    const save = () => {
+        setStatus(null);
         if (!validateForm()) return;
-
         const name = shortName.trim();
-        // if name conflicts with another file (and is not simply saving the same object), confirm
         if (!nameAvailable && (isNew || name !== originalShortName)) {
             const proceed = window.confirm(
-                "A config with this name already exists. Do you want to overwrite it?"
+                "A configuration with that name already exists. Do you want to overwrite it?"
             );
-            if (!proceed) {
-                return;
-            }
+            if (!proceed) return;
         }
-
         setStatus({ text: "Saving…", kind: "info" });
         vscode.postMessage({
             type: "filepath-config:save",
@@ -174,7 +172,6 @@ export function App() {
             },
         });
     };
-
     const onCancel = () => {
         vscode.postMessage({ type: "filepath-config:cancel" });
     };
@@ -198,9 +195,8 @@ export function App() {
             isNew={isNew}
             errors={errors}
             status={status}
-            validateForm={validateForm}
             onShortNameBlur={onShortNameBlur}
-            onSubmit={onSubmit}
+            onSave={save}
             onCancel={onCancel}
             originalShortName={originalShortName}
             canSave={canSave}

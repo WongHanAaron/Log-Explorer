@@ -52,10 +52,10 @@ export interface FormPageProps {
     isNew: boolean;
     errors: { shortName?: string };
     status: { text: string; kind: "info" | "success" | "error" } | null;
-    validateForm: () => boolean;
-    onSubmit: (e: React.FormEvent) => void;
     onCancel: () => void;
     onTestRegex: (index: number) => void;
+    /** fired when user clicks Save */
+    onSave: () => void;
 }
 
 export function FormPage({
@@ -80,10 +80,9 @@ export function FormPage({
     isNew,
     errors,
     status,
-    validateForm,
-    onSubmit,
     onCancel,
     onTestRegex,
+    onSave,
 }: FormPageProps) {
     // helper functions for field manipulation
     const addTextField = () => {
@@ -125,7 +124,7 @@ export function FormPage({
             <h2 className="text-xl font-bold mb-4">
                 {isNew ? "New Log File Line Config" : `Edit: ${shortName}`}
             </h2>
-            <form onSubmit={onSubmit} noValidate>
+            <div>
                 <div className="flex flex-col gap-1 mb-3">
                     <Label htmlFor="shortName">Short Name <span className="text-destructive-foreground">*</span></Label>
                     <Input id="shortName" value={shortName} onChange={e => setShortName(e.target.value)} autoComplete="off" placeholder="e.g. nginx-combined" />
@@ -237,14 +236,14 @@ export function FormPage({
                 )}
 
                 <div className="flex gap-2 mb-3">
-                    <Button type="submit">Save</Button>
-                    <Button variant="secondary" onClick={onCancel}>Cancel</Button>
+                    <Button type="button" variant="default" size="default" onClick={onSave}>Save</Button>
+                    <Button variant="secondary" size="default" onClick={onCancel}>Cancel</Button>
                 </div>
 
                 {status && (
                     <div className={`text-xs ${status.kind === 'success' ? 'text-terminal-ansiGreen' : status.kind === 'error' ? 'text-destructive-foreground' : 'text-muted-foreground'}`}>{status.text}</div>
                 )}
-            </form>
+            </div>
         </div>
     );
 }

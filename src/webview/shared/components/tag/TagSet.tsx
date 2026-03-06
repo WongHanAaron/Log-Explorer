@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Tag } from "./Tag";
 import { Button } from "../ui/button";
 import { Plus } from "lucide-react";
@@ -8,6 +8,8 @@ export interface TagSetProps {
     onAdd: (tag: string) => void;
     onRename: (index: number, newTag: string) => void;
     onRemove: (index: number) => void;
+    /** called for every keydown in the editing input */
+    onTagKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
     maxTags?: number;
     validate?: (tags: string[]) => string | null;
 }
@@ -17,12 +19,38 @@ export function TagSet({
     onAdd,
     onRename,
     onRemove,
+    onTagKeyDown,
     maxTags,
     validate,
 }: TagSetProps) {
+    const containerRef = useRef<HTMLDivElement>(null);
+    const justCommitted = useRef(false);
     const [editingIndex, setEditingIndex] = useState<number | null>(null);
     const [editingValue, setEditingValue] = useState("");
     const [error, setError] = useState<string | null>(null);
+
+    // if a <form> is submitted while focus resides inside this component we
+    // want to cancel it.  browsers will fire 'submit' on the form as a default
+    // action when Enter is pressed inside a text input, and the event is not
+    // cancellable by stopping propagation of the key event alone.  attaching a
+    // capture listener at the document level lets us intercept the submit event
+    // early and prevent accidental saves.
+    useEffect(() => {
+        const handler = (evt: Event) => {
+            if (justCommitted.current) {
+                evt.preventDefault();
+                evt.stopPropagation();
+                justCommitted.current = false;
+                return;
+            }
+            if (containerRef.current && containerRef.current.contains(document.activeElement)) {
+                evt.preventDefault();
+                evt.stopPropagation();
+            }
+        };
+        document.addEventListener('submit', handler, true);
+        return () => document.removeEventListener('submit', handler, true);
+    }, []);
 
     useEffect(() => {
         if (validate) {
@@ -39,11 +67,17 @@ export function TagSet({
 
     const finishEdit = () => {
         if (editingIndex === null) return;
+        // mark that we are finishing an edit; this helps prevent the outer
+        // form from immediately submitting due to the Enter key that triggered
+        // the commit.  the submit listener will see this flag and cancel the
+        // event.
+        justCommitted.current = true;
         let value = editingValue.trim();
         // normalize to lowercase per requirements
         value = value.toLowerCase();
         // if editing existing tag and blank -> remove
         if (value === "") {
+            console.log('TagSet.finishEdit: removing tag at', editingIndex);
             onRemove(editingIndex);
             setEditingIndex(null);
             setEditingValue("");
@@ -54,6 +88,7 @@ export function TagSet({
         );
         if (existing !== -1) {
             // merge: update casing on existing and remove current if new
+            console.log('TagSet.finishEdit: merging tag', value, 'into index', existing);
             onRename(existing, value);
             if (editingIndex !== existing) {
                 onRemove(editingIndex);
@@ -61,8 +96,10 @@ export function TagSet({
         } else {
             if (editingIndex === tags.length) {
                 // new tag case
+                console.log('TagSet.finishEdit: adding new tag', value);
                 onAdd(value);
             } else {
+                console.log('TagSet.finishEdit: renaming tag at', editingIndex, 'to', value);
                 onRename(editingIndex, value);
             }
         }
@@ -89,7 +126,7 @@ export function TagSet({
     const displayTags = [...tags];
 
     return (
-        <div className="flex flex-wrap gap-2 items-center">
+        <div ref={containerRef} className="flex flex-wrap gap-2 items-center">
             {displayTags.map((tag, i) => (
                 <Tag
                     key={i}
@@ -100,6 +137,7 @@ export function TagSet({
                     onSubmit={finishEdit}
                     onCancel={cancelEdit}
                     onRemove={() => onRemove(i)}
+                    onKeyDown={e => onTagKeyDown && onTagKeyDown(e)}
                 />
             ))}
             {editingIndex === tags.length && (
@@ -109,6 +147,7 @@ export function TagSet({
                     onChange={v => setEditingValue(v)}
                     onSubmit={finishEdit}
                     onCancel={cancelEdit}
+                    onKeyDown={e => onTagKeyDown && onTagKeyDown(e)}
                 />
             )}
             <Button

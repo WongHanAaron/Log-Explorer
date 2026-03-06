@@ -18,9 +18,9 @@ export interface FormPageProps {
     isNew: boolean;
     errors: { shortName?: string; pathPattern?: string };
     status: { text: string; kind: "info" | "success" | "error" } | null;
-    validateForm: () => boolean;
     onShortNameBlur: () => void;
-    onSubmit: (e: React.FormEvent) => void;
+    /** invoked when Save button is clicked */
+    onSave: () => void;
     onCancel: () => void;
     originalShortName: string | null;
     canSave: boolean;
@@ -40,19 +40,19 @@ export function FormPage({
     isNew,
     errors,
     status,
-    validateForm,
     onShortNameBlur,
-    onSubmit,
     onCancel,
     originalShortName,
     canSave,
+    onSave,
 }: FormPageProps) {
+
     return (
         <div className="p-4">
             <h2 className="text-xl font-bold mb-4">
                 {isNew ? "New Filepath Config" : `Edit: ${originalShortName}`}
             </h2>
-            <form onSubmit={onSubmit} noValidate>
+            <div>
                 <div className="flex flex-col gap-1 mb-3">
                     <Label htmlFor="shortName" className="flex items-center gap-1">
                         Short Name <span className="text-destructive-foreground">*</span>
@@ -107,7 +107,7 @@ export function FormPage({
                 </div>
                 <div className="flex gap-2 mb-3">
                     {canSave && (
-                        <Button type="submit" variant="default" size="default">
+                        <Button type="button" variant="default" size="default" onClick={onSave}>
                             Save
                         </Button>
                     )}
@@ -119,7 +119,7 @@ export function FormPage({
                 {status && (
                     <div className={`text-xs ${status.kind === 'success' ? 'text-terminal-ansiGreen' : status.kind === 'error' ? 'text-destructive-foreground' : 'text-muted-foreground'}`}>{status.text}</div>
                 )}
-            </form>
+            </div>
         </div>
     );
 }

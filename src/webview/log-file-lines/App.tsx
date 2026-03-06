@@ -26,6 +26,7 @@ export function App() {
     const [isNew, setIsNew] = useState(true);
     const [errors, setErrors] = useState<{ shortName?: string }>({});
     const [status, setStatus] = useState<{ text: string; kind: "info" | "success" | "error" } | null>(null);
+    // explicit save flow eliminates need for suppression/submit logic
 
     const KEBAB_RE = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 
@@ -94,8 +95,7 @@ export function App() {
         return Object.keys(errs).length === 0;
     }, [shortName]);
 
-    const onSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
+    const save = () => {
         setStatus(null);
         if (!validateForm()) return;
         const payload: any = {
@@ -112,6 +112,16 @@ export function App() {
     };
 
     // helpers to manage fields (can be passed down or kept here)
+    const handleAddTag = (tag: string) => {
+        console.log('App.handleAddTag invoked with', tag);
+        setTags(prev => {
+            const next = [...prev, tag];
+            console.log('App.tags will become', next);
+            return next;
+        });
+    };
+
+    // no longer needed, saving occurs directly in `save`
 
     return (
         <FormPage
@@ -120,7 +130,7 @@ export function App() {
             description={description}
             setDescription={setDescription}
             tags={tags}
-            onAddTag={tag => setTags(prev => [...prev, tag])}
+            onAddTag={handleAddTag}
             onRenameTag={(i, tag) => setTags(prev => {
                 const copy = [...prev];
                 copy[i] = tag;
@@ -140,9 +150,8 @@ export function App() {
             isNew={isNew}
             errors={errors}
             status={status}
-            onSubmit={onSubmit}
             onCancel={() => vscode.postMessage({ type: "filelog-config:cancel" })}
-            validateForm={validateForm}
+            onSave={save}
             onTestRegex={(i: number) => vscode.postMessage({ type: "filelog-config:test-regex", fieldIndex: i, pattern: textFields[i].extraction.pattern || "", sampleLine: textFields[i].sample || "" })}
         />
     );

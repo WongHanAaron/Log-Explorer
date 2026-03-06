@@ -11,6 +11,7 @@ export interface TagProps {
     onSubmit?: () => void;      // finish editing (blur or enter)
     onCancel?: () => void;      // cancel editing (escape)
     onRemove?: () => void;      // optional remove action
+    onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
 }
 
 // Simple tag/pill that switches to an input when editing flag is set.
@@ -23,10 +24,40 @@ export function Tag(props: TagProps) {
         onSubmit,
         onCancel,
         onRemove,
+        onKeyDown,
     } = props;
     const [hovered, setHovered] = React.useState(false);
 
     const inputRef = useRef<HTMLInputElement>(null);
+    // native event handler needs stable identity so we can add/remove it.
+    const nativeHandler = React.useCallback((e: KeyboardEvent) => {
+        // notify parent via React prop (if supplied) even before any synthetic
+        // handlers or form submissions occur.  cast to any because DOM event
+        // types differ slightly from React's.
+        if (onKeyDown) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            onKeyDown(e as any);
+        }
+        if (e.key === "Enter") {
+            e.preventDefault();
+            e.stopPropagation();
+            onSubmit && onSubmit();
+        } else if (e.key === "Escape") {
+            e.preventDefault();
+            e.stopPropagation();
+            onCancel && onCancel();
+        }
+    }, [onSubmit, onCancel, onKeyDown]);
+
+    const setInputRef = (el: HTMLInputElement | null) => {
+        if (inputRef.current) {
+            inputRef.current.removeEventListener('keydown', nativeHandler, true);
+        }
+        inputRef.current = el;
+        if (el) {
+            el.addEventListener('keydown', nativeHandler, true);
+        }
+    };
 
     useEffect(() => {
         if (editing && inputRef.current) {
@@ -36,23 +67,45 @@ export function Tag(props: TagProps) {
     }, [editing]);
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        // synthetic handler kept for completeness, but because React events are
+        // invoked after native events, we also attach a native listener below to
+        // guarantee prevention of the default form submission behaviour.
         if (e.key === "Enter") {
             e.preventDefault();
+            e.stopPropagation();
             onSubmit && onSubmit();
         } else if (e.key === "Escape") {
             e.preventDefault();
+            e.stopPropagation();
             onCancel && onCancel();
+        }
+    };
+
+
+    // for keypress/keyup events we only need to inhibit the default behavior
+    // and stop propagation; the actual submission logic is handled on keydown
+    // (above), so we don't call onSubmit again here.
+    const inhibitForm = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === "Enter" || e.key === "Escape") {
+            e.preventDefault();
+            e.stopPropagation();
         }
     };
 
     if (editing) {
         return (
             <Input
-                ref={inputRef}
+                data-testid="tag-input"
+                ref={setInputRef}
                 value={value}
                 onChange={e => onChange && onChange(e.target.value)}
                 onBlur={() => onSubmit && onSubmit()}
-                onKeyDown={handleKeyDown}
+                onKeyDown={e => {
+                    onKeyDown && onKeyDown(e);
+                    handleKeyDown(e);
+                }}
+                onKeyPress={inhibitForm}
+                onKeyUp={inhibitForm}
                 className="h-6 px-2 min-w-[4rem] w-auto text-center"
             />
         );

@@ -19,11 +19,6 @@ export class FilepathConfig extends IsSerializable {
     @Matches(/^[a-z0-9]+(-[a-z0-9]+)*$/)
     shortName!: string;
 
-    /** Display-friendly label shown in the UI */
-    @Expose()
-    // @ts-ignore
-    @IsString()
-    label!: string;
 
     /**
      * Glob pattern or absolute/relative path to the log file(s).

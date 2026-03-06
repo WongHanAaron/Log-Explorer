@@ -26,8 +26,7 @@ const baseProps = {
     isNew: true,
     errors: {},
     status: null,
-    validateForm: () => true,
-    onSubmit: (_: React.FormEvent) => { },
+    onSave: () => { },
     onCancel: () => { },
     onTestRegex: (_: number) => { },
 };

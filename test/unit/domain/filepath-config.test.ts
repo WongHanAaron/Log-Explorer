@@ -66,7 +66,6 @@ describe('FilepathConfig domain', function () {
         it('round-trips a valid instance', async () => {
             const cfg = new FilepathConfig();
             cfg.shortName = 'my-source';
-            cfg.label = 'My Source';
             cfg.pathPattern = '/var/log/*.log';
             cfg.description = 'example';
             cfg.tags = ['foo', 'bar'];
@@ -74,9 +73,29 @@ describe('FilepathConfig domain', function () {
             await assertRoundTrip(FilepathConfig, cfg);
         });
 
+        it('toJson produces parseable JSON with the expected props', () => {
+            const cfg = new FilepathConfig();
+            cfg.shortName = 'test';
+            cfg.pathPattern = '*.log';
+            const json = cfg.toJson();
+            const obj = JSON.parse(json);
+            expect(obj).to.include({ shortName: 'test', pathPattern: '*.log' });
+        });
+
+        it('fromJson returns instance when given output of toJson', async () => {
+            const cfg = new FilepathConfig();
+            cfg.shortName = 'round';
+            cfg.pathPattern = '/x';
+            const json = cfg.toJson();
+            const [parsed, err] = await FilepathConfig.fromJson(json);
+            expect(err).to.be.null;
+            expect(parsed).to.be.instanceOf(FilepathConfig);
+            expect(parsed).to.deep.equal(cfg);
+        });
+
         it('rejects missing required property', async () => {
             const json = JSON.stringify({
-                label: 'No name',
+
                 pathPattern: '/tmp/x'
             });
 
@@ -89,7 +108,6 @@ describe('FilepathConfig domain', function () {
         it('rejects invalid shortName format', async () => {
             const json = JSON.stringify({
                 shortName: 'Bad Name!',
-                label: 'Label',
                 pathPattern: '/tmp/x'
             });
 
@@ -102,7 +120,6 @@ describe('FilepathConfig domain', function () {
         it('rejects extra properties', async () => {
             const json = JSON.stringify({
                 shortName: 'ok',
-                label: 'Label',
                 pathPattern: '/tmp/x',
                 extra: 42
             });

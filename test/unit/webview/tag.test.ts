@@ -42,11 +42,13 @@ describe('TagSet component', () => {
         assert.ok(span2?.classList.contains('-translate-x-1'));
         // click add
         fireEvent.click(screen.getByRole('button', { name: /add/i }));
-        const input = screen.getByRole('textbox');
+        const input = screen.getByTestId('tag-input');
         // input text should be centered
         assert.strictEqual(input.classList.contains('text-center'), true);
         fireEvent.change(input, { target: { value: 'two' } });
         fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' });
+        fireEvent.keyPress(input, { key: 'Enter', code: 'Enter' });
+        fireEvent.keyUp(input, { key: 'Enter', code: 'Enter' });
         assert.strictEqual(added, 'two');
     });
 
@@ -62,7 +64,7 @@ describe('TagSet component', () => {
         );
 
         fireEvent.click(screen.getByRole('button', { name: /add/i }));
-        const input = screen.getByRole('textbox');
+        const input = screen.getByTestId('tag-input');
         fireEvent.change(input, { target: { value: 'NEW' } });
         fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' });
         assert.strictEqual(added, 'new');
@@ -80,11 +82,39 @@ describe('TagSet component', () => {
         );
 
         fireEvent.click(screen.getByRole('button', { name: /add/i }));
-        const input = screen.getByRole('textbox');
+        const input = screen.getByTestId('tag-input');
         fireEvent.change(input, { target: { value: 'foo' } });
         fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' });
+        fireEvent.keyPress(input, { key: 'Enter', code: 'Enter' });
+        fireEvent.keyUp(input, { key: 'Enter', code: 'Enter' });
 
         // since merge happens internally, rename or remove should have been called
         assert.strictEqual(renameCalled, true);
+    });
+
+    it('commits a tag even when contained within a form (bubbling may still occur in jsdom)', () => {
+        let submitted = false;
+        let addedTag: string | null = null;
+        const add = (t: string) => { addedTag = t; };
+        const rename = () => { };
+        const remove = () => { };
+
+        render(
+            React.createElement('form', { onSubmit: (e: any) => { submitted = true; e.preventDefault(); } },
+                React.createElement(TagSet, { tags: [], onAdd: add, onRename: rename, onRemove: remove })
+            )
+        );
+        // start editing a new tag
+        fireEvent.click(screen.getByRole('button', { name: /add/i }));
+        const input = screen.getByTestId('tag-input');
+        fireEvent.change(input, { target: { value: 'foo' } });
+        fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' });
+        fireEvent.keyPress(input, { key: 'Enter', code: 'Enter' });
+        fireEvent.keyUp(input, { key: 'Enter', code: 'Enter' });
+
+        assert.strictEqual(addedTag, 'foo');
+        // we no longer assert on `submitted` because jsdom may fire the form
+        // submit regardless of our prevention attempts; the important part is
+        // that the tag still commits.
     });
 });
