@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { getReactWebviewHtml } from '../../utils/reactWebview';
 import { ConfigStore, ConfigCategory } from '../../services/config-store';
 import { FilepathConfig } from '../../domain/filepath-config';
+import { ConfigSaver } from '../../services/config-saver';
 import type {
     FilepathConfigSaveMessage,
     FilepathConfigValidateNameMessage
@@ -132,43 +133,15 @@ export class LogFileSourcesPanel {
             }
             case 'filepath-config:save': {
                 const { config } = msg as FilepathConfigSaveMessage;
-                try {
-                    let cfgInst: FilepathConfig;
-                    if (typeof config === 'string') {
-                        // webview sent JSON text
-                        const [inst, err] = await FilepathConfig.fromJson(config);
-                        if (err || !inst) {
-                            throw err || new Error('validation failed');
-                        }
-                        cfgInst = inst;
-                    } else {
-                        // object coming over the wire
-                        cfgInst = Object.assign(new FilepathConfig(), config);
-                    }
-
-                    // validate payload by round‑tripping through the class
-                    const [valid, err] = await FilepathConfig.fromJson(cfgInst.toJson());
-                    if (err || !valid) {
-                        throw err || new Error('validation failed');
-                    }
-                    await vscode.workspace.fs.createDirectory(this._configDirUri);
-                    await this._store.writeConfig(ConfigCategory.Filepath, valid.shortName, valid);
-                    this._panel.webview.postMessage({ type: 'filepath-config:save-result', success: true });
-                } catch (err: any) {
-                    let message: string;
-                    if (Array.isArray(err)) {
-                        // validation errors from class-validator
-                        message = err.map(e => `${e.property}: ${Object.values(e.constraints || {}).join(', ')}`).join('; ');
-                    } else if (err && typeof err.message === 'string') {
-                        message = err.message;
-                    } else {
-                        message = String(err);
-                    }
-                    this._panel.webview.postMessage({
-                        type: 'filepath-config:save-result', success: false,
-                        errorMessage: message
-                    });
-                }
+                const resultMsg = await ConfigSaver.save(
+                    config,
+                    FilepathConfig,
+                    this._store,
+                    ConfigCategory.Filepath,
+                    this._configDirUri,
+                    'filepath-config:save-result'
+                );
+                this._panel.webview.postMessage(resultMsg);
                 break;
             }
             case 'filepath-config:validate-name': {
