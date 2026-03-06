@@ -18,6 +18,8 @@ Auto-generated from all feature plans. Last updated: 2026-02-28
 - [if applicable, e.g., PostgreSQL, CoreData, files or N/A] (001-react-logfile-source)
 - TypeScript (ES2021 w/ React 18) + VSCode Extension API, React, Tailwind CSS, existing (001-tag-component)
 - configuration files stored on local filesystem; tags are a simple (001-tag-component)
+- TypeScript (ES2021) with React 18 and TailwindCSS. + `vscode` extension API, React, `@testing-library/react`, `ts-node`/Mocha for unit tests. (004-logfile-source-save)
+- File system under workspace (`.logex/filepath-configs/*.json`) via `vscode.workspace.fs` and `ConfigStore`. (004-logfile-source-save)
 
 - TypeScript 5.x, Node.js 18+ + @types/vscode (extension API types), esbuild (bundler) (001-vscode-extension-setup)
 
@@ -51,9 +53,9 @@ rules on file/class isolation, exports, dependency injection, etc.
 When authoring UI code, consult the 'docs/react-ui-guidelines.md' for our conventions on webview structure, messaging, styling, and documentation.
 
 ## Recent Changes
+- 004-logfile-source-save: Added TypeScript (ES2021) with React 18 and TailwindCSS. + `vscode` extension API, React, `@testing-library/react`, `ts-node`/Mocha for unit tests.
 - 001-tag-component: Added TypeScript (ES2021 w/ React 18) + VSCode Extension API, React, Tailwind CSS, existing
 - 001-react-logfile-source: Added [e.g., Python 3.11, Swift 5.9, Rust 1.75 or NEEDS CLARIFICATION] + [e.g., FastAPI, UIKit, LLVM or NEEDS CLARIFICATION]
-- 001-new-session-panel: Added TypeScript 5.x, target ES2020 + VS Code API ^1.85.0; esbuild ^0.27
 
 
 <!-- MANUAL ADDITIONS START -->
