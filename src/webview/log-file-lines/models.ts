@@ -27,23 +27,23 @@ export interface JsonField {
 
 export type FileLogLineConfigPayload =
     | {
-          type: 'text';
-          shortName: string;
-          fields: TextField[];
-          description?: string;
-          tags?: string[];
-      }
+        type: 'text';
+        shortName: string;
+        fields: TextField[];
+        description?: string;
+        tags?: string[];
+    }
     | {
-          type: 'xml';
-          shortName: string;
-          fields: XmlField[];
-          description?: string;
-          tags?: string[];
-      }
+        type: 'xml';
+        shortName: string;
+        fields: XmlField[];
+        description?: string;
+        tags?: string[];
+    }
     | {
-          type: 'json';
-          shortName: string;
-          fields: JsonField[];
-          description?: string;
-          tags?: string[];
-      };
+        type: 'json';
+        shortName: string;
+        fields: JsonField[];
+        description?: string;
+        tags?: string[];
+    };

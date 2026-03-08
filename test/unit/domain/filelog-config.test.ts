@@ -61,7 +61,7 @@ describe('FileLogLineConfig classes', () => {
 
         // no longer validate presence of rootXpath – it was removed from the model
         // because XML extraction always operates on the whole document
-        
+
     });
 
     describe('JsonLineConfig', () => {

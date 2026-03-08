@@ -17,7 +17,7 @@ describe('buildPayload helper', () => {
     });
 
     it('constructs an xml payload correctly', () => {
-        const xmlFields: XmlField[] = [ { name: 'x', xpath: 'foo' } ];
+        const xmlFields: XmlField[] = [{ name: 'x', xpath: 'foo' }];
         const result = buildPayload('xml', 'bar', 'desc', [], [], xmlFields, []);
         expect(result).to.deep.equal({
             type: 'xml',
@@ -28,7 +28,7 @@ describe('buildPayload helper', () => {
     });
 
     it('constructs a json payload correctly', () => {
-        const jsonFields: JsonField[] = [ { name: 'j', jsonPath: '$.a' } ];
+        const jsonFields: JsonField[] = [{ name: 'j', jsonPath: '$.a' }];
         const result = buildPayload('json', 'baz', '', [], [], [], jsonFields);
         expect(result).to.deep.equal({
             type: 'json',

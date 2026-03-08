@@ -90,15 +90,15 @@ export function App() {
                         setTags(cfg.tags || []);
                         setLineType(cfg.type || "text");
                         // payload now uses a single `fields` array which is interpreted
-                    // as text/xml/json based on the type.
-                    setFields(cfg.type === 'text' ? cfg.fields || [] : []);
-                    setXmlFields(cfg.type === 'xml' ? cfg.fields || [] : []);
-                    setJsonFields(cfg.type === 'json' ? cfg.fields || [] : []);
-                } else {
-                    // clear
-                    setShortName(""); setDescription(""); setTags([]);
-                    setLineType("text"); setFields([]); setXmlFields([]); setJsonFields([]);
-                }
+                        // as text/xml/json based on the type.
+                        setFields(cfg.type === 'text' ? cfg.fields || [] : []);
+                        setXmlFields(cfg.type === 'xml' ? cfg.fields || [] : []);
+                        setJsonFields(cfg.type === 'json' ? cfg.fields || [] : []);
+                    } else {
+                        // clear
+                        setShortName(""); setDescription(""); setTags([]);
+                        setLineType("text"); setFields([]); setXmlFields([]); setJsonFields([]);
+                    }
                     break;
                 }
                 case "filelog-config:name-available": {
@@ -141,7 +141,7 @@ export function App() {
         return Object.keys(errs).length === 0;
     }, [shortName]);
 
-const save = () => {
+    const save = () => {
         setStatus(null);
         if (!validateForm()) return;
         const payload = buildPayload(lineType, shortName, description, tags, fields, xmlFields, jsonFields);
