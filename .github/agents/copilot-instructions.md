@@ -1,4 +1,4 @@
-﻿# LogExplorer Development Guidelines
+# LogExplorer Development Guidelines
 
 Auto-generated from all feature plans. Last updated: 2026-02-28
 
@@ -57,7 +57,6 @@ When authoring UI code, consult the 'docs/react-ui-guidelines.md' for our conven
 ## Recent Changes
 - 005-config-model-serialization: Added TypeScript 5.x targeting ES2020; Node 18 runtime in VSCode extension host.  Decorators are not currently enabled in tsconfig. + existing dependencies plus new packages for serialization/validation (likely `class-transformer` and `class-validator` or similar).  Also `reflect-metadata` may be required.
 - 005-config-model-serialization: Added TypeScript 5.x targeting ES2020; Node 18 runtime in VSCode extension host.  Decorators are not currently enabled in tsconfig. + existing dependencies plus new packages for serialization/validation (likely `class-transformer` and `class-validator` or similar).  Also `reflect-metadata` may be required.
-- 004-logfile-source-save: Added TypeScript (ES2021) with React 18 and TailwindCSS. + `vscode` extension API, React, `@testing-library/react`, `ts-node`/Mocha for unit tests.
 
 
 <!-- MANUAL ADDITIONS START -->

@@ -2,7 +2,7 @@
     "name": "logexplorer",
     "displayName": "LogExplorer",
     "description": "A VSCode extension for exploring and analyzing log files",
-    "version": "0.3.0",
+    "version": "0.3.1",
     "publisher": "logexplorer",
     "engines": {
         "vscode": "^1.85.0"
@@ -92,6 +92,45 @@
                 "category": "Log Explorer"
             }
         ],
+        "configuration": {
+            "type": "object",
+            "title": "Log Explorer settings",
+            "properties": {
+                "logExplorer.logLevel": {
+                    "type": "string",
+                    "enum": [
+                        "info",
+                        "warn",
+                        "error",
+                        "debug"
+                    ],
+                    "default": "info",
+                    "description": "Minimum log level to output. Messages below this level are suppressed."
+                },
+                "logExplorer.allowedScopes": {
+                    "type": [
+                        "array",
+                        "null"
+                    ],
+                    "items": {
+                        "type": "string"
+                    },
+                    "default": null,
+                    "description": "List of logger scopes that are allowed. Leave empty or null to allow all."
+                },
+                "logExplorer.deniedScopes": {
+                    "type": [
+                        "array",
+                        "null"
+                    ],
+                    "items": {
+                        "type": "string"
+                    },
+                    "default": null,
+                    "description": "List of logger scopes that are denied. Takes precedence over allowedScopes."
+                }
+            }
+        },
         "menus": {
             "commandPalette": [
                 {

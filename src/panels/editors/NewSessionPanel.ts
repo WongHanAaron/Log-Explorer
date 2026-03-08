@@ -3,6 +3,8 @@ import { getReactWebviewHtml } from '../../utils/reactWebview';
 import { loadTemplates, createTemplate } from '../../workspace/sessionTemplates';
 import { loadRecentSessions, createSession } from '../../workspace/sessions';
 import { ConfigStore, ConfigCategory } from '../../services/config-store';
+import { logger } from '../../utils/logger';
+import { isLogMessage } from '../../utils/logMessage';
 
 export class NewSessionPanel {
     public static readonly viewType = 'logexplorer.newSession';
@@ -55,6 +57,12 @@ export class NewSessionPanel {
         const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri;
 
         switch (message.type) {
+            case 'log': {
+                if (isLogMessage(message)) {
+                    logger.log(message.level, message.text, message.scope);
+                }
+                break;
+            }
             case 'ready': {
                 if (!workspaceRoot) {
                     this._postMessage({ type: 'init', templates: [], recentSessions: [], fileConfigs: [], logConfigs: [] });

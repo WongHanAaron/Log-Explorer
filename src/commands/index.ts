@@ -15,6 +15,32 @@ export function registerCommands(context: vscode.ExtensionContext): void {
         }
     );
 
+    // T012 — US1 sample log command
+    const testLogCommand = vscode.commands.registerCommand(
+        'logexplorer.testLog',
+        () => {
+            const { logger } = require('../utils/logger');
+            logger.log('info', 'test log from command');
+        }
+    );
+
+    // T014 — command to show the output channel
+    const showLogCommand = vscode.commands.registerCommand(
+        'logexplorer.showLog',
+        () => {
+            const { logger } = require('../utils/logger');
+            logger.show(false);
+        }
+    );
+    // command to hide/dispose the output channel
+    const hideLogCommand = vscode.commands.registerCommand(
+        'logexplorer.hideLog',
+        () => {
+            const { logger } = require('../utils/logger');
+            logger.close();
+        }
+    );
+
     // T005 — US1: New Session panel
     const newSessionCommand = vscode.commands.registerCommand(
         'logexplorer.newSession',
@@ -71,6 +97,9 @@ export function registerCommands(context: vscode.ExtensionContext): void {
 
     context.subscriptions.push(
         showPanelCommand,
+        testLogCommand,
+        showLogCommand,
+        hideLogCommand,
         newSessionCommand,
         editLogFileSourceConfigCommand,
         editFileLogLineConfigCommand,

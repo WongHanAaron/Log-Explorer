@@ -115,6 +115,8 @@ dist/                         # Build output (gitignored)
 - **Content Security Policy** — Nonce-based CSP for webview security
 - **State Persistence** — Webview state preserved across visibility toggles
 
+- **Logging** — The extension exposes a `logger` utility (`src/utils/logger.ts`) that writes to a dedicated "Log Explorer" output channel. Use `logger.info/warn/debug/error` (or `logger.log(level, msg, scope)`) or the `logExplorer.showLog` command to view it; `logger.close()` (or `logExplorer.hideLog`) hides the pane. Configuration settings (e.g. `logExplorer.logLevel`) control filtering.
+
 ## Minimum VSCode Version
 
 This extension requires **VSCode 1.85.0** or later.

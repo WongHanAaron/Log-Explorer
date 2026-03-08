@@ -1,6 +1,8 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
+import { logger } from '../utils/logger';
+import { isLogMessage } from '../utils/logMessage';
 import { getNonce } from '../utils/nonce';
 
 export class LogExplorerPanel implements vscode.WebviewViewProvider {
@@ -41,6 +43,12 @@ export class LogExplorerPanel implements vscode.WebviewViewProvider {
         // Handle messages from the webview
         webviewView.webview.onDidReceiveMessage((message) => {
             switch (message.type) {
+                case 'log': {
+                    if (isLogMessage(message)) {
+                        logger.log(message.level, message.text, message.scope);
+                    }
+                    break;
+                }
                 case 'ready':
                     // Webview is ready to receive data
                     console.log('LogExplorer webview is ready');

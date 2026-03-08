@@ -1,6 +1,8 @@
 import * as vscode from 'vscode';
 import { getReactWebviewHtml } from '../../utils/reactWebview';
 import { ConfigStore, ConfigCategory } from '../../services/config-store';
+import { logger } from '../../utils/logger';
+import { isLogMessage } from '../../utils/logMessage';
 import { FileLogLineConfig } from '../../domain/filelog-config';
 import { ConfigSaver } from '../../services/config-saver';
 import type {
@@ -119,6 +121,12 @@ export class LogFileLinesPanel {
         const m = msg as { type: string };
 
         switch (m.type) {
+            case 'log': {
+                if (isLogMessage(msg)) {
+                    logger.log(msg.level, msg.text, msg.scope);
+                }
+                break;
+            }
             case 'ready': {
                 this._sendLoad();
                 break;

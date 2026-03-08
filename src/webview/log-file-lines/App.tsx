@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import type { HostToWebviewMessage, WebviewToHostMessage } from "../messages";
+import { WebViewLogger } from '../webviewLogger';
 import { FormPage, TextField, XmlField, JsonField } from "./components/FormPage";
 import type { FileLogLineConfigPayload } from "./models";
 
@@ -150,10 +151,10 @@ export function App() {
 
     // helpers to manage fields (can be passed down or kept here)
     const handleAddTag = (tag: string) => {
-        console.log('App.handleAddTag invoked with', tag);
+        WebViewLogger.log(`adding tag ${tag}`, 'debug', 'App');
         setTags(prev => {
             const next = [...prev, tag];
-            console.log('App.tags will become', next);
+            WebViewLogger.log(`tags now ${JSON.stringify(next)}`, 'debug', 'App');
             return next;
         });
     };
