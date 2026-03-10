@@ -13,6 +13,11 @@ declare const acquireVsCodeApi: () => {
 const vscode = acquireVsCodeApi();
 
 export function App() {
+    // list pane state
+    const [names, setNames] = useState<string[]>([]);
+    const [searchText, setSearchText] = useState("");
+    const [selectedName, setSelectedName] = useState<string | null>(null);
+
     const [shortName, setShortName] = useState("");
     const [pathPattern, setPathPattern] = useState("");
     const [description, setDescription] = useState("");
@@ -23,22 +28,16 @@ export function App() {
     const [errors, setErrors] = useState({ shortName: "", pathPattern: "" });
     const [status, setStatus] = useState<{ text: string; kind: "info" | "success" | "error" } | null>(null);
     const [nameAvailable, setNameAvailable] = useState(true);
-    // snapshot of the last successfully saved values.  We keep this so we can
-    // detect whether the form is "dirty" (i.e. user made changes after the last
-    // save) and therefore control the visibility of the Save button.
     const [savedConfig, setSavedConfig] = useState<{
         shortName: string;
         pathPattern: string;
         description: string;
         tags: string[];
     } | null>(null);
-    // derived boolean computed in an effect below.  `canSave` is true when the
-    // current form passes basic validation and differs from `savedConfig`.  It's
-    // passed to <FormPage> which simply renders the Save button when truthy.
     const [canSave, setCanSave] = useState(false);
-    // we no longer use the old form-based submit flow; saving is triggered
-    // explicitly by clicking the Save button.  This lets us drop the
-    // suppression logic that prevented tag-enter from firing a save.
+
+    // track debounce timer for search
+    const searchTimer = React.useRef<number | null>(null);
 
     const KEBAB_RE = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 
@@ -46,10 +45,10 @@ export function App() {
         function handler(event: MessageEvent) {
             const msg = event.data as HostToWebviewMessage;
             switch (msg.type) {
-                case "filepath-config:load": {
-                    const cfg = msg.config;
-                    setIsNew(msg.isNew);
-                    if (cfg) {
+                case "init": {
+                    setNames(msg.configs);
+                    if (msg.current) {
+                        const cfg = msg.current;
                         setShortName(cfg.shortName);
                         setPathPattern(cfg.pathPattern);
                         setDescription(cfg.description ?? "");
@@ -61,13 +60,52 @@ export function App() {
                             description: cfg.description ?? "",
                             tags: cfg.tags || [],
                         });
+                        setSelectedName(cfg.shortName);
+                        setIsNew(false);
                     } else {
+                        // clear selection/form
                         setShortName("");
                         setPathPattern("");
                         setDescription("");
                         setTags([]);
                         setOriginalShortName(null);
                         setSavedConfig(null);
+                        setSelectedName(null);
+                        setIsNew(true);
+                    }
+                    break;
+                }
+                case "configListChanged": {
+                    setNames(msg.configs);
+                    // if selected name was removed, clear selection
+                    if (selectedName && !msg.configs.includes(selectedName)) {
+                        setSelectedName(null);
+                        setShortName("");
+                        setPathPattern("");
+                        setDescription("");
+                        setTags([]);
+                        setOriginalShortName(null);
+                        setSavedConfig(null);
+                        setIsNew(true);
+                    }
+                    break;
+                }
+                case "configData": {
+                    const cfg = msg.config;
+                    if (cfg) {
+                        setSelectedName(cfg.shortName);
+                        setShortName(cfg.shortName);
+                        setPathPattern(cfg.pathPattern);
+                        setDescription(cfg.description ?? "");
+                        setTags(cfg.tags || []);
+                        setOriginalShortName(cfg.shortName);
+                        setSavedConfig({
+                            shortName: cfg.shortName,
+                            pathPattern: cfg.pathPattern,
+                            description: cfg.description ?? "",
+                            tags: cfg.tags || [],
+                        });
+                        setIsNew(false);
                     }
                     break;
                 }
@@ -85,7 +123,6 @@ export function App() {
                             setIsNew(false);
                             setOriginalShortName(shortName);
                         }
-                        // mark current state as saved
                         setSavedConfig({
                             shortName: shortName.trim(),
                             pathPattern: pathPattern.trim(),
@@ -101,7 +138,7 @@ export function App() {
         }
         window.addEventListener("message", handler);
         return () => window.removeEventListener("message", handler);
-    }, [isNew, shortName]);
+    }, [isNew, shortName, selectedName]);
 
     const validateForm = useCallback(() => {
         let valid = true;
@@ -176,30 +213,99 @@ export function App() {
         vscode.postMessage({ type: "filepath-config:cancel" });
     };
 
+    const onNameClick = (name: string) => {
+        setSelectedName(name);
+        vscode.postMessage({ type: 'selectConfig', name });
+    };
+
+    const filteredNames = names.filter(n => n.toLowerCase().includes(searchText.toLowerCase()));
+
     return (
-        <FormPage
-            shortName={shortName}
-            setShortName={setShortName}
-            pathPattern={pathPattern}
-            setPathPattern={setPathPattern}
-            description={description}
-            setDescription={setDescription}
-            tags={tags}
-            onAddTag={tag => setTags(prev => [...prev, tag])}
-            onRenameTag={(i, tag) => setTags(prev => {
-                const copy = [...prev];
-                copy[i] = tag;
-                return copy;
-            })}
-            onRemoveTag={i => setTags(prev => prev.filter((_, idx) => idx !== i))}
-            isNew={isNew}
-            errors={errors}
-            status={status}
-            onShortNameBlur={onShortNameBlur}
-            onSave={save}
-            onCancel={onCancel}
-            originalShortName={originalShortName}
-            canSave={canSave}
-        />
+        <div className="flex h-full">
+            {/* left list pane */}
+            <div className="w-1/3 min-w-[150px] max-w-[300px] border-r border-[--border] p-2 overflow-auto">
+                <input
+                    type="text"
+                    placeholder="Search..."
+                    value={searchText}
+                    onChange={e => {
+                        const v = e.target.value;
+                        setSearchText(v);
+                        if (searchTimer.current !== null) {
+                            clearTimeout(searchTimer.current);
+                        }
+                        searchTimer.current = window.setTimeout(() => {
+                            setSearchText(v);
+                        }, 200);
+                    }}
+                    className="w-full mb-2 px-2 py-1 border border-[--input-border] rounded"
+                />
+                {filteredNames.length === 0 ? (
+                    <div className="text-xs text-muted-foreground">No configs found.</div>
+                ) : (
+                    <ul
+                        className="list-none p-0 m-0"
+                        tabIndex={0}
+                        onKeyDown={e => {
+                            if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+                                e.preventDefault();
+                                if (filteredNames.length === 0) return;
+                                const idx = filteredNames.findIndex(x => x === selectedName);
+                                let next = 0;
+                                if (idx !== -1) {
+                                    if (e.key === 'ArrowDown') {
+                                        next = (idx + 1) % filteredNames.length;
+                                    } else {
+                                        next = (idx - 1 + filteredNames.length) % filteredNames.length;
+                                    }
+                                }
+                                const name = filteredNames[next];
+                                setSelectedName(name);
+                                vscode.postMessage({ type: 'selectConfig', name });
+                            } else if (e.key === 'Enter' && selectedName) {
+                                vscode.postMessage({ type: 'selectConfig', name: selectedName });
+                            }
+                        }}
+                    >
+                        {filteredNames.map(n => (
+                            <li
+                                key={n}
+                                className={`px-2 py-1 cursor-pointer ${n === selectedName ? 'bg-[--list-activeSelectionBackground]' : ''}`}
+                                onClick={() => onNameClick(n)}
+                            >
+                                {n}
+                            </li>
+                        ))}
+                    </ul>
+                )}
+            </div>
+            {/* right form pane */}
+            <div className="flex-1 min-w-0 overflow-auto">
+                <FormPage
+                    shortName={shortName}
+                    setShortName={setShortName}
+                    pathPattern={pathPattern}
+                    setPathPattern={setPathPattern}
+                    description={description}
+                    setDescription={setDescription}
+                    tags={tags}
+                    onAddTag={tag => setTags(prev => [...prev, tag])}
+                    onRenameTag={(i, tag) => setTags(prev => {
+                        const copy = [...prev];
+                        copy[i] = tag;
+                        return copy;
+                    })}
+                    onRemoveTag={i => setTags(prev => prev.filter((_, idx) => idx !== i))}
+                    isNew={isNew}
+                    errors={errors}
+                    status={status}
+                    onShortNameBlur={onShortNameBlur}
+                    onSave={save}
+                    onCancel={onCancel}
+                    originalShortName={originalShortName}
+                    canSave={canSave}
+                />
+            </div>
+        </div>
     );
 }

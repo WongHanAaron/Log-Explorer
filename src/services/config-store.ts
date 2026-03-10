@@ -16,6 +16,7 @@ export const vscodeRuntime: Partial<typeof vscode> = (() => {
 
 import { FilepathConfig } from '../domain/filepath-config';
 import { FileLogLineConfig } from '../domain/filelog-config';
+import { logger } from '../utils/logger';
 
 
 // small abstraction so callers can inject a fake in tests.  The real
@@ -66,6 +67,8 @@ export type ConfigAddedCallback = (shortName: string) => void;
 
 class ConfigSubscriptionRegistry implements vscode.Disposable {
     private subscribers = new Map<ConfigCategory, Set<ConfigAddedCallback>>();
+    // reuse logger to emit file watch diagnostics
+    private readonly logger = logger;
     private readonly watchers: vscode.FileSystemWatcher[] = [];
     private workspaceRoot: vscode.Uri;
     private watcherFactory: WatcherFactory;
@@ -90,6 +93,7 @@ class ConfigSubscriptionRegistry implements vscode.Disposable {
 
         for (const w of this.watchers) {
             w.onDidCreate((uri) => this.handleFileChanges([{ type: (vscodeRuntime.FileChangeType as any).Created, uri }]));
+            w.onDidDelete((uri) => this.handleFileChanges([{ type: (vscodeRuntime.FileChangeType as any).Deleted, uri }]));
         }
     }
 
@@ -124,13 +128,19 @@ class ConfigSubscriptionRegistry implements vscode.Disposable {
 
     private handleFileChanges(changes: readonly vscode.FileChangeEvent[]): void {
         for (const change of changes) {
-            if (change.type !== (vscodeRuntime.FileChangeType as any).Created) {
+            if (change.type !== (vscodeRuntime.FileChangeType as any).Created &&
+                change.type !== (vscodeRuntime.FileChangeType as any).Deleted) {
                 continue;
             }
 
             const parsed = this.tryParseConfigAdded(change.uri);
             if (!parsed) {
                 continue;
+            }
+
+            // only log deletion events here; create/update are already logged in writeConfig
+            if (change.type === (vscodeRuntime.FileChangeType as any).Deleted) {
+                logger.info(`filesystem deleted config: ${parsed.category}/${parsed.shortName}`);
             }
 
             this.notify(parsed.category, parsed.shortName);
@@ -392,23 +402,33 @@ export class ConfigStore {
         return this.subscriptions.subscribe(category, cb);
     }
 
-    writeConfig(
+    async writeConfig(
         category: ConfigCategory,
         shortName: string,
         data: FilepathConfig | FileLogLineConfig
     ): Promise<void> {
-        return this.writeConfigInternal(
-            this.getCategoryDir(category),
-            shortName,
-            data
-        );
+        const dir = this.getCategoryDir(category);
+        // determine whether this is a create or update
+        let action = 'create';
+        try {
+            const exists = await this.configExistsInternal(dir, shortName);
+            if (exists) {
+                action = 'update';
+            }
+        } catch {
+            // if stat fails for any reason, treat as create
+            action = 'create';
+        }
+        await this.writeConfigInternal(dir, shortName, data);
+        logger.info(`Config ${action}: ${category}/${shortName}`);
     }
 
-    deleteConfig(category: ConfigCategory, shortName: string): Promise<void> {
-        return this.deleteConfigInternal(
+    async deleteConfig(category: ConfigCategory, shortName: string): Promise<void> {
+        await this.deleteConfigInternal(
             this.getCategoryDir(category),
             shortName
         );
+        logger.info(`Config delete: ${category}/${shortName}`);
     }
 
     configExists(

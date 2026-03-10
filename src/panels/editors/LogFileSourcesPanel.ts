@@ -46,6 +46,14 @@ export class LogFileSourcesPanel {
         // store desired config name for later load
         this._shortName = shortName;
 
+        // listen for store changes and forward updated name lists
+        this._disposables.push(
+            this._store.subscribeConfigAdded(ConfigCategory.Filepath, async () => {
+                const names = await this._store.listConfigNames(ConfigCategory.Filepath);
+                this._panel.webview.postMessage({ type: 'configListChanged', configs: names });
+            }) as any /* vscode.Disposable */
+        );
+
     }
 
     public static createOrShow(extensionUri: vscode.Uri, shortName?: string): void {
@@ -103,24 +111,31 @@ export class LogFileSourcesPanel {
     // ── Message flow ──────────────────────────────────────────────────────────
 
     private async _sendLoad(shortName?: string): Promise<void> {
-        // use the saved shortName parameter if none provided
+        // wrapper kept for backward compatibility but now delegates to init
+        await this._sendInit(shortName);
+    }
+
+    private async _sendInit(shortName?: string): Promise<void> {
+        // fetch current list and optional config
+        const names = await this._store.listConfigNames(ConfigCategory.Filepath);
+        let current: any = null;
+        let isNew = true;
         const name = shortName ?? this._shortName;
         if (name) {
             try {
                 const configObj = await this._store.getConfig(ConfigCategory.Filepath, name);
-                // send a JSON string instead of the instance so the webview always
-                // receives plain data; the host knows how to round-trip it again.
                 const json = configObj.toJson();
-                this._panel.webview.postMessage({ type: 'filepath-config:load', config: json, isNew: false });
-            } catch (err) {
-                vscode.window.showErrorMessage(
-                    `Log Explorer: Could not load "${name}": ${(err as Error).message}`
-                );
-                this._panel.webview.postMessage({ type: 'filepath-config:load', config: null, isNew: true });
+                try {
+                    current = JSON.parse(json);
+                } catch {
+                    current = json;
+                }
+                isNew = false;
+            } catch {
+                // ignore; leave current null
             }
-        } else {
-            this._panel.webview.postMessage({ type: 'filepath-config:load', config: null, isNew: true });
         }
+        this._panel.webview.postMessage({ type: 'init', configs: names, current });
     }
 
     private async _handleMessage(msg: unknown): Promise<void> {
@@ -136,7 +151,25 @@ export class LogFileSourcesPanel {
             }
             case 'ready': {
                 // webview has loaded; send initial data
-                this._sendLoad();
+                this._sendInit();
+                break;
+            }
+            case 'selectConfig': {
+                const { name } = msg as { name: string };
+                try {
+                    const configObj = await this._store.getConfig(ConfigCategory.Filepath, name);
+                    const json = configObj.toJson();
+                    // send plain object rather than JSON string
+                    let plain: any;
+                    try {
+                        plain = JSON.parse(json);
+                    } catch {
+                        plain = json;
+                    }
+                    this._panel.webview.postMessage({ type: 'configData', config: plain });
+                } catch {
+                    this._panel.webview.postMessage({ type: 'configData', config: null });
+                }
                 break;
             }
             case 'filepath-config:save': {

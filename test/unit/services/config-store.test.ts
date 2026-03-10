@@ -1,5 +1,6 @@
 import * as assert from 'assert';
 import * as path from 'path';
+import * as sinon from 'sinon';
 import type * as VscTypes from 'vscode';
 
 
@@ -28,6 +29,7 @@ const vscode: any = {
 // import directly from TypeScript sources (ts-node will compile on the fly)
 // @ts-ignore TS5097: allow .ts imports for ts-node loader
 import { ConfigStore, ConfigCategory, vscodeRuntime } from '../../../src/services/config-store.ts';
+import { logger } from '../../../src/utils/logger';
 
 
 // copy stub into the module's runtime proxy so the implementation can use it
@@ -285,11 +287,10 @@ describe('ConfigStore (filesystem interactions)', function () {
             } as any;
             fs.fileChangeEmitter.event((changes: VscTypes.FileChangeEvent[]) => {
                 for (const c of changes) {
-                    if (c.type !== vscode.FileChangeType.Created) {
+                    // forward both create and delete events
+                    if (c.type !== vscode.FileChangeType.Created && c.type !== vscode.FileChangeType.Deleted) {
                         continue;
                     }
-                    // pattern is RelativePattern, use its pattern portion to
-                    // check inclusion; this is a simple substring check.
                     const pat = (pattern as VscTypes.RelativePattern).pattern.replace('*', '');
                     if (c.uri.path.includes(pat)) {
                         emitter.fire(c.uri);
@@ -304,6 +305,8 @@ describe('ConfigStore (filesystem interactions)', function () {
         fs = new FakeFs();
         const root = vscode.Uri.parse('file:///workspace');
         store = new ConfigStore(root, fs, makeWatcherFactory(fs, root));
+        // stub logger to capture messages
+        sinon.stub(logger, 'info');
     });
 
     it('can write, list and read a filepath config', async () => {
@@ -360,5 +363,46 @@ describe('ConfigStore (filesystem interactions)', function () {
         // our fake watcher should fire asynchronously; allow a tick
         await new Promise((r) => setTimeout(r, 0));
         assert.strictEqual(notified, true);
+    });
+
+    it('subscriber and logger react when a config file is deleted externally', async () => {
+        let notified = false;
+        store.subscribeConfigAdded(ConfigCategory.Filepath, name => {
+            if (name === 'z') {
+                notified = true;
+            }
+        });
+        // write then delete via fs to simulate external removal
+        await store.writeConfig(ConfigCategory.Filepath, 'z', { shortName: 'z', pathPattern: 'p' } as any);
+        (fs as any).delete(vscode.Uri.file('/workspace/.logex/filepath-configs/z.json'));
+        await new Promise(r => setTimeout(r, 0));
+        assert.strictEqual(notified, true);
+        // logger should have been called *once* for deletion only
+        sinon.assert.calledOnce(logger.info);
+        sinon.assert.calledWith(logger.info, sinon.match(/deleted config/i));
+    });
+
+    it('logs create and update actions using OutputLogger', async () => {
+        const cfg: any = { shortName: 'foo', pathPattern: '/tmp/foo.log' };
+        // first write should be a create
+        await store.writeConfig(ConfigCategory.Filepath, 'foo', cfg);
+        sinon.assert.calledWith(logger.info, sinon.match(/Config create: filepath\/foo/));
+        // clear stub history
+        (logger.info as any).resetHistory();
+        // second write should be an update
+        await store.writeConfig(ConfigCategory.Filepath, 'foo', cfg);
+        sinon.assert.calledWith(logger.info, sinon.match(/Config update: filepath\/foo/));
+    });
+
+    it('logs delete action using OutputLogger', async () => {
+        const cfg: any = { shortName: 'bar', pathPattern: '/tmp/bar.log' };
+        await store.writeConfig(ConfigCategory.Filepath, 'bar', cfg);
+        (logger.info as any).resetHistory();
+        await store.deleteConfig(ConfigCategory.Filepath, 'bar');
+        sinon.assert.calledWith(logger.info, sinon.match(/Config delete: filepath\/bar/));
+    });
+
+    afterEach(() => {
+        sinon.restore();
     });
 });
