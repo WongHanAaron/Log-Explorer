@@ -119,6 +119,7 @@ export class LogFileSourcesPanel {
         // fetch current list and optional config
         const names = await this._store.listConfigNames(ConfigCategory.Filepath);
         let current: any = null;
+        let error: string | undefined;
         let isNew = true;
         const name = shortName ?? this._shortName;
         if (name) {
@@ -131,11 +132,12 @@ export class LogFileSourcesPanel {
                     current = json;
                 }
                 isNew = false;
-            } catch {
-                // ignore; leave current null
+            } catch (err: any) {
+                // capture error so webview can show it
+                error = err && err.message ? String(err.message) : String(err);
             }
         }
-        this._panel.webview.postMessage({ type: 'init', configs: names, current });
+        this._panel.webview.postMessage({ type: 'init', configs: names, current, error });
     }
 
     private async _handleMessage(msg: unknown): Promise<void> {
@@ -167,8 +169,9 @@ export class LogFileSourcesPanel {
                         plain = json;
                     }
                     this._panel.webview.postMessage({ type: 'configData', config: plain });
-                } catch {
-                    this._panel.webview.postMessage({ type: 'configData', config: null });
+                } catch (err: any) {
+                    const message = err && err.message ? String(err.message) : String(err);
+                    this._panel.webview.postMessage({ type: 'configData', config: null, error: message });
                 }
                 break;
             }

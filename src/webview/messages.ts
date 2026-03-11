@@ -96,7 +96,25 @@ export interface FilelogConfigValidateNameMessage {
 // Union types used by panels for type-safe dispatch
 // ════════════════════════════════════════════════════════════════════
 
+// generic panel messages
+export interface GenericInitMessage {
+    type: 'init';
+    configs: string[];
+    current?: any;
+}
+export interface GenericConfigListChangedMessage {
+    type: 'configListChanged';
+    configs: string[];
+}
+export interface GenericConfigDataMessage {
+    type: 'configData';
+    config: any;
+}
+
 export type HostToWebviewMessage =
+    | GenericInitMessage
+    | GenericConfigListChangedMessage
+    | GenericConfigDataMessage
     | FilepathConfigLoadMessage
     | FilepathConfigSaveResultMessage
     | FilepathConfigNameAvailableMessage
@@ -105,7 +123,14 @@ export type HostToWebviewMessage =
     | FilelogConfigRegexTestResultMessage
     | FilelogConfigNameAvailableMessage;
 
+// generic panel -> host messages
+export interface GenericSelectConfigMessage {
+    type: 'selectConfig';
+    name: string;
+}
+
 export type WebviewToHostMessage =
+    | GenericSelectConfigMessage
     | FilepathConfigSaveMessage
     | FilepathConfigValidateNameMessage
     | FilelogConfigSaveMessage

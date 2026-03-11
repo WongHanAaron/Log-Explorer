@@ -49,7 +49,12 @@ describe('LogFileSources App', () => {
         assert.strictEqual(screen.queryByText('foo'), null);
         assert.ok(screen.queryByText('bar'));
     });
-
+    it('highlights selected name when init message supplies current', async () => {
+        render(React.createElement(App));
+        window.dispatchEvent(new MessageEvent('message', { data: { type: 'init', configs: ['x', 'y'], current: { shortName: 'y', pathPattern: '/x' } } }));
+        const item = await screen.findByText('y');
+        assert.ok(item.className.includes('bg')); // simple check for highlight
+    });
     it('posts selectConfig when a name is clicked', async () => {
         render(React.createElement(App));
         window.dispatchEvent(new MessageEvent('message', { data: { type: 'init', configs: ['one'] } }));
@@ -165,6 +170,14 @@ describe('LogFileSources App', () => {
         window.dispatchEvent(new MessageEvent('message', { data: { type: 'filepath-config:save-result', success: false, errorMessage: 'disk full' } }));
         // the status should eventually appear
         const statusElem = await screen.findByText(/disk full/i);
+        assert.ok(statusElem);
+    });
+
+    it('shows error banner when config retrieval fails', async () => {
+        render(React.createElement(App));
+        // send error configData message
+        window.dispatchEvent(new MessageEvent('message', { data: { type: 'configData', config: null, error: 'malformed' } }));
+        const statusElem = await screen.findByText(/malformed/i);
         assert.ok(statusElem);
     });
 

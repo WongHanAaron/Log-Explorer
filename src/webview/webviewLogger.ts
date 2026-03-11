@@ -1,5 +1,6 @@
 // helper that can be bundled into webview scripts.  The webview side has
 // access to `acquireVsCodeApi` only.
+import { getVsCodeApi } from './vscodeApi';
 
 export namespace WebViewLogger {
     type LogLevel = 'info' | 'warn' | 'error' | 'debug';
@@ -11,7 +12,7 @@ export namespace WebViewLogger {
         scope?: string;
     }
 
-    const vscode = (window as any).acquireVsCodeApi && (window as any).acquireVsCodeApi();
+    const vscode = typeof window !== 'undefined' ? getVsCodeApi() : undefined;
 
     function post(msg: LogMessage) {
         if (!vscode || typeof vscode.postMessage !== 'function') {

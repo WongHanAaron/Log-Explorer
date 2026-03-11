@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useCallback } from "react";
-import type { HostToWebviewMessage, WebviewToHostMessage } from "../messages";
+import type { HostToWebviewMessage } from "../messages";
 import { WebViewLogger } from '../webviewLogger';
 import { FormPage, TextField, XmlField, JsonField } from "./components/FormPage";
 import type { FileLogLineConfigPayload } from "./models";
+import { getVsCodeApi } from "../vscodeApi";
+import { App as GenericApp } from "../config-panel/App";
 
 // helper that mirrors the logic used by `save` within <App />.  Having a
 // standalone, exported function makes it easy to unit‑test the shape and keeps
@@ -47,15 +49,8 @@ export function buildPayload(
     }
 }
 
-// VS Code API helper available in webview context
-
-declare const acquireVsCodeApi: () => {
-    postMessage(message: WebviewToHostMessage | { type: string;[key: string]: any }): void;
-    getState(): unknown;
-    setState(state: unknown): void;
-};
-
-const vscode = acquireVsCodeApi();
+// VS Code API helper (cached singleton)
+const vscode = getVsCodeApi();
 
 export function App() {
     const [shortName, setShortName] = useState("");
@@ -81,27 +76,6 @@ export function App() {
         const handler = (evt: MessageEvent) => {
             const msg = evt.data as HostToWebviewMessage;
             switch (msg.type) {
-                case "filelog-config:load": {
-                    const cfg = msg.config as any; // loose
-                    setIsNew(msg.isNew);
-                    if (cfg) {
-                        setShortName(cfg.shortName);
-                        // label is stored but not editable
-                        setDescription(cfg.description || "");
-                        setTags(cfg.tags || []);
-                        setLineType(cfg.type || "text");
-                        // payload now uses a single `fields` array which is interpreted
-                        // as text/xml/json based on the type.
-                        setFields(cfg.type === 'text' ? cfg.fields || [] : []);
-                        setXmlFields(cfg.type === 'xml' ? cfg.fields || [] : []);
-                        setJsonFields(cfg.type === 'json' ? cfg.fields || [] : []);
-                    } else {
-                        // clear
-                        setShortName(""); setDescription(""); setTags([]);
-                        setLineType("text"); setFields([]); setXmlFields([]); setJsonFields([]);
-                    }
-                    break;
-                }
                 case "filelog-config:name-available": {
                     if (!msg.available) {
                         setErrors(prev => ({ ...prev, shortName: "A config with this name already exists." }));
@@ -162,33 +136,60 @@ export function App() {
     // no longer needed, saving occurs directly in `save`
 
     return (
-        <FormPage
-            shortName={shortName}
-            setShortName={setShortName}
-            description={description}
-            setDescription={setDescription}
-            tags={tags}
-            onAddTag={handleAddTag}
-            onRenameTag={(i, tag) => setTags(prev => {
-                const copy = [...prev];
-                copy[i] = tag;
-                return copy;
-            })}
-            onRemoveTag={i => setTags(prev => prev.filter((_, idx) => idx !== i))}
-            lineType={lineType}
-            setLineType={setLineType}
-            fields={fields}
-            setFields={setFields}
-            xmlFields={xmlFields}
-            setXmlFields={setXmlFields}
-            jsonFields={jsonFields}
-            setJsonFields={setJsonFields}
-            isNew={isNew}
-            errors={errors}
-            status={status}
-            onCancel={() => vscode.postMessage({ type: "filelog-config:cancel" })}
-            onSave={save}
-            onTestRegex={(i: number) => vscode.postMessage({ type: "filelog-config:test-regex", fieldIndex: i, pattern: fields[i].extraction.pattern || "", sampleLine: fields[i].sample || "" })}
-        />
+        <GenericApp
+            onConfigData={cfg => {
+                if (cfg) {
+                    setIsNew(false);
+                    setShortName(cfg.shortName ?? "");
+                    setDescription(cfg.description || "");
+                    setTags(cfg.tags || []);
+                    setLineType(cfg.type || "text");
+                    setFields(cfg.type === 'text' ? cfg.fields || [] : []);
+                    setXmlFields(cfg.type === 'xml' ? cfg.fields || [] : []);
+                    setJsonFields(cfg.type === 'json' ? cfg.fields || [] : []);
+                } else {
+                    setIsNew(true);
+                    setShortName("");
+                    setDescription("");
+                    setTags([]);
+                    setLineType("text");
+                    setFields([]);
+                    setXmlFields([]);
+                    setJsonFields([]);
+                }
+            }}
+            onError={msg => setStatus({ text: msg, kind: 'error' })}
+        >
+            {() => (
+                <FormPage
+                    shortName={shortName}
+                    setShortName={setShortName}
+                    description={description}
+                    setDescription={setDescription}
+                    tags={tags}
+                    onAddTag={handleAddTag}
+                    onRenameTag={(i, tag) => setTags(prev => {
+                        const copy = [...prev];
+                        copy[i] = tag;
+                        return copy;
+                    })}
+                    onRemoveTag={i => setTags(prev => prev.filter((_, idx) => idx !== i))}
+                    lineType={lineType}
+                    setLineType={setLineType}
+                    fields={fields}
+                    setFields={setFields}
+                    xmlFields={xmlFields}
+                    setXmlFields={setXmlFields}
+                    jsonFields={jsonFields}
+                    setJsonFields={setJsonFields}
+                    isNew={isNew}
+                    errors={errors}
+                    status={status}
+                    onCancel={() => vscode.postMessage({ type: "filelog-config:cancel" })}
+                    onSave={save}
+                    onTestRegex={(i: number) => vscode.postMessage({ type: "filelog-config:test-regex", fieldIndex: i, pattern: fields[i].extraction.pattern || "", sampleLine: fields[i].sample || "" })}
+                />
+            )}
+        </GenericApp>
     );
 }

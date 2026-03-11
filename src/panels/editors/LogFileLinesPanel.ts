@@ -43,6 +43,14 @@ export class LogFileLinesPanel {
         this._panel.onDidDispose(() => this.dispose(), null, this._disposables);
 
         this._shortName = shortName;
+
+        // listen for store changes and forward updated name lists
+        this._disposables.push(
+            this._store.subscribeConfigAdded(ConfigCategory.Filelog, async () => {
+                const names = await this._store.listConfigNames(ConfigCategory.Filelog);
+                this._panel.webview.postMessage({ type: 'configListChanged', configs: names });
+            }) as any /* vscode.Disposable */
+        );
     }
 
     public static createOrShow(extensionUri: vscode.Uri, shortName?: string): void {
@@ -100,20 +108,30 @@ export class LogFileLinesPanel {
     // ── Message flow ──────────────────────────────────────────────────────────
 
     private async _sendLoad(shortName?: string): Promise<void> {
+        await this._sendInit(shortName);
+    }
+
+    private async _sendInit(shortName?: string): Promise<void> {
+        const names = await this._store.listConfigNames(ConfigCategory.Filelog);
+        let current: any = null;
+        let error: string | undefined;
         const name = shortName ?? this._shortName;
+
         if (name) {
             try {
-                const config = await this._store.getConfig(ConfigCategory.Filelog, name);
-                this._panel.webview.postMessage({ type: 'filelog-config:load', config, isNew: false });
-            } catch (err) {
-                vscode.window.showErrorMessage(
-                    `Log Explorer: Could not load "${name}": ${(err as Error).message}`
-                );
-                this._panel.webview.postMessage({ type: 'filelog-config:load', config: null, isNew: true });
+                const configObj = await this._store.getConfig(ConfigCategory.Filelog, name);
+                const json = (configObj as any).toJson ? (configObj as any).toJson() : configObj;
+                try {
+                    current = JSON.parse(json);
+                } catch {
+                    current = json;
+                }
+            } catch (err: any) {
+                error = err && err.message ? String(err.message) : String(err);
             }
-        } else {
-            this._panel.webview.postMessage({ type: 'filelog-config:load', config: null, isNew: true });
         }
+
+        this._panel.webview.postMessage({ type: 'init', configs: names, current, error });
     }
 
     private async _handleMessage(msg: unknown): Promise<void> {
@@ -128,7 +146,25 @@ export class LogFileLinesPanel {
                 break;
             }
             case 'ready': {
-                this._sendLoad();
+                this._sendInit();
+                break;
+            }
+            case 'selectConfig': {
+                const { name } = msg as { name: string };
+                try {
+                    const configObj = await this._store.getConfig(ConfigCategory.Filelog, name);
+                    const json = (configObj as any).toJson ? (configObj as any).toJson() : configObj;
+                    let plain: any;
+                    try {
+                        plain = JSON.parse(json);
+                    } catch {
+                        plain = json;
+                    }
+                    this._panel.webview.postMessage({ type: 'configData', config: plain });
+                } catch (err: any) {
+                    const message = err && err.message ? String(err.message) : String(err);
+                    this._panel.webview.postMessage({ type: 'configData', config: null, error: message });
+                }
                 break;
             }
             case 'filelog-config:save': {

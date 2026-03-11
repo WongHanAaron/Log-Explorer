@@ -39,7 +39,7 @@ export function getReactWebviewHtml(
     <title>${title}</title>
 </head>
 <body>
-    <div id="root"></div>
+    <div id="root" class="h-full flex flex-col"></div>
     <script nonce="${nonce}" src="${scriptUri}"></script>
 </body>
 </html>`;
