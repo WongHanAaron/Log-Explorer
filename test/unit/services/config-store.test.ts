@@ -183,21 +183,21 @@ describe('ConfigStore (pure parsing)', function () {
                 shortName: 'my-log',
                 pathPattern: '/var/log/app.log'
             });
-            const [cfg, err] = await (await import('../../../src/domain/filepath-config')).FilepathConfig.fromJson(json);
+            const [cfg, err] = await (await import('../../../src/domain/config/filepath-config')).FilepathConfig.fromJson(json);
             assert.strictEqual(cfg?.shortName, 'my-log');
             assert.strictEqual(cfg?.pathPattern, '/var/log/app.log');
         });
 
         it('throws on malformed JSON', async () => {
             const json = '{invalid';
-            const [cfg, err] = await (await import('../../../src/domain/filepath-config')).FilepathConfig.fromJson(json);
+            const [cfg, err] = await (await import('../../../src/domain/config/filepath-config')).FilepathConfig.fromJson(json);
             assert.strictEqual(cfg, null);
             assert.ok(err);
         });
 
         it('throws on valid JSON but invalid schema', async () => {
             const json = JSON.stringify({ shortName: 'INVALID NAME', pathPattern: 'y' });
-            const [cfg, err] = await (await import('../../../src/domain/filepath-config')).FilepathConfig.fromJson(json);
+            const [cfg, err] = await (await import('../../../src/domain/config/filepath-config')).FilepathConfig.fromJson(json);
             assert.strictEqual(cfg, null);
             assert.ok(err);
             assert.strictEqual(err[0].property, 'shortName');
@@ -209,7 +209,7 @@ describe('ConfigStore (pure parsing)', function () {
                 pathPattern: '*.log',
                 description: 'main app'
             });
-            const [cfg, err] = await (await import('../../../src/domain/filepath-config')).FilepathConfig.fromJson(json);
+            const [cfg, err] = await (await import('../../../src/domain/config/filepath-config')).FilepathConfig.fromJson(json);
             assert.strictEqual(cfg?.description, 'main app');
         });
     });
@@ -223,7 +223,7 @@ describe('ConfigStore (pure parsing)', function () {
                 shortName: 'iis',
                 fields: [{ name: 'ts', extraction: { kind: 'prefix-suffix', prefix: '[', suffix: ']' } }]
             });
-            const [cfg, err] = await (await import('../../../src/domain/filelog-config')).TextLineConfig.fromJson(json);
+            const [cfg, err] = await (await import('../../../src/domain/config/filelog-config')).TextLineConfig.fromJson(json);
             assert.strictEqual(cfg?.type, 'text');
             assert.strictEqual(cfg?.shortName, 'iis');
         });
@@ -234,13 +234,13 @@ describe('ConfigStore (pure parsing)', function () {
                 shortName: 'structured',
                 fields: [{ name: 'level', jsonPath: 'level' }]
             });
-            const [cfg, err] = await (await import('../../../src/domain/filelog-config')).JsonLineConfig.fromJson(json);
+            const [cfg, err] = await (await import('../../../src/domain/config/filelog-config')).JsonLineConfig.fromJson(json);
             assert.strictEqual(cfg?.type, 'json');
         });
 
         it('throws on malformed JSON', () => {
             assert.throws(async () => {
-                const [cfg, err] = await (await import('../../../src/domain/filelog-config')).TextLineConfig.fromJson('{{');
+                const [cfg, err] = await (await import('../../../src/domain/config/filelog-config')).TextLineConfig.fromJson('{{');
                 if (!err) throw new Error('expected error');
             }, /malformed/i);
         });
@@ -249,7 +249,7 @@ describe('ConfigStore (pure parsing)', function () {
             const json = JSON.stringify({ type: 'unknown', shortName: 'x', fields: [] });
             assert.throws(async () => {
                 // choose TextLineConfig arbitrarily – it will reject due to type
-                const [cfg, err] = await (await import('../../../src/domain/filelog-config')).TextLineConfig.fromJson(json);
+                const [cfg, err] = await (await import('../../../src/domain/config/filelog-config')).TextLineConfig.fromJson(json);
                 if (!err) throw new Error('expected error');
             }, /Invalid FileLogLineConfig/);
         });
@@ -261,7 +261,7 @@ describe('ConfigStore (pure parsing)', function () {
                 fields: [],
                 tags: ['a', 'b']
             });
-            const [cfg, err] = await (await import('../../../src/domain/filelog-config')).TextLineConfig.fromJson(json);
+            const [cfg, err] = await (await import('../../../src/domain/config/filelog-config')).TextLineConfig.fromJson(json);
             assert.deepStrictEqual(cfg?.tags, ['a', 'b']);
         });
     });

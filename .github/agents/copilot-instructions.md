@@ -24,6 +24,8 @@ Auto-generated from all feature plans. Last updated: 2026-02-28
 - JSON files under `.logex/*-configs` accessed via `ConfigStore` (file system through vscode.workspace.fs). (005-config-model-serialization)
 - TypeScript 5.x targeting Node/ES2021 in a VSCode + vscode API (`@types/vscode`), React/tailwind libs used (001-logfile-path-ui)
 - Configurations are persisted via `ConfigStore` to the workspace (001-logfile-path-ui)
+- TypeScript 5.x targeting ES2020/ES2022, Node.js 18+ (per project constraints) + built‑in Node modules (`fs`, `path`), `ssh2-sftp-client` for SFTP, `smb2` for SMB, occasionally `chai`/`mocha` for tests. (008-file-adapters)
+- file system accesses only; no database. (008-file-adapters)
 
 - TypeScript 5.x, Node.js 18+ + @types/vscode (extension API types), esbuild (bundler) (001-vscode-extension-setup)
 
@@ -53,12 +55,16 @@ TypeScript 5.x, Node.js 18+: Follow standard conventions.  When authoring
 TypeScript code, consult `docs/typescript-guidelines.md` for our project‑wide
 rules on file/class isolation, exports, dependency injection, etc.
 
+*💡 TypeScript tip:* use strongly typed types wherever possible — prefer
+specific interfaces, enums, and generics over `any` or implicit `any` to keep
+the codebase robust and self-documenting.
+
 # React UI Development. 
 When authoring UI code, consult the 'docs/react-ui-guidelines.md' for our conventions on webview structure, messaging, styling, and documentation.
 
 ## Recent Changes
+- 008-file-adapters: Added TypeScript 5.x targeting ES2020/ES2022, Node.js 18+ (per project constraints) + built‑in Node modules (`fs`, `path`), `ssh2-sftp-client` for SFTP, `smb2` for SMB, occasionally `chai`/`mocha` for tests.
 - 001-logfile-path-ui: Added TypeScript 5.x targeting Node/ES2021 in a VSCode + vscode API (`@types/vscode`), React/tailwind libs used
-- 005-config-model-serialization: Added TypeScript 5.x targeting ES2020; Node 18 runtime in VSCode extension host.  Decorators are not currently enabled in tsconfig. + existing dependencies plus new packages for serialization/validation (likely `class-transformer` and `class-validator` or similar).  Also `reflect-metadata` may be required.
 - 005-config-model-serialization: Added TypeScript 5.x targeting ES2020; Node 18 runtime in VSCode extension host.  Decorators are not currently enabled in tsconfig. + existing dependencies plus new packages for serialization/validation (likely `class-transformer` and `class-validator` or similar).  Also `reflect-metadata` may be required.
 
 

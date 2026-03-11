@@ -189,10 +189,12 @@
         "@types/chai-as-promised": "^8.0.2",
         "@types/glob": "^8.1.0",
         "@types/jest": "^30.0.0",
+        "@types/minimist": "^1.2.5",
         "@types/mocha": "^10.0.10",
         "@types/node": "^25.3.2",
         "@types/react": "^19.2.14",
         "@types/react-dom": "^19.2.3",
+        "@types/ssh2-sftp-client": "^9.0.6",
         "@types/testing-library__react": "^10.0.1",
         "@types/vscode": "^1.85.0",
         "@vscode/test-cli": "^0.0.12",
@@ -217,6 +219,8 @@
     "dependencies": {
         "class-transformer": "^0.5.1",
         "class-validator": "^0.15.1",
-        "reflect-metadata": "^0.2.2"
+        "reflect-metadata": "^0.2.2",
+        "smb2": "^0.2.11",
+        "ssh2-sftp-client": "^9.0.0"
     }
 }

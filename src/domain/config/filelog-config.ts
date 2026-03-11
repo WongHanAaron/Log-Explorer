@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { Expose, Type } from 'class-transformer';
 import { IsString, IsOptional, IsArray, ValidateNested, IsIn } from 'class-validator';
-import { IsSerializable } from './serializable';
+import { IsSerializable } from '../serializable';
 
 // shared extraction types ----------------------------------------------------
 export abstract class FieldExtraction {

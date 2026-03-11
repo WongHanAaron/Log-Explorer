@@ -3,7 +3,7 @@ import { getReactWebviewHtml } from '../../utils/reactWebview';
 import { ConfigStore, ConfigCategory } from '../../services/config-store';
 import { logger } from '../../utils/logger';
 import { isLogMessage } from '../../utils/logMessage';
-import { FilepathConfig } from '../../domain/filepath-config';
+import { FilepathConfig } from '../../domain/config/filepath-config';
 import { ConfigSaver } from '../../services/config-saver';
 import type {
     FilepathConfigSaveMessage,

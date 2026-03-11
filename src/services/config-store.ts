@@ -14,8 +14,8 @@ export const vscodeRuntime: Partial<typeof vscode> = (() => {
     }
 })();
 
-import { FilepathConfig } from '../domain/filepath-config';
-import { FileLogLineConfig } from '../domain/filelog-config';
+import { FilepathConfig } from '../domain/config/filepath-config';
+import { FileLogLineConfig } from '../domain/config/filelog-config';
 import { logger } from '../utils/logger';
 
 
@@ -304,13 +304,13 @@ export class ConfigStore {
         let tuple: [FileLogLineConfig | null, any | null];
         switch (plain.type) {
             case 'text':
-                tuple = await (require('../domain/filelog-config').TextLineConfig as any).fromJson(json);
+                tuple = await (require('../domain/config/filelog-config').TextLineConfig as any).fromJson(json);
                 break;
             case 'xml':
-                tuple = await (require('../domain/filelog-config').XmlLineConfig as any).fromJson(json);
+                tuple = await (require('../domain/config/filelog-config').XmlLineConfig as any).fromJson(json);
                 break;
             case 'json':
-                tuple = await (require('../domain/filelog-config').JsonLineConfig as any).fromJson(json);
+                tuple = await (require('../domain/config/filelog-config').JsonLineConfig as any).fromJson(json);
                 break;
             default:
                 throw new Error(`Invalid FileLogLineConfig: unknown type`);

@@ -10,7 +10,7 @@ const {
     PrefixSuffixExtraction,
     RegexExtraction,
     DateTimeFormat
-} = require('../../../src/domain/filelog-config.ts');
+} = require('../../../src/domain/config/filelog-config.ts');
 
 async function assertRoundTrip(clazz: any, obj: any) {
     const json = obj.toJson ? obj.toJson() : JSON.stringify(obj);

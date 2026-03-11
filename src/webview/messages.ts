@@ -4,8 +4,8 @@
  * Constitution §II requirement: every message has a `type` discriminant string.
  * Both panels validate every inbound message before acting on it.
  */
-import type { FilepathConfig } from '../domain/filepath-config';
-import type { FileLogLineConfig } from '../domain/filelog-config';
+import type { FilepathConfig } from '../domain/config/filepath-config';
+import type { FileLogLineConfig } from '../domain/config/filelog-config';
 
 // ════════════════════════════════════════════════════════════════════
 // Filepath Config Editor messages

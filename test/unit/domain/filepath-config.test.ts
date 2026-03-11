@@ -6,7 +6,7 @@ import {
     isKebabName,
     toKebabName,
     FilepathConfig
-} from '../../../src/domain/filepath-config';
+} from '../../../src/domain/config/filepath-config';
 import { assertRoundTrip } from './utils';
 
 describe('FilepathConfig domain', function () {

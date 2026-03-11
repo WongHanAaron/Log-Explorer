@@ -5,8 +5,8 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { ConfigStore, ConfigCategory } from '../../src/services/config-store';
 import { ConfigSaver } from '../../src/services/config-saver';
-import { FilepathConfig } from '../../src/domain/filepath-config';
-import { TextLineConfig } from '../../src/domain/filelog-config';
+import { FilepathConfig } from '../../src/domain/config/filepath-config';
+import { TextLineConfig } from '../../src/domain/config/filelog-config';
 
 describe('ConfigSaver', () => {
     let tmpFolder: vscode.Uri;

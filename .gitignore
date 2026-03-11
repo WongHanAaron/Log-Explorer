@@ -27,6 +27,8 @@ src/**/*.js.map
 
 # Environment
 .env*
+# explicitly ignore local environment overrides
+.env.local
 
 # Editor
 *.swp
