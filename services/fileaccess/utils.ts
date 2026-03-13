@@ -1,4 +1,7 @@
-import { ListDirOptions } from '../../domain/config/fileaccess/types';
+// compile-time-only type
+
+type ListDirOptions = import('../../domain/config/fileaccess/types.ts').ListDirOptions;
+
 
 /**
  * Walk a generic directory client that has `readdir` and returns entries with

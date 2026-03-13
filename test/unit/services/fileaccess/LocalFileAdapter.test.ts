@@ -1,10 +1,11 @@
-dimport { expect } from 'chai';
-import { LocalFileAdapter } from '../../../services/fileaccess/LocalFileAdapter';
+import { expect } from 'chai';
+import { LocalFileAdapter } from '../../../../services/fileaccess/LocalFileAdapter.ts';
 import { promises as fs } from 'fs';
 import * as path from 'path';
 
 describe('LocalFileAdapter', () => {
-    const tmpDir = path.join(__dirname, '..', '..', 'tmp-local-adapter');
+    // use workspace root rather than __dirname since tests run under ESM
+    const tmpDir = path.join(process.cwd(), 'test', 'unit', 'services', 'fileaccess', 'tmp-local-adapter');
     const config = { type: 'local' as const, basePath: tmpDir };
     let adapter: LocalFileAdapter;
 

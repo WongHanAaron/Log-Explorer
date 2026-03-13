@@ -6,8 +6,8 @@ import { LogDetailsViewProvider } from './panels/views/LogDetailsViewProvider';
 import { SearchResultsViewProvider } from './panels/views/SearchResultsViewProvider';
 import { syncWorkspaceContext } from './workspace/setupWorkspace';
 import { registerCommands } from './commands';
-import { ConfigStore, ConfigCategory } from './services/config-store';
-import { logger } from './utils/logger';
+import { ConfigStore, ConfigCategory } from './services/config-store.ts';
+import { logger } from './utils/logger.ts';
 
 export async function activate(context: vscode.ExtensionContext): Promise<{ ConfigStore: typeof ConfigStore; ConfigCategory: typeof ConfigCategory }> {
     logger.info('extension activated');

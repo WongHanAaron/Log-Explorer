@@ -1,7 +1,14 @@
-import { FileAccessAdapter } from './FileAccessAdapter';
-import { SmbConfig, ListDirOptions } from '../../domain/config/fileaccess/types';
-const SMB2 = require('smb2') as Smb2Constructor;
-import { walkDir } from './utils';
+import { FileAccessAdapter } from './FileAccessAdapter.ts';
+// compile-time-only types
+
+type SmbConfig = import('../../domain/config/fileaccess/types.ts').SmbConfig;
+type ListDirOptions = import('../../domain/config/fileaccess/types.ts').ListDirOptions;
+
+import SMB2 from 'smb2';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+type _SMB2Constructor = Smb2Constructor; // keep type available for later
+
+import { walkDir } from './utils.ts';
 
 type Smb2CallbackError = NodeJS.ErrnoException | null;
 
@@ -26,8 +33,11 @@ type Smb2Constructor = new (options: {
 export class SmbFileAdapter extends FileAccessAdapter {
     private client: Smb2Client;
 
-    constructor(protected readonly config: SmbConfig) {
+    protected readonly config: SmbConfig;
+
+    constructor(config: SmbConfig) {
         super(config);
+        this.config = config;
         this.client = new SMB2({
             share: this.config.share,
             username: this.config.username,

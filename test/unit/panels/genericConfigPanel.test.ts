@@ -1,7 +1,7 @@
 import * as assert from 'assert';
-import * as vscode from 'vscode';
-import { GenericConfigPanel } from '../../../src/panels/editors/GenericConfigPanel';
-import { ConfigCategory } from '../../../src/services/config-store';
+import * as vscode from '../vscode.ts';
+import { GenericConfigPanel } from '../../../src/panels/editors/GenericConfigPanel.ts';
+import { ConfigCategory } from '../../../src/services/config-store.ts';
 
 class FakeWebview {
     public posts: any[] = [];
@@ -14,11 +14,21 @@ class FakeWebview {
         this.posts.push(message);
         return Promise.resolve(true);
     }
-    asWebviewUri(uri: vscode.Uri): vscode.Uri { return uri; }
+    // uri type is intentionally loose; the stub is simple and tests don't
+    // depend on its shape.
+    asWebviewUri(uri: any): any { return uri; }
     cspSource = '';
 }
 
-class FakePanel { constructor(public webview: FakeWebview) { } dispose() { } }
+class FakePanel {
+    public webview: FakeWebview;
+    constructor(webview: FakeWebview) { this.webview = webview; }
+    dispose() { }
+    onDidDispose(cb: () => any): vscode.Disposable {
+        // mimic VSCode API
+        return { dispose() { } } as any;
+    }
+}
 
 class DummyStore {
     names: string[] = [];
@@ -47,13 +57,19 @@ describe('GenericConfigPanel', function () {
     beforeEach(() => {
         fakeWeb = new FakeWebview();
         store = new DummyStore();
-        const fakePanel = new FakePanel(fakeWeb) as unknown as vscode.WebviewPanel;
+        // the VSCode WebviewPanel interface is large; we only need the bits used
+        // by GenericConfigPanel.  cast via `any` and then to the *real* vscode
+        // type so the constructor signature lines up (our stub lives in a
+        // different module namespace).
+        const fakePanel = new FakePanel(fakeWeb) as unknown as any as import('vscode').WebviewPanel;
         panel = new TestPanel(fakePanel, vscode.Uri.file('ext'), vscode.Uri.file('cfg'), ConfigCategory.Filepath, undefined, vscode.Uri.file('root'), store as any);
     });
 
     it('sends init message with names', async () => {
         store.names = ['a', 'b'];
         panel.sendInit();
+        // the implementation sends messages asynchronously via a microtask
+        await new Promise(r => setTimeout(r, 0));
         assert.deepStrictEqual(fakeWeb.posts[0].type, 'init');
         assert.deepStrictEqual(fakeWeb.posts[0].configs, ['a', 'b']);
     });
@@ -72,6 +88,8 @@ describe('GenericConfigPanel', function () {
     it('forwards store change events as configListChanged', async () => {
         store.names = ['x'];
         panel.sendInit();
+        // wait for init to complete before clearing messages
+        await new Promise(r => setTimeout(r, 0));
         fakeWeb.posts = [];
         // simulate change
         store.names.push('y');

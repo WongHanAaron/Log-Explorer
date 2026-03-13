@@ -1,6 +1,6 @@
 import { expect } from 'chai';
-import { walkDir } from '../../../services/fileaccess/utils';
-import { ListDirOptions } from '../../../domain/config/fileaccess/types';
+import { walkDir } from '../../../../services/fileaccess/utils.ts';
+import type { ListDirOptions } from '../../../../domain/config/fileaccess/types.ts';
 
 describe('walkDir helper', () => {
     // simulate a simple tree:
@@ -17,8 +17,8 @@ describe('walkDir helper', () => {
     };
 
     const readdir = async (p: string) => {
-        const key = p === '.' ? '' : p.replace(/\/g, '/');
-    return tree[key] || [];
+        const key = p === '.' ? '' : p.replace(/\//g, '/');
+        return tree[key] || [];
     };
     const stat = async (p: string) => {
         const parts = p.split('/');

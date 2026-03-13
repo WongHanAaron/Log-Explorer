@@ -1,4 +1,32 @@
-import * as vscode from 'vscode';
+// When running unit tests we want to use the stubbed vscode interface
+// defined under test/unit/vscode.ts.  A simple runtime switch keeps the
+// production build free of any test code paths, which is important for
+// esbuild tree-shaking; the bundler will replace the `process.env` check
+// with a constant at build time and eliminate the dead branch.
+
+// use Node's createRequire helper so that this module works regardless of
+// whether it's executed as CommonJS or ES module.  The base path passed to
+// createRequire only affects how non-relative module names are resolved, and
+// we always request packages that either live in node_modules or via an
+// absolute filesystem path, so it's safe to use the workspace root.
+import { createRequire } from 'module';
+import { join } from 'path';
+const requireCJS = createRequire(process.cwd());
+
+function getVscode(): typeof import('vscode') {
+    if (process.env.LOGEX_UNIT_TEST) {
+        // load the stub directly from an absolute path; this avoids needing any
+        // relative resolution magic and works regardless of the current
+        // module type.
+        // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-unsafe-return
+        return requireCJS(join(process.cwd(), 'test', 'unit', 'vscode'));
+    }
+    // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-unsafe-return
+    return requireCJS('vscode');
+}
+
+const vscode = getVscode();
+
 
 // a small enum-like object so we can refer to the levels in a type-safe way
 export const LogLevel = {
@@ -36,11 +64,13 @@ export class OutputLogger implements vscode.Disposable {
     private channel: vscode.OutputChannel | undefined;
     private config: Config;
     private disposables: vscode.Disposable[] = [];
+    private readonly scope?: string;
 
-    constructor(private readonly scope?: string) {
+    constructor(scope?: string) {
+        this.scope = scope;
         this.config = readConfig();
         this.disposables.push(
-            vscode.workspace.onDidChangeConfiguration(e => {
+            vscode.workspace.onDidChangeConfiguration((e: any) => {
                 if (e.affectsConfiguration('logExplorer')) {
                     this.config = readConfig();
                 }

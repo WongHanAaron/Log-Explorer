@@ -1,9 +1,9 @@
 import { expect } from 'chai';
-import { createFileAdapter } from '../../../services/fileaccess/factory';
-import { FileSourceConfig } from '../../../domain/config/fileaccess/types';
-import { LocalFileAdapter } from '../../../services/fileaccess/LocalFileAdapter';
-import { SftpFileAdapter } from '../../../services/fileaccess/SftpFileAdapter';
-import { SmbFileAdapter } from '../../../services/fileaccess/SmbFileAdapter';
+import { createFileAdapter } from '../../../../services/fileaccess/factory.ts';
+import { FileSourceConfig } from '../../../../domain/config/fileaccess/types.ts';
+import { LocalFileAdapter } from '../../../../services/fileaccess/LocalFileAdapter.ts';
+import { SftpFileAdapter } from '../../../../services/fileaccess/SftpFileAdapter.ts';
+import { SmbFileAdapter } from '../../../../services/fileaccess/SmbFileAdapter.ts';
 
 describe('createFileAdapter', () => {
     it('returns LocalFileAdapter for local config', () => {

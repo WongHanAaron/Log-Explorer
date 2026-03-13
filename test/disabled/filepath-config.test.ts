@@ -2,12 +2,28 @@ import * as chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 const { expect } = chai;
 chai.use(chaiAsPromised);
-import {
-    isKebabName,
-    toKebabName,
-    FilepathConfig
-} from '../../../src/domain/config/filepath-config';
-import { assertRoundTrip } from './utils';
+
+let isKebabName: any;
+let toKebabName: any;
+let FilepathConfig: any;
+
+async function assertRoundTrip<T>(
+    clazz: { new(): T; fromJson(json: string): Promise<[T | null, any | null]> },
+    obj: T
+) {
+    const json = (obj as any).toJson ? (obj as any).toJson() : JSON.stringify(obj);
+    const [inst, err] = await clazz.fromJson(json);
+    expect(err).to.be.null;
+    expect(inst).to.be.instanceOf(clazz as any);
+    expect(inst).to.deep.equal(obj);
+}
+
+before(async () => {
+    const domain = await import('../../../src/domain/config/filepath-config.ts');
+    isKebabName = (domain as any).isKebabName || (domain as any).default?.isKebabName;
+    toKebabName = (domain as any).toKebabName || (domain as any).default?.toKebabName;
+    FilepathConfig = (domain as any).FilepathConfig || (domain as any).default?.FilepathConfig;
+});
 
 describe('FilepathConfig domain', function () {
     // ── isKebabName ───────────────────────────────────────────────────────────

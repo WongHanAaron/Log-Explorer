@@ -72,6 +72,11 @@
                 "category": "Log Explorer"
             },
             {
+                "command": "logexplorer.editFileAccessConfigs",
+                "title": "Edit File Access Configs",
+                "category": "Log Explorer"
+            },
+            {
                 "command": "logexplorer.editFileLogLineConfig",
                 "title": "Edit File Log Line Config",
                 "category": "Log Explorer"
@@ -146,6 +151,10 @@
                     "when": "workspaceFolderCount > 0 && logexplorer.initialized"
                 },
                 {
+                    "command": "logexplorer.editFileAccessConfigs",
+                    "when": "workspaceFolderCount > 0 && logexplorer.initialized"
+                },
+                {
                     "command": "logexplorer.editFileLogLineConfig",
                     "when": "workspaceFolderCount > 0 && logexplorer.initialized"
                 },
@@ -163,8 +172,16 @@
     "scripts": {
         "build": "node esbuild.mjs",
         "watch": "node esbuild.mjs --watch",
-        "pretest": "npm run build && tsc -p test/tsconfig.json",
-        "test": "vscode-test",
+        "typecheck": "tsc --noEmit -p tsconfig.json",
+        "lint": "eslint \"src/**/*.{ts,tsx}\" \"test/**/*.{ts,tsx}\"",
+        "pretest": "npm run typecheck && npm run build && tsc -p test/tsconfig.json",
+        "test": "mocha --extensions ts,tsx -r ts-node/register -r tsconfig-paths/register \"test/unit/**/*.test.tsx?\"",
+        "typecheck:tests": "tsc -p test/tsconfig.json",
+        "prepare": "husky install",
+        "test:unit": "npm run test",
+        "test:integration": "echo \"integration tests are disabled\" && exit 0",
+        "typecheck:watch": "tsc -p tsconfig.json --watch",
+        "dev": "npm-run-all --parallel watch typecheck:watch",
         "package": "vsce package --allow-missing-repository",
         "package:local": "node scripts/package-local.mjs",
         "install:local": "node scripts/install-local.mjs",
@@ -172,13 +189,15 @@
         "test:kibana": "npm run pretest && node scripts/run-kibana-tests.js",
         "loggen": "ts-node tools/loggen.ts",
         "build:tools": "echo \"no build needed\"",
-        "test:e2e-data": "set \"NODE_OPTIONS=--loader ts-node/esm\" && mocha test/unit/**/*.ts test/e2e/**/*.ts",
+        "test:e2e-data": "node scripts/test-e2e-data.js",
         "compose:up": "bash scripts/compose.sh up",
         "compose:down": "bash scripts/compose.sh down",
         "compose:ps": "bash scripts/compose.sh ps",
         "vscode:prepublish": "node esbuild.mjs --production"
     },
     "devDependencies": {
+        "husky": "^8.0.0",
+        "npm-run-all": "^4.1.5",
         "@radix-ui/react-label": "^2.1.8",
         "@radix-ui/react-slot": "^1.2.4",
         "@tailwindcss/cli": "^4.2.1",
@@ -194,6 +213,7 @@
         "@types/node": "^25.3.2",
         "@types/react": "^19.2.14",
         "@types/react-dom": "^19.2.3",
+        "@types/sinon": "^21.0.0",
         "@types/ssh2-sftp-client": "^9.0.6",
         "@types/testing-library__react": "^10.0.1",
         "@types/vscode": "^1.85.0",
@@ -204,6 +224,7 @@
         "chai-as-promised": "^8.0.2",
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
+        "cross-env": "^10.1.0",
         "esbuild": "^0.27.3",
         "glob": "^13.0.6",
         "jsdom-global": "^3.0.2",
@@ -211,9 +232,11 @@
         "mocha": "^11.7.5",
         "react": "^19.2.4",
         "react-dom": "^19.2.4",
+        "sinon": "^15.2.0",
         "tailwind-merge": "^3.5.0",
         "tailwindcss": "^4.2.1",
         "ts-node": "^10.9.2",
+        "tsconfig-paths": "^4.2.0",
         "typescript": "^5.9.3"
     },
     "dependencies": {

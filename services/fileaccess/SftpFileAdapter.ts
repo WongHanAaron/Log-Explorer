@@ -1,14 +1,22 @@
-import { FileAccessAdapter } from './FileAccessAdapter';
-import { SftpConfig, ListDirOptions } from '../../domain/config/fileaccess/types';
+import { FileAccessAdapter } from './FileAccessAdapter.ts';
+// types are only needed for compile-time; use `import()`-style aliases so
+// no runtime `import` statement is generated (which would fail because the
+// module only exports interfaces/type aliases).
+type SftpConfig = import('../../domain/config/fileaccess/types.ts').SftpConfig;
+type ListDirOptions = import('../../domain/config/fileaccess/types.ts').ListDirOptions;
+
 import Client from 'ssh2-sftp-client';
-import { walkDir } from './utils';
+import { walkDir } from './utils.ts';
 
 export class SftpFileAdapter extends FileAccessAdapter {
     private client: Client;
     private connected = false;
 
-    constructor(protected readonly config: SftpConfig) {
+    protected readonly config: SftpConfig;
+
+    constructor(config: SftpConfig) {
         super(config);
+        this.config = config;
         this.client = new Client();
     }
 

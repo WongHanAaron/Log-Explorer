@@ -141,7 +141,13 @@ export function FormPage({
                 </div>
                 <div className="flex flex-col gap-1 mb-3">
                     <Label htmlFor="lineType">Line Type <span className="text-destructive-foreground">*</span></Label>
-                    <select id="lineType" value={lineType} onChange={e => setLineType(e.target.value as any)} className="w-full border border-[--input-border] bg-[--input-bg] px-2 py-1">
+                    <select
+                        id="lineType"
+                        value={lineType}
+                        onChange={e => setLineType(e.target.value as any)}
+                        style={{ backgroundColor: 'var(--input-bg)', color: 'var(--foreground)' }}
+                        className="w-full border border-[--input-border] bg-[--input-bg] text-foreground px-2 py-1 appearance-none focus:outline-none focus:ring-1 focus:ring-ring"
+                    >
                         <option value="text">Text</option>
                         <option value="xml">XML</option>
                         <option value="json">JSON</option>
@@ -162,7 +168,12 @@ export function FormPage({
                                     <Button variant="secondary" size="sm" onClick={() => removeField(i)}>Remove</Button>
                                 </div>
                                 <div className="flex gap-2 mb-1">
-                                    <select value={f.extraction.kind} onChange={e => updateField(i, { extraction: { ...f.extraction, kind: e.target.value as ExtractionKind } })} className="border border-[--input-border] bg-[--input-bg] px-2 py-1">
+                                    <select
+                                        value={f.extraction.kind}
+                                        onChange={e => updateField(i, { extraction: { ...f.extraction, kind: e.target.value as ExtractionKind } })}
+                                        style={{ backgroundColor: 'var(--input-bg)', color: 'var(--foreground)' }}
+                                        className="border border-[--input-border] bg-[--input-bg] text-foreground px-2 py-1 appearance-none focus:outline-none focus:ring-1 focus:ring-ring"
+                                    >
                                         <option value="prefix-suffix">Prefix / Suffix</option>
                                         <option value="regex">Regex</option>
                                     </select>

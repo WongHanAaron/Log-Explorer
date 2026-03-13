@@ -8,12 +8,14 @@
         ],
         "outDir": "../out/test",
         "rootDir": "../",
+        "baseUrl": "./",
         "sourceMap": true,
         "strict": true,
         "esModuleInterop": true,
         "skipLibCheck": true,
         "forceConsistentCasingInFileNames": true,
         "resolveJsonModule": true,
+        "moduleResolution": "node",
         "allowImportingTsExtensions": true,
         "noEmit": true,
         "jsx": "react-jsx",
@@ -21,14 +23,21 @@
         "emitDecoratorMetadata": true,
         "types": [
             "jest",
-            "node"
-        ]
+            "node",
+            "sinon"
+        ],
+        "paths": {
+            "vscode": [
+                "test/unit/vscode"
+            ]
+        }
     },
     "include": [
         "./suite/**/*.ts",
         "../src/panels/**/*.ts",
         "../src/webview/config-panel/**/*.ts",
         "../src/services/**/*.ts",
-        "../src/utils/**/*.ts"
+        "../src/utils/**/*.ts",
+        "../src/types/**/*.d.ts"
     ]
 }

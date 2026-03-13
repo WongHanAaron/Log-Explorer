@@ -1,7 +1,15 @@
-import { FileSourceConfig, ListDirOptions } from '../../domain/config/fileaccess/types';
+// compile-time-only types
+
+type FileSourceConfig = import('../../domain/config/fileaccess/types.ts').FileSourceConfig;
+type ListDirOptions = import('../../domain/config/fileaccess/types.ts').ListDirOptions;
+
 
 export abstract class FileAccessAdapter {
-    constructor(protected readonly config: FileSourceConfig) { }
+    protected readonly config: FileSourceConfig;
+
+    constructor(config: FileSourceConfig) {
+        this.config = config;
+    }
 
     abstract readFile(path: string): Promise<Buffer>;
     abstract listDir(path: string, options?: ListDirOptions): Promise<string[]>;

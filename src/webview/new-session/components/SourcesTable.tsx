@@ -7,7 +7,7 @@ import {
     TableHead,
     TableCell,
 } from "../../shared/components/ui/table";
-import type { SourceLogConfigReference } from "../App";
+import type { SourceLogConfigReference } from "../types";
 
 interface SourcesTableProps {
     sources: SourceLogConfigReference[];

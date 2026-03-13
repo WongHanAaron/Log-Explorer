@@ -1,0 +1,5 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+# ensure unit tests pass before pushing
+npm run test:unit

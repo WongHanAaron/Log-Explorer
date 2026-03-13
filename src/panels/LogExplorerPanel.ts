@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
-import { logger } from '../utils/logger';
+import { logger } from '../utils/logger.ts';
 import { isLogMessage } from '../utils/logMessage';
 import { getNonce } from '../utils/nonce';
 

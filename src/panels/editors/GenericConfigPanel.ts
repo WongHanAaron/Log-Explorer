@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
-import { ConfigStore, ConfigCategory } from '../../services/config-store';
-import { logger } from '../../utils/logger';
-import { isLogMessage } from '../../utils/logMessage';
+import { ConfigStore, ConfigCategory } from '../../services/config-store.ts';
+import { logger } from '../../utils/logger.ts';
+import { isLogMessage } from '../../utils/logMessage.ts';
 
 /**
  * Base class that implements the common two‑column panel behaviour.  Subclasses

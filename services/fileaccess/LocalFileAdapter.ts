@@ -1,11 +1,18 @@
 import { promises as fs } from 'fs';
 import * as path from 'path';
-import { FileAccessAdapter } from './FileAccessAdapter';
-import { LocalConfig, ListDirOptions } from '../../domain/config/fileaccess/types';
+import { FileAccessAdapter } from './FileAccessAdapter.ts';
+// compile-time-only types
+
+type LocalConfig = import('../../domain/config/fileaccess/types.ts').LocalConfig;
+type ListDirOptions = import('../../domain/config/fileaccess/types.ts').ListDirOptions;
+
 
 export class LocalFileAdapter extends FileAccessAdapter {
-    constructor(protected readonly config: LocalConfig) {
+    protected readonly config: LocalConfig;
+
+    constructor(config: LocalConfig) {
         super(config);
+        this.config = config;
     }
 
     async readFile(p: string): Promise<Buffer> {

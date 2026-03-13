@@ -1,6 +1,6 @@
 import { expect } from 'chai';
-import { SftpFileAdapter } from '../../../services/fileaccess/SftpFileAdapter';
-import { SftpConfig } from '../../../domain/config/fileaccess/types';
+import { SftpFileAdapter } from '../../../../services/fileaccess/SftpFileAdapter.ts';
+import type { SftpConfig } from '../../../../domain/config/fileaccess/types.ts';
 
 // stub client for tests
 class FakeSftp {

@@ -2,38 +2,26 @@ import { useEffect, useCallback, useState } from "react";
 import { getVsCodeApi } from "../shared/lib/vscode";
 import { DiscoveryPage } from "./components/DiscoveryPage";
 import { FormPage } from "./components/FormPage";
+// bring in types from shared types module (App also re-exports them above)
+import type {
+    SourceLogConfigReference,
+    TemplateData,
+    SessionSummary,
+    FormValues,
+} from "./types";
 
 // ---------------------------------------------------------------------------
 // Types (mirrored from extension-side contracts)
 // ---------------------------------------------------------------------------
 
-export interface SourceLogConfigReference {
-    type: "file" | "kibana";
-    sourceConfig: string;
-    logConfig: string;
-}
-
-export interface TemplateData {
-    id: string;
-    name: string;
-    description: string;
-    parameters: Array<{ name: string }>;
-    sources: SourceLogConfigReference[];
-}
-
-export interface SessionSummary {
-    name: string;
-    description: string;
-    folderName: string;
-}
-
-export interface FormValues {
-    name: string;
-    description: string;
-    timeStart: string;
-    parameters: Record<string, string>;
-    sources: SourceLogConfigReference[];
-}
+// the actual definitions live in types.ts so that both App and FormPage can
+// reference them without creating a runtime import cycle.
+export type {
+    SourceLogConfigReference,
+    TemplateData,
+    SessionSummary,
+    FormValues,
+} from "./types";
 
 // ---------------------------------------------------------------------------
 // App
@@ -86,18 +74,19 @@ export function App() {
         templateName: string | null;
         parameters: Record<string, string>;
         timeStart: string;
-        sources: SourceLogConfigReference[];
+        sources?: SourceLogConfigReference[]; // incoming data may omit field
     }) => {
         const match = session.templateName
             ? templates.find(t => t.name === session.templateName) ?? null
             : null;
         setSelectedTemplate(match);
+        // ensure fields are well-formed; guard against undefined/null values
         setForm({
             name: session.name,
             description: session.description,
             timeStart: session.timeStart,
-            parameters: session.parameters,
-            sources: session.sources,
+            parameters: session.parameters ?? {},
+            sources: session.sources ?? [],
         });
         setFormError(null);
         setPage("form");
@@ -144,11 +133,11 @@ export function App() {
         setSelectedTemplate(tpl);
         // Pre-populate sources and reset parameters from template
         const defaultParams: Record<string, string> = {};
-        for (const p of tpl.parameters) { defaultParams[p.name] = ""; }
+        for (const p of tpl.parameters || []) { defaultParams[p.name] = ""; }
         setForm(prev => ({
             ...prev,
             parameters: defaultParams,
-            sources: tpl.sources,
+            sources: tpl.sources ?? [],
         }));
         setFormError(null);
         setPage("form");

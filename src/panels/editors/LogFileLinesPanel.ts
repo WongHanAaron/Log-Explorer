@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { getReactWebviewHtml } from '../../utils/reactWebview';
-import { ConfigStore, ConfigCategory } from '../../services/config-store';
-import { logger } from '../../utils/logger';
+import { ConfigStore, ConfigCategory } from '../../services/config-store.ts';
+import { logger } from '../../utils/logger.ts';
 import { isLogMessage } from '../../utils/logMessage';
 import { FileLogLineConfig } from '../../domain/config/filelog-config';
 import { ConfigSaver } from '../../services/config-saver';

@@ -3,11 +3,14 @@ import { Button } from "../../shared/components/ui/button";
 import { Input } from "../../shared/components/ui/input";
 import { Label } from "../../shared/components/ui/label";
 import { SourcesTable } from "./SourcesTable";
-import type { TemplateData, FormValues, SourceLogConfigReference } from "../App";
+import type { TemplateData, FormValues, SourceLogConfigReference } from "../types";
 
 interface FormPageProps {
     selectedTemplate: TemplateData | null;
     form: FormValues;
+    // simple notification that the form state has changed.  callers may
+    // choose to implement this via a React `setState` dispatch or any other
+    // mechanism; the component itself never assumes it can pass a function.
     onFormChange: (values: FormValues) => void;
     error: string | null;
     onBack: () => void;
@@ -31,6 +34,7 @@ export function FormPage({
 }: FormPageProps) {
     const update = useCallback(
         <K extends keyof FormValues>(key: K, value: FormValues[K]) => {
+            // build a new form object based on the current value from props.
             onFormChange({ ...form, [key]: value });
         },
         [form, onFormChange]
@@ -162,7 +166,10 @@ export function FormPage({
                             </Button>
                         </div>
                         <SourcesTable
-                            sources={form.sources}
+                            // parent ensures `form.sources` is never undefined but the
+                            // extra `|| []` here makes the component resilient in case
+                            // the invariant is ever broken.
+                            sources={form.sources || []}
                             onChange={handleSourcesChange}
                             fileConfigs={fileConfigs}
                             logConfigs={logConfigs}

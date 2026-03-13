@@ -1,4 +1,4 @@
-import { LogLevel, LogLevel as LL } from './logger';
+import { LogLevel, LogLevel as LL } from './logger.ts';
 
 export interface LogMessagePayload {
     type: 'log';

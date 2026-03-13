@@ -1,6 +1,6 @@
 {
     "compilerOptions": {
-        "module": "commonjs",
+        "module": "ES2020",
         "target": "ES2020",
         "lib": [
             "ES2020",
@@ -14,6 +14,7 @@
         "esModuleInterop": true,
         "skipLibCheck": true,
         "forceConsistentCasingInFileNames": true,
+        "moduleResolution": "node",
         "resolveJsonModule": true,
         "allowImportingTsExtensions": true,
         "noEmit": true,
@@ -32,6 +33,9 @@
     ],
     "ts-node": {
         "experimentalSpecifierResolution": "node",
-        "esm": true
+        "esm": true,
+        "compilerOptions": {
+            "module": "ES2020"
+        }
     }
 }

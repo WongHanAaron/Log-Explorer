@@ -51,7 +51,7 @@ const extensionConfig = {
     external: ["vscode"],
     format: "cjs",
     platform: "node",
-    target: "ES2020",
+    target: "esnext",
     sourcemap: !production,
     minify: production,
 };
@@ -82,6 +82,7 @@ const panelConfigs = [
     { in: "src/webview/getting-started/main.tsx", out: "dist/webview/getting-started.js" },
     { in: "src/webview/log-file-lines/main.tsx", out: "dist/webview/log-file-lines.js" },
     { in: "src/webview/log-file-sources/main.tsx", out: "dist/webview/log-file-sources.js" },
+    { in: "src/webview/file-access-configs/main.tsx", out: "dist/webview/file-access-configs.js" },
     { in: "src/webview/session-tools/main.tsx", out: "dist/webview/session-tools.js" },
     { in: "src/webview/log-details/main.tsx", out: "dist/webview/log-details.js" },
     { in: "src/webview/search-results/main.tsx", out: "dist/webview/search-results.js" },

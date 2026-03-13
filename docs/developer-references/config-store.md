@@ -5,9 +5,9 @@ This module provides an abstraction layer for working with **FilepathConfig** an
 
 ## Core concepts
 
-- **FilepathConfig** and **FileLogLineConfig** — domain interfaces defined in
+- **FilepathConfig**, **FileLogLineConfig**, and **FileAccessConfig** — domain interfaces defined in
   `src/domain/*.ts`.
-- **ConfigCategory** — TypeScript enum with values `Filepath` and `Filelog`.
+- **ConfigCategory** — TypeScript enum with values `Filepath`, `Filelog`, and `FileAccess`.
 - **ConfigStore** — class that binds to a workspace root and offers methods
   for querying, fetching, and subscribing to config changes.
 
