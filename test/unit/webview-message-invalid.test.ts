@@ -1,8 +1,8 @@
 import * as chai from 'chai';
 const { expect } = chai;
-import { isLogMessage } from '../../src/utils/logMessage';
-import { LogLevel, OutputLogger } from '../../src/utils/logger';
-import * as vscode from 'vscode';
+import { isLogMessage } from '../../src/utils/logMessage.ts';
+import { LogLevel, OutputLogger } from '../../src/utils/logger.ts';
+import * as vscode from './vscode.ts';
 
 describe('Webview message validation (unit)', function () {
     it('isLogMessage returns false for malformed objects', () => {

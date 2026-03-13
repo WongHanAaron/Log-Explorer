@@ -1,17 +1,29 @@
-const { expect } = require('chai');
-const {
-    FileLogLineConfig,
-    TextLineConfig,
-    XmlLineConfig,
-    JsonLineConfig,
-    TextField,
-    XmlFieldMapping,
-    JsonFieldMapping,
-    PrefixSuffixExtraction,
-    RegexExtraction,
-    DateTimeFormat
-} = require('../../../src/domain/config/filelog-config.ts');
+import { expect } from 'chai';
 
+let FileLogLineConfig: any;
+let TextLineConfig: any;
+let XmlLineConfig: any;
+let JsonLineConfig: any;
+let TextField: any;
+let XmlFieldMapping: any;
+let JsonFieldMapping: any;
+let PrefixSuffixExtraction: any;
+let RegexExtraction: any;
+let DateTimeFormat: any;
+
+before(async () => {
+    const domain = await import('../../../src/domain/config/filelog-config.ts');
+    FileLogLineConfig = (domain as any).FileLogLineConfig || (domain as any).default?.FileLogLineConfig;
+    TextLineConfig = (domain as any).TextLineConfig || (domain as any).default?.TextLineConfig;
+    XmlLineConfig = (domain as any).XmlLineConfig || (domain as any).default?.XmlLineConfig;
+    JsonLineConfig = (domain as any).JsonLineConfig || (domain as any).default?.JsonLineConfig;
+    TextField = (domain as any).TextField || (domain as any).default?.TextField;
+    XmlFieldMapping = (domain as any).XmlFieldMapping || (domain as any).default?.XmlFieldMapping;
+    JsonFieldMapping = (domain as any).JsonFieldMapping || (domain as any).default?.JsonFieldMapping;
+    PrefixSuffixExtraction = (domain as any).PrefixSuffixExtraction || (domain as any).default?.PrefixSuffixExtraction;
+    RegexExtraction = (domain as any).RegexExtraction || (domain as any).default?.RegexExtraction;
+    DateTimeFormat = (domain as any).DateTimeFormat || (domain as any).default?.DateTimeFormat;
+});
 async function assertRoundTrip(clazz: any, obj: any) {
     const json = obj.toJson ? obj.toJson() : JSON.stringify(obj);
     const [inst, err] = await clazz.fromJson(json);

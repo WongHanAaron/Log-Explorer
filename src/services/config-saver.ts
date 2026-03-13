@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { ConfigStore, ConfigCategory } from './config-store';
+import { ConfigStore, ConfigCategory } from './config-store.ts';
 import { IsSerializable } from '../domain/serializable';
 
 // A helper type describing a class that can be round‑trip validated.

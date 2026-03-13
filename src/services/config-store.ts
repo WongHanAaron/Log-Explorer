@@ -14,9 +14,16 @@ export const vscodeRuntime: Partial<typeof vscode> = (() => {
     }
 })();
 
-import { FilepathConfig } from '../domain/config/filepath-config';
-import { FileLogLineConfig } from '../domain/config/filelog-config';
-import { logger } from '../utils/logger';
+// runtime imports for config model classes are performed lazily inside
+// methods to avoid circular dependency issues when tests load the domain
+// modules before the service.  We still import the *types* here so that
+// callers can reference them in method signatures without triggering a
+// runtime require.
+import type { FilepathConfig } from '../domain/config/filepath-config';
+import type { FileLogLineConfig } from '../domain/config/filelog-config';
+import type { FileAccessConfig } from '../domain/config/fileaccess-config';
+
+import { logger } from '../utils/logger.ts';
 
 
 // small abstraction so callers can inject a fake in tests.  The real
@@ -42,6 +49,7 @@ export type WatcherFactory = (
 export const ConfigCategory = {
     Filepath: 'filepath',
     Filelog: 'filelog',
+    FileAccess: 'fileaccess',
 } as const;
 export type ConfigCategory = typeof ConfigCategory[keyof typeof ConfigCategory];
 
@@ -53,10 +61,20 @@ function getConfigDir(
     workspaceRoot: vscode.Uri,
     category: ConfigCategory
 ): vscode.Uri {
-    const subdir =
-        category === ConfigCategory.Filepath
-            ? 'filepath-configs'
-            : 'filelog-configs';
+    let subdir: string;
+    switch (category) {
+        case ConfigCategory.Filepath:
+            subdir = 'filepath-configs';
+            break;
+        case ConfigCategory.Filelog:
+            subdir = 'filelog-configs';
+            break;
+        case ConfigCategory.FileAccess:
+            subdir = 'fileaccess-configs';
+            break;
+        default:
+            throw new Error(`unknown config category ${category}`);
+    }
     return (vscodeRuntime.Uri as any).joinPath(workspaceRoot, '.logex', subdir);
 }
 
@@ -88,8 +106,13 @@ class ConfigSubscriptionRegistry implements vscode.Disposable {
             this.workspaceRoot,
             '.logex/filelog-configs/*.json'
         );
+        const faPattern = new (vscodeRuntime.RelativePattern as any)(
+            this.workspaceRoot,
+            '.logex/fileaccess-configs/*.json'
+        );
         this.watchers.push(this.watcherFactory(fpPattern));
         this.watchers.push(this.watcherFactory(flPattern));
+        this.watchers.push(this.watcherFactory(faPattern));
 
         for (const w of this.watchers) {
             w.onDidCreate((uri) => this.handleFileChanges([{ type: (vscodeRuntime.FileChangeType as any).Created, uri }]));
@@ -155,7 +178,7 @@ class ConfigSubscriptionRegistry implements vscode.Disposable {
         }
 
         const normalizedPath = uri.path.toLowerCase();
-        for (const category of [ConfigCategory.Filepath, ConfigCategory.Filelog]) {
+        for (const category of [ConfigCategory.Filepath, ConfigCategory.Filelog, ConfigCategory.FileAccess]) {
             const categoryDir = getConfigDir(this.workspaceRoot, category)
                 .path
                 .toLowerCase();
@@ -275,6 +298,8 @@ export class ConfigStore {
         const uri = (vscodeRuntime.Uri as any).joinPath(dir, ConfigStore.configFilename(shortName));
         const bytes = await this.fs.readFile(uri);
         const json = Buffer.from(bytes).toString(ENCODING);
+        // dynamically import the model class to break potential cycles
+        const { FilepathConfig } = await import('../domain/config/filepath-config');
         const [cfg, err] = await FilepathConfig.fromJson(json);
         if (err) {
             if (err instanceof SyntaxError) {
@@ -283,6 +308,23 @@ export class ConfigStore {
             throw err;
         }
         return cfg as FilepathConfig;
+    }
+
+    private async readFileAccessConfig(
+        dir: vscode.Uri,
+        shortName: string
+    ): Promise<any> {
+        const uri = (vscodeRuntime.Uri as any).joinPath(dir, ConfigStore.configFilename(shortName));
+        const bytes = await this.fs.readFile(uri);
+        const json = Buffer.from(bytes).toString(ENCODING);
+        const [cfg, err] = await (ConfigParser.parseFileAccessConfig as any)(json);
+        if (err) {
+            if (err instanceof SyntaxError) {
+                throw new Error(`Malformed JSON: could not parse fileaccess config`);
+            }
+            throw err;
+        }
+        return cfg;
     }
 
     private async readFileLogLineConfig(
@@ -326,7 +368,7 @@ export class ConfigStore {
     private async writeConfigInternal(
         dir: vscode.Uri,
         shortName: string,
-        data: FilepathConfig | FileLogLineConfig
+        data: FilepathConfig | FileLogLineConfig | any
     ): Promise<void> {
         const uri = (vscodeRuntime.Uri as any).joinPath(dir, ConfigStore.configFilename(shortName));
         // if the object has a toJson method use it; otherwise fall back to
@@ -376,7 +418,7 @@ export class ConfigStore {
     async getConfig(
         category: ConfigCategory,
         shortName: string
-    ): Promise<FilepathConfig | FileLogLineConfig> {
+    ): Promise<FilepathConfig | FileLogLineConfig | any> {
         const dir = this.getCategoryDir(category);
         try {
             switch (category) {
@@ -384,6 +426,8 @@ export class ConfigStore {
                     return await this.readFilepathConfig(dir, shortName);
                 case ConfigCategory.Filelog:
                     return await this.readFileLogLineConfig(dir, shortName);
+                case ConfigCategory.FileAccess:
+                    return await this.readFileAccessConfig(dir, shortName);
                 default:
                     throw new Error(`Unknown category: ${category}`);
             }
@@ -394,6 +438,7 @@ export class ConfigStore {
             throw err;
         }
     }
+
 
     subscribeConfigAdded(
         category: ConfigCategory,
@@ -442,4 +487,66 @@ export class ConfigStore {
     }
 
 }
+
+// -----------------------------------------------------------------------------
+// Exported parser helpers used by tests and other modules
+// -----------------------------------------------------------------------------
+
+export const ConfigParser = {
+    configFilename: ConfigStore.configFilename,
+
+    async parseFilepathConfig(json: string): Promise<FilepathConfig> {
+        // use require instead of dynamic import to avoid ESM loader errors with
+        // decorators in the module; ts-node/register handles the transpilation.
+        // include the ".ts" extension so the module is resolved correctly under
+        // our test configuration.
+        const { FilepathConfig } = require('../domain/config/filepath-config.ts');
+        const [cfg, err] = await FilepathConfig.fromJson(json);
+        if (err) {
+            throw err;
+        }
+        return cfg as FilepathConfig;
+    },
+
+    async parseFileLogLineConfig(json: string): Promise<FileLogLineConfig> {
+        // reuse logic from the class method in store
+        // the ConfigStore.getConfig path already handles dispatch but we
+        // replicate the parsing here for convenience
+        let plain: any;
+        try {
+            plain = JSON.parse(json);
+        } catch (e) {
+            throw new Error('Malformed JSON: could not parse filelog config');
+        }
+        let tuple: [FileLogLineConfig | null, any | null];
+        switch (plain.type) {
+            case 'text':
+                tuple = await (require('../domain/config/filelog-config').TextLineConfig as any).fromJson(json);
+                break;
+            case 'xml':
+                tuple = await (require('../domain/config/filelog-config').XmlLineConfig as any).fromJson(json);
+                break;
+            case 'json':
+                tuple = await (require('../domain/config/filelog-config').JsonLineConfig as any).fromJson(json);
+                break;
+            default:
+                throw new Error('Invalid FileLogLineConfig: unknown type');
+        }
+        const [cfg, err] = tuple;
+        if (err) {
+            throw err;
+        }
+        return cfg as FileLogLineConfig;
+    },
+
+    async parseFileAccessConfig(json: string): Promise<FileAccessConfig> {
+        const { FileAccessConfig } = require('../domain/config/fileaccess-config.ts');
+        const [cfg, err] = await FileAccessConfig.fromJson(json);
+        if (err) {
+            throw err;
+        }
+        return cfg as FileAccessConfig;
+    }
+};
+
 

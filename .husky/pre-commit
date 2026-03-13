@@ -1,0 +1,6 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+# run lightweight checks before allowing a commit
+npm run typecheck:tests
+npm run lint

@@ -1,6 +1,6 @@
 import { expect } from 'chai';
-import { SmbFileAdapter } from '../../../services/fileaccess/SmbFileAdapter';
-import { SmbConfig } from '../../../domain/config/fileaccess/types';
+import { SmbFileAdapter } from '../../../../services/fileaccess/SmbFileAdapter.ts';
+import type { SmbConfig } from '../../../../domain/config/fileaccess/types.ts';
 
 class FakeSmb {
     private tree: Record<string, any[]> = {

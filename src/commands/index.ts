@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { logger } from '../utils/logger.ts';
 import { NewSessionPanel } from '../panels/editors/NewSessionPanel';
 import { LogFileSourcesPanel } from '../panels/editors/LogFileSourcesPanel';
 import { LogFileLinesPanel } from '../panels/editors/LogFileLinesPanel';
@@ -19,7 +20,6 @@ export function registerCommands(context: vscode.ExtensionContext): void {
     const testLogCommand = vscode.commands.registerCommand(
         'logexplorer.testLog',
         () => {
-            const { logger } = require('../utils/logger');
             logger.log('info', 'test log from command');
         }
     );
@@ -28,7 +28,6 @@ export function registerCommands(context: vscode.ExtensionContext): void {
     const showLogCommand = vscode.commands.registerCommand(
         'logexplorer.showLog',
         () => {
-            const { logger } = require('../utils/logger');
             logger.show(false);
         }
     );
@@ -36,7 +35,6 @@ export function registerCommands(context: vscode.ExtensionContext): void {
     const hideLogCommand = vscode.commands.registerCommand(
         'logexplorer.hideLog',
         () => {
-            const { logger } = require('../utils/logger');
             logger.close();
         }
     );
@@ -51,6 +49,12 @@ export function registerCommands(context: vscode.ExtensionContext): void {
     const editLogFileSourceConfigCommand = vscode.commands.registerCommand(
         'logexplorer.editLogFileSourceConfig',
         () => LogFileSourcesPanel.createOrShow(context.extensionUri)
+    );
+
+    // US? New command for FileAccessConfigs panel (T011)
+    const editFileAccessConfigsCommand = vscode.commands.registerCommand(
+        'logexplorer.editFileAccessConfigs',
+        () => require('../panels/editors/FileAccessConfigsPanel').FileAccessConfigsPanel.createOrShow(context.extensionUri)
     );
 
     // T013 — US4: Log File Lines panel
@@ -102,6 +106,7 @@ export function registerCommands(context: vscode.ExtensionContext): void {
         hideLogCommand,
         newSessionCommand,
         editLogFileSourceConfigCommand,
+        editFileAccessConfigsCommand,
         editFileLogLineConfigCommand,
         editSessionTemplatesCommand,
         setupWorkspaceCommand,

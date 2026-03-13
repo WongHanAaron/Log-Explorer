@@ -1,7 +1,7 @@
 import * as assert from 'assert';
 import * as path from 'path';
 import * as sinon from 'sinon';
-import type * as VscTypes from 'vscode';
+import type * as VscTypes from '../vscode.ts';
 
 
 // because there is no real `vscode` package available when running under
@@ -28,8 +28,8 @@ const vscode: any = {
 
 // import directly from TypeScript sources (ts-node will compile on the fly)
 // @ts-ignore TS5097: allow .ts imports for ts-node loader
-import { ConfigStore, ConfigCategory, vscodeRuntime } from '../../../src/services/config-store.ts';
-import { logger } from '../../../src/utils/logger';
+import { ConfigStore, ConfigCategory, ConfigParser, vscodeRuntime } from '../../../src/services/config-store.ts';
+import { logger } from '../../../src/utils/logger.ts';
 
 
 // copy stub into the module's runtime proxy so the implementation can use it
@@ -183,21 +183,24 @@ describe('ConfigStore (pure parsing)', function () {
                 shortName: 'my-log',
                 pathPattern: '/var/log/app.log'
             });
-            const [cfg, err] = await (await import('../../../src/domain/config/filepath-config')).FilepathConfig.fromJson(json);
+            const { FilepathConfig } = require('../../../src/domain/config/filepath-config.ts');
+            const [cfg, err] = await FilepathConfig.fromJson(json);
             assert.strictEqual(cfg?.shortName, 'my-log');
             assert.strictEqual(cfg?.pathPattern, '/var/log/app.log');
         });
 
         it('throws on malformed JSON', async () => {
             const json = '{invalid';
-            const [cfg, err] = await (await import('../../../src/domain/config/filepath-config')).FilepathConfig.fromJson(json);
+            const { FilepathConfig } = require('../../../src/domain/config/filepath-config.ts');
+            const [cfg, err] = await FilepathConfig.fromJson(json);
             assert.strictEqual(cfg, null);
             assert.ok(err);
         });
 
         it('throws on valid JSON but invalid schema', async () => {
             const json = JSON.stringify({ shortName: 'INVALID NAME', pathPattern: 'y' });
-            const [cfg, err] = await (await import('../../../src/domain/config/filepath-config')).FilepathConfig.fromJson(json);
+            const { FilepathConfig } = require('../../../src/domain/config/filepath-config.ts');
+            const [cfg, err] = await FilepathConfig.fromJson(json);
             assert.strictEqual(cfg, null);
             assert.ok(err);
             assert.strictEqual(err[0].property, 'shortName');
@@ -266,6 +269,43 @@ describe('ConfigStore (pure parsing)', function () {
         });
     });
 
+    // ── parseFileAccessConfig tests ─────────────────────────────────
+    describe('parseFileAccessConfig', function () {
+        it('returns valid object for correct JSON', async () => {
+            const json = JSON.stringify({
+                shortName: 'fa1',
+                adapterType: 'local',
+                settings: { basePath: '/tmp' }
+            });
+            const cfg = await ConfigParser.parseFileAccessConfig(json);
+            assert.strictEqual(cfg.shortName, 'fa1');
+            assert.strictEqual(cfg.adapterType, 'local');
+        });
+        it('throws on invalid adapterType', async () => {
+            const json = JSON.stringify({
+                shortName: 'bad',
+                adapterType: 'unknown',
+                settings: {}
+            });
+            await assert.rejects(() => ConfigParser.parseFileAccessConfig(json));
+        });
+
+        it('errors gracefully when settings is an array (not object)', async () => {
+            const json = JSON.stringify({
+                shortName: 'weird',
+                adapterType: 'local',
+                settings: []
+            });
+            try {
+                await ConfigParser.parseFileAccessConfig(json);
+                throw new Error('expected failure');
+            } catch (err: any) {
+                console.log('parse error message:', err.message);
+                assert.ok(err instanceof Error);
+                assert.notStrictEqual(err.message, '(intermediate value) is not iterable');
+            }
+        });
+    });
 
 });
 // ── filesystem-interaction tests ─────────────────────────────────────────
@@ -345,6 +385,15 @@ describe('ConfigStore (filesystem interactions)', function () {
             await store.configExists(ConfigCategory.Filepath, 'z'),
             true
         );
+    });
+
+    it('can write, list and read a fileaccess config', async () => {
+        const cfg: any = { shortName: 'fa', name: 'FA', adapterType: 'local', settings: { basePath: '/x' } };
+        await store.writeConfig(ConfigCategory.FileAccess, 'fa', cfg);
+        const names = await store.listConfigNames(ConfigCategory.FileAccess);
+        assert.deepStrictEqual(names, ['fa']);
+        const read = await store.getConfig(ConfigCategory.FileAccess, 'fa');
+        assert.deepStrictEqual(read, cfg);
     });
 
     it('subscribers are notified when a config is written', async () => {

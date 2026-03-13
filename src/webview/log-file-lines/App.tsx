@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import type { HostToWebviewMessage } from "../messages";
-import { WebViewLogger } from '../webviewLogger';
+import { WebViewLogger } from '../webviewLogger.ts';
 import { FormPage, TextField, XmlField, JsonField } from "./components/FormPage";
 import type { FileLogLineConfigPayload } from "./models";
 import { getVsCodeApi } from "../vscodeApi";

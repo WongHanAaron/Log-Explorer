@@ -18,3 +18,6 @@ export async function assertRoundTrip<T>(
     expect(inst).to.be.instanceOf(clazz as any);
     expect(inst).to.deep.equal(obj);
 }
+
+// default export for compatibility with various module systems
+export default { assertRoundTrip };

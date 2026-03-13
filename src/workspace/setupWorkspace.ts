@@ -16,7 +16,7 @@ export function getLastWorkspaceContext(): WorkspaceContextState {
 }
 
 /** Sub-directories created inside `.logex` during workspace initialisation. */
-const LOGEX_SUBDIRS = ['filepath-configs', 'filelog-configs'] as const;
+const LOGEX_SUBDIRS = ['filepath-configs', 'filelog-configs', 'fileaccess-configs'] as const;
 
 /**
  * Checks the state of the `.logex` workspace folder.

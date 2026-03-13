@@ -49,6 +49,9 @@ docs/                # Developer references
 
 npm test; npm run lint
 
+> **Agent behavior:**
+> When applying or suggesting code changes, the assistant should execute `npm run typecheck` (or equivalent `tsc --noEmit`) afterward and surface any resulting diagnostics.  This ensures the errors seen in VS Code are reproduced and fixed iteratively.
+
 ## Code Style
 
 TypeScript 5.x, Node.js 18+: Follow standard conventions.  When authoring
@@ -69,4 +72,7 @@ When authoring UI code, consult the 'docs/react-ui-guidelines.md' for our conven
 
 
 <!-- MANUAL ADDITIONS START -->
+
+> ⚠️ **Editor note:** After modifying TypeScript configuration or adjusting imports (e.g. enabling decorators, changing moduleResolution, adding new packages), the VS Code TypeScript server may cache the old settings.  Run **"TypeScript: Restart TS Server"** (or reload the window) so diagnostics accurately reflect the current config.
+
 <!-- MANUAL ADDITIONS END -->

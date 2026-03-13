@@ -1,6 +1,6 @@
 import * as assert from 'assert';
-import * as vscode from 'vscode';
-import { isSelectConfigMessage, isLogMessage } from '../../../src/utils/panelHelpers';
+import * as vscode from '../vscode.ts';
+import { isSelectConfigMessage, isLogMessage } from '../../../src/utils/panelHelpers.ts';
 
 describe('panelHelpers', function () {
     it('detects selectConfig messages', () => {

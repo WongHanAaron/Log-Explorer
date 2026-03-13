@@ -1,7 +1,10 @@
-import { FileSourceConfig } from '../../domain/config/fileaccess/types';
-import { LocalFileAdapter } from './LocalFileAdapter';
-import { SftpFileAdapter } from './SftpFileAdapter';
-import { SmbFileAdapter } from './SmbFileAdapter';
+// compile-time-only type
+
+type FileSourceConfig = import('../../domain/config/fileaccess/types.ts').FileSourceConfig;
+
+import { LocalFileAdapter } from './LocalFileAdapter.ts';
+import { SftpFileAdapter } from './SftpFileAdapter.ts';
+import { SmbFileAdapter } from './SmbFileAdapter.ts';
 
 export function createFileAdapter(config: FileSourceConfig) {
     switch (config.type) {

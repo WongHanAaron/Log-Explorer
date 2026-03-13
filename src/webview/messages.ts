@@ -42,6 +42,38 @@ export interface FilepathConfigValidateNameMessage {
     shortName: string;
 }
 
+// ── FileAccess Config Editor messages ───────────────────────────────────
+
+// ── Host → Webview ────────────────────────────────────────────────
+
+export interface FileAccessConfigSaveResultMessage {
+    type: 'fileaccess-config:save-result';
+    success: boolean;
+    errorMessage?: string;
+}
+
+export interface FileAccessConfigNameAvailableMessage {
+    type: 'fileaccess-config:name-available';
+    available: boolean;
+}
+
+// ── Webview → Host ────────────────────────────────────────────────
+
+export interface FileAccessConfigSaveMessage {
+    type: 'fileaccess-config:save';
+    config: any;
+}
+
+export interface FileAccessConfigValidateNameMessage {
+    type: 'fileaccess-config:validate-name';
+    shortName: string;
+}
+
+export interface FileAccessConfigDeleteMessage {
+    type: 'fileaccess-config:delete';
+    shortName: string;
+}
+
 // ════════════════════════════════════════════════════════════════════
 // File Log Line Config Editor messages
 // ════════════════════════════════════════════════════════════════════
@@ -118,6 +150,8 @@ export type HostToWebviewMessage =
     | FilepathConfigLoadMessage
     | FilepathConfigSaveResultMessage
     | FilepathConfigNameAvailableMessage
+    | FileAccessConfigSaveResultMessage
+    | FileAccessConfigNameAvailableMessage
     | FilelogConfigLoadMessage
     | FilelogConfigSaveResultMessage
     | FilelogConfigRegexTestResultMessage
@@ -133,6 +167,9 @@ export type WebviewToHostMessage =
     | GenericSelectConfigMessage
     | FilepathConfigSaveMessage
     | FilepathConfigValidateNameMessage
+    | FileAccessConfigSaveMessage
+    | FileAccessConfigValidateNameMessage
+    | FileAccessConfigDeleteMessage
     | FilelogConfigSaveMessage
     | FilelogConfigTestRegexMessage
     | FilelogConfigValidateNameMessage;

@@ -1,6 +1,7 @@
 import { expect } from 'chai';
-import { FileAccessAdapter } from '../../../services/fileaccess/FileAccessAdapter';
-import { FileSourceConfig, ListDirOptions } from '../../../domain/config/fileaccess/types';
+import { FileAccessAdapter } from '../../../../services/fileaccess/FileAccessAdapter.ts';
+// types only
+import type { FileSourceConfig, ListDirOptions } from '../../../../domain/config/fileaccess/types.ts';
 
 class DummyAdapter extends FileAccessAdapter {
     readFile(path: string): Promise<Buffer> {
