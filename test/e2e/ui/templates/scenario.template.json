@@ -1,0 +1,32 @@
+{
+    "id": "replace-with-scenario-id",
+    "name": "Replace with scenario name",
+    "priority": "P1",
+    "tags": [
+        "smoke"
+    ],
+    "replayEnabled": true,
+    "preconditions": [
+        "fixture:default-workspace"
+    ],
+    "steps": [
+        {
+            "index": 1,
+            "actionType": "openBrowser",
+            "target": {
+                "url": "http://localhost:3000"
+            },
+            "expectedOutputs": [
+                {
+                    "type": "visible",
+                    "source": {
+                        "selector": "#app"
+                    },
+                    "expected": true,
+                    "comparator": "equals"
+                }
+            ],
+            "pauseAfter": false
+        }
+    ]
+}
