@@ -4,6 +4,8 @@ node_modules/
 # Build output
 dist/
 out/
+build/
+coverage/
 
 # Extension package
 *.vsix
@@ -33,6 +35,8 @@ src/**/*.js.map
 # Editor
 *.swp
 *.tmp
+.vscode/
+.idea/
 
 # Logs
 *.log

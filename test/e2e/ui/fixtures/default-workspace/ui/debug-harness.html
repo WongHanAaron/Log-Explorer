@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>LogExplorer UI E2E Harness</title>
+    <style>
+        body {
+            font-family: Segoe UI, sans-serif;
+            margin: 24px;
+        }
+
+        .row {
+            margin-bottom: 12px;
+        }
+
+        #status {
+            font-weight: 700;
+            color: #1f6feb;
+        }
+
+        #savedPath {
+            color: #0a7f2e;
+        }
+    </style>
+</head>
+
+<body>
+    <main id="app" data-testid="app-root">
+        <h1>LogExplorer UI E2E Harness</h1>
+        <div class="row">
+            <button id="open-config" data-testid="open-config">Open File Config</button>
+            <span id="status" data-testid="status">Idle</span>
+        </div>
+        <div class="row">
+            <input id="filepath" data-testid="filepath" placeholder="Enter log file path" />
+            <button id="save-path" data-testid="save-path">Save Path</button>
+        </div>
+        <div class="row">
+            <span>Saved path: </span>
+            <span id="savedPath" data-testid="saved-path">(none)</span>
+        </div>
+    </main>
+    <script>
+        const status = document.getElementById('status');
+        const filepath = document.getElementById('filepath');
+        const savedPath = document.getElementById('savedPath');
+
+        document.getElementById('open-config').addEventListener('click', () => {
+            status.textContent = 'Config opened';
+        });
+
+        document.getElementById('save-path').addEventListener('click', () => {
+            savedPath.textContent = filepath.value || '(none)';
+            status.textContent = 'Path saved';
+        });
+    </script>
+</body>
+
+</html>

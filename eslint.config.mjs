@@ -5,9 +5,12 @@ export default [
     {
         ignores: [
             "dist/**",
+            "build/**",
             "out/**",
+            "coverage/**",
             "node_modules/**",
             ".vscode-test/**",
+            "**/*.min.js",
             "**/*.d.ts"
         ]
     },

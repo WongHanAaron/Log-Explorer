@@ -7,11 +7,11 @@
 
 **Purpose**: Initialize UI E2E project scaffolding and command entry points
 
-- [ ] T001 Create UI E2E folder scaffolding and placeholder files in test/e2e/ui/{artifacts,fixtures,scenarios,support,templates}/.gitkeep
-- [ ] T002 Add UI E2E npm script placeholders in package.json
-- [ ] T003 [P] Add UI E2E quick command launcher script in scripts/run-ui-e2e.js
-- [ ] T004 [P] Add scenario template for authoring new tests in test/e2e/ui/templates/scenario.template.json
-- [ ] T005 [P] Add fixture workspace README and baseline fixture contract in test/e2e/ui/fixtures/default-workspace/README.md
+- [X] T001 Create UI E2E folder scaffolding and placeholder files in test/e2e/ui/{artifacts,fixtures,scenarios,support,templates}/.gitkeep
+- [X] T002 Add UI E2E npm script placeholders in package.json
+- [X] T003 [P] Add UI E2E quick command launcher script in scripts/run-ui-e2e.js
+- [X] T004 [P] Add scenario template for authoring new tests in test/e2e/ui/templates/scenario.template.json
+- [X] T005 [P] Add fixture workspace README and baseline fixture contract in test/e2e/ui/fixtures/default-workspace/README.md
 
 ---
 
@@ -21,14 +21,14 @@
 
 **CRITICAL**: No user story work begins until this phase completes
 
-- [ ] T006 Define shared E2E domain types aligned with data model in test/e2e/ui/support/types.ts
-- [ ] T007 Implement scenario schema parsing and validation in test/e2e/ui/support/schema.ts
-- [ ] T008 [P] Implement fixture/environment bootstrap and preflight diagnostics in test/e2e/ui/support/environment.ts
-- [ ] T009 [P] Implement command and UI action driver abstractions in test/e2e/ui/support/commands.ts
-- [ ] T010 [P] Implement assertion adapter framework for expected outputs in test/e2e/ui/support/assertions.ts
-- [ ] T011 Implement artifact writer for result/events/manifest files in test/e2e/ui/support/artifacts.ts
-- [ ] T012 Implement core scenario runner orchestration in test/e2e/ui/support/runner.ts
-- [ ] T013 Wire npm scripts to new runner modes (run/grep/debug/replay) in package.json
+- [X] T006 Define shared E2E domain types aligned with data model in test/e2e/ui/support/types.ts
+- [X] T007 Implement scenario schema parsing and validation in test/e2e/ui/support/schema.ts
+- [X] T008 [P] Implement fixture/environment bootstrap and preflight diagnostics in test/e2e/ui/support/environment.ts
+- [X] T009 [P] Implement command and UI action driver abstractions in test/e2e/ui/support/commands.ts
+- [X] T010 [P] Implement assertion adapter framework for expected outputs in test/e2e/ui/support/assertions.ts
+- [X] T011 Implement artifact writer for result/events/manifest files in test/e2e/ui/support/artifacts.ts
+- [X] T012 Implement core scenario runner orchestration in test/e2e/ui/support/runner.ts
+- [X] T013 Wire npm scripts to new runner modes (run/grep/debug/replay) in package.json
 
 **Checkpoint**: Foundational runtime complete; user stories can now be implemented and tested independently
 
@@ -42,20 +42,20 @@
 
 ### Tests for User Story 1
 
-- [ ] T014 [P] [US1] Add contract tests for scenario schema validation in test/e2e/ui/support/schema.contract.test.ts
-- [ ] T015 [P] [US1] Add integration test for automated run status and failure diagnostics in test/e2e/ui/scenarios/automated-run.integration.test.ts
-- [ ] T016 [P] [US1] Add assertion adapter tests for text/visibility/state outputs in test/e2e/ui/support/assertions.test.ts
+- [X] T014 [P] [US1] Add contract tests for scenario schema validation in test/e2e/ui/support/schema.contract.test.ts
+- [X] T015 [P] [US1] Add integration test for automated run status and failure diagnostics in test/e2e/ui/scenarios/automated-run.integration.test.ts
+- [X] T016 [P] [US1] Add assertion adapter tests for text/visibility/state outputs in test/e2e/ui/support/assertions.test.ts
 
 ### Implementation for User Story 1
 
-- [ ] T017 [P] [US1] Create P1 filepath config smoke scenario definition in test/e2e/ui/scenarios/filepath-config.smoke.json
-- [ ] T018 [P] [US1] Create P1 output verification scenario definition in test/e2e/ui/scenarios/output-verification.smoke.json
-- [ ] T019 [US1] Implement automated mode execution pipeline in test/e2e/ui/support/runner.automated.ts
-- [ ] T020 [US1] Implement per-test summary and exit code mapping in test/e2e/ui/support/results.ts
-- [ ] T021 [US1] Integrate browser automation adapter with webview interactions in test/e2e/ui/support/webviewDriver.ts
-- [ ] T022 [US1] Add setup/precondition error code mapping in test/e2e/ui/support/errors.ts
-- [ ] T023 [US1] Add CLI entry point for run and grep execution in scripts/run-ui-e2e.js
-- [ ] T024 [US1] Document automated run usage and expected outputs in test/e2e/ui/README.md
+- [X] T017 [P] [US1] Create P1 filepath config smoke scenario definition in test/e2e/ui/scenarios/filepath-config.smoke.json
+- [X] T018 [P] [US1] Create P1 output verification scenario definition in test/e2e/ui/scenarios/output-verification.smoke.json
+- [X] T019 [US1] Implement automated mode execution pipeline in test/e2e/ui/support/runner.automated.ts
+- [X] T020 [US1] Implement per-test summary and exit code mapping in test/e2e/ui/support/results.ts
+- [X] T021 [US1] Integrate browser automation adapter with webview interactions in test/e2e/ui/support/webviewDriver.ts
+- [X] T022 [US1] Add setup/precondition error code mapping in test/e2e/ui/support/errors.ts
+- [X] T023 [US1] Add CLI entry point for run and grep execution in scripts/run-ui-e2e.js
+- [X] T024 [US1] Document automated run usage and expected outputs in test/e2e/ui/README.md
 
 **Checkpoint**: User Story 1 is independently runnable with deterministic assertions and pass/fail reporting
 
@@ -69,16 +69,16 @@
 
 ### Tests for User Story 2
 
-- [ ] T025 [P] [US2] Add debug stepping integration test for pauseBefore/pauseAfter behavior in test/e2e/ui/scenarios/debug-step.integration.test.ts
-- [ ] T026 [P] [US2] Add debug state emission tests for step context visibility in test/e2e/ui/support/debugSession.test.ts
+- [X] T025 [P] [US2] Add debug stepping integration test for pauseBefore/pauseAfter behavior in test/e2e/ui/scenarios/debug-step.integration.test.ts
+- [X] T026 [P] [US2] Add debug state emission tests for step context visibility in test/e2e/ui/support/debugSession.test.ts
 
 ### Implementation for User Story 2
 
-- [ ] T027 [US2] Implement debug session state machine for step/pause/resume in test/e2e/ui/support/debugSession.ts
-- [ ] T028 [US2] Extend runner to execute debug mode with interactive step control in test/e2e/ui/support/runner.debug.ts
-- [ ] T029 [US2] Add debug channel logging for current step and assertion status in test/e2e/ui/support/debugOutput.ts
-- [ ] T030 [US2] Add scenario-level debug options parsing in test/e2e/ui/support/cliArgs.ts
-- [ ] T031 [US2] Extend command launcher with debug mode and scenario targeting in scripts/run-ui-e2e.js
+- [X] T027 [US2] Implement debug session state machine for step/pause/resume in test/e2e/ui/support/debugSession.ts
+- [X] T028 [US2] Extend runner to execute debug mode with interactive step control in test/e2e/ui/support/runner.debug.ts
+- [X] T029 [US2] Add debug channel logging for current step and assertion status in test/e2e/ui/support/debugOutput.ts
+- [X] T030 [US2] Add scenario-level debug options parsing in test/e2e/ui/support/cliArgs.ts
+- [X] T031 [US2] Extend command launcher with debug mode and scenario targeting in scripts/run-ui-e2e.js
 - [ ] T032 [US2] Add visible debug walkthrough scenario fixture in test/e2e/ui/scenarios/filepath-config.debug.json
 - [ ] T033 [US2] Document step-through debug workflow in test/e2e/ui/README.md
 
