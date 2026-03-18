@@ -78,3 +78,5 @@ When authoring UI code, consult the 'docs/react-ui-guidelines.md' for our conven
 > ⚠️ **Editor note:** After modifying TypeScript configuration or adjusting imports (e.g. enabling decorators, changing moduleResolution, adding new packages), the VS Code TypeScript server may cache the old settings.  Run **"TypeScript: Restart TS Server"** (or reload the window) so diagnostics accurately reflect the current config.
 
 <!-- MANUAL ADDITIONS END -->
+
+

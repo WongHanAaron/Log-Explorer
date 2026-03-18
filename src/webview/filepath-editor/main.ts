@@ -7,7 +7,7 @@ declare function acquireVsCodeApi(): {
     setState(state: unknown): void;
 };
 
-const vscode = acquireVsCodeApi();
+const vscodeApi = acquireVsCodeApi();
 
 // ── DOM refs ──────────────────────────────────────────────────────────────────
 
@@ -74,7 +74,7 @@ shortNameInput.addEventListener('blur', () => {
     }
     // Only check availability when creating a new config or when the name changed.
     if (isNew || name !== originalShortName) {
-        vscode.postMessage({ type: 'filepath-config:validate-name', shortName: name });
+        vscodeApi.postMessage({ type: 'filepath-config:validate-name', shortName: name });
     }
 });
 
@@ -88,7 +88,7 @@ form.addEventListener('submit', (e) => {
     saveBtn.disabled = true;
     setStatus('Saving…', 'info');
 
-    vscode.postMessage({
+    vscodeApi.postMessage({
         type: 'filepath-config:save',
         config: {
             shortName: shortNameInput.value.trim(),
@@ -104,7 +104,7 @@ form.addEventListener('submit', (e) => {
 cancelBtn.addEventListener('click', () => {
     // Ask host to close the panel by posting a cancel message.
     // (The panel can just dispose itself.)
-    vscode.postMessage({ type: 'filepath-config:cancel' });
+    vscodeApi.postMessage({ type: 'filepath-config:cancel' });
 });
 
 // ── Host messages ─────────────────────────────────────────────────────────────

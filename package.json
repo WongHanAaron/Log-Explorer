@@ -175,7 +175,7 @@
         "typecheck": "tsc --noEmit -p tsconfig.json",
         "lint": "eslint \"src/**/*.{ts,tsx}\" \"test/**/*.{ts,tsx}\"",
         "pretest": "npm run typecheck && npm run build && tsc -p test/tsconfig.json",
-        "test": "mocha --extensions ts,tsx -r ts-node/register -r tsconfig-paths/register \"test/unit/**/*.test.tsx?\"",
+        "test": "cross-env LOGEX_UNIT_TEST=1 mocha --extensions ts,tsx -r ts-node/register -r tsconfig-paths/register \"test/unit/**/*.test.ts\"",
         "typecheck:tests": "tsc -p test/tsconfig.json",
         "prepare": "husky install",
         "test:unit": "npm run test",
@@ -200,6 +200,7 @@
         "vscode:prepublish": "node esbuild.mjs --production"
     },
     "devDependencies": {
+        "vscode": "file:test/unit",
         "@eslint/js": "^10.0.1",
         "@radix-ui/react-label": "^2.1.8",
         "@radix-ui/react-slot": "^1.2.4",

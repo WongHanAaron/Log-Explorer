@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import { createFileAdapter } from '../../../../services/fileaccess/factory.ts';
-import { FileSourceConfig } from '../../../../domain/config/fileaccess/types.ts';
+import type { FileSourceConfig } from '../../../../domain/config/fileaccess/types.ts';
 import { LocalFileAdapter } from '../../../../services/fileaccess/LocalFileAdapter.ts';
 import { SftpFileAdapter } from '../../../../services/fileaccess/SftpFileAdapter.ts';
 import { SmbFileAdapter } from '../../../../services/fileaccess/SmbFileAdapter.ts';
