@@ -49,4 +49,40 @@ describe("ui-e2e assertions", () => {
         expect(outcomes).to.have.length(3);
         expect(outcomes.every((outcome) => outcome.passed)).to.equal(true);
     });
+
+    it("evaluates combined host and webview outcome assertions", async () => {
+        const step: UiE2EStep = {
+            index: 2,
+            actionType: "command",
+            target: { command: "message.send" },
+            expectedOutputs: [
+                {
+                    type: "state",
+                    source: { stateKey: "lastSentMessageType" },
+                    expected: "fileaccess-config:save"
+                },
+                {
+                    type: "state",
+                    source: { stateKey: "lastReceivedMessageType" },
+                    expected: "fileaccess-config:save-result"
+                },
+                {
+                    type: "textEquals",
+                    source: { selector: "#status" },
+                    expected: "Config opened"
+                }
+            ]
+        };
+
+        const outcomes = await evaluateStepAssertions(step, {
+            driver: new FakeDriver() as never,
+            state: {
+                lastSentMessageType: "fileaccess-config:save",
+                lastReceivedMessageType: "fileaccess-config:save-result"
+            }
+        });
+
+        expect(outcomes).to.have.length(3);
+        expect(outcomes.every((outcome) => outcome.passed)).to.equal(true);
+    });
 });

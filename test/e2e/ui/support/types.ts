@@ -1,5 +1,98 @@
 export type UiE2EMode = "run" | "grep" | "debug" | "replay";
 
+export type CanonicalTracePolicy = "minimal" | "full";
+
+export type CanonicalActionType =
+    | "panel.open"
+    | "panel.dispose"
+    | "command.execute"
+    | "webview.interact"
+    | "message.send"
+    | "message.wait";
+
+export interface CanonicalAssertion {
+    type: string;
+    source?: Record<string, unknown>;
+    expected: unknown;
+}
+
+export interface CanonicalStep {
+    index: number;
+    action: CanonicalActionType;
+    target?: Record<string, unknown>;
+    input?: unknown;
+    assertions: CanonicalAssertion[];
+    timeoutMs?: number;
+    tracePolicy?: CanonicalTracePolicy;
+}
+
+export interface CanonicalScenario {
+    schemaVersion: "2.0";
+    scenarioId: string;
+    name: string;
+    priority: UiE2EPriority;
+    tags?: string[];
+    preconditions?: string[];
+    steps: CanonicalStep[];
+}
+
+export interface HostRuntime {
+    openPanel(input: { panelType: string; fixturePath: string; initialState?: Record<string, unknown> }): Promise<{ sessionId: string }>;
+    executeCommand(input: { sessionId: string; command: string; args?: unknown[] }): Promise<{ success: boolean; details: Record<string, unknown> }>;
+    sendWebviewMessage(input: { sessionId: string; message: { type: string;[k: string]: unknown } }): Promise<void>;
+    waitForMessage(input: { sessionId: string; type: string; timeoutMs: number }): Promise<{ type: string; payload: unknown }>;
+    getTrace(input: { sessionId: string }): Promise<MessageTraceEvent[]>;
+    disposePanel(input: { sessionId: string }): Promise<void>;
+}
+
+export interface HostRuntimeSession {
+    sessionId: string;
+    panelType: string;
+    status: "created" | "initialized" | "ready" | "disposed" | "error";
+    openedAt: string;
+    disposedAt?: string;
+    hostState: Record<string, unknown>;
+    lastError?: string;
+}
+
+export interface MessageTraceEvent {
+    ordinal: number;
+    sessionId: string;
+    direction: "webview_to_host" | "host_to_webview";
+    type: string;
+    payload: unknown;
+    timestamp: string;
+    accepted: boolean;
+    errorCode?: string;
+    errorMessage?: string;
+}
+
+export interface HostOutcome {
+    sessionId: string;
+    stepIndex: number;
+    outcomeType: "panel_opened" | "message_handled" | "command_executed" | "validation_result" | "save_result" | "disposed" | "error";
+    success: boolean;
+    details: Record<string, unknown>;
+    recordedAt: string;
+}
+
+export interface MigrationIssue {
+    code: string;
+    severity: "error" | "warning";
+    fieldPath: string;
+    message: string;
+    suggestedFix?: string;
+}
+
+export interface MigrationRecord {
+    legacyScenarioPath: string;
+    canonicalScenarioPath?: string;
+    status: "migrated" | "failed";
+    issues: MigrationIssue[];
+    startedAt: string;
+    endedAt: string;
+}
+
 export type UiE2EPriority = "P1" | "P2" | "P3";
 
 export type UiE2EActionType =
@@ -108,6 +201,7 @@ export interface UiE2ERunnerOptions {
     fixture?: string;
     step?: boolean;
     continueOnFail?: boolean;
+    profile?: string;
 }
 
 export interface UiE2EExecutionContext {

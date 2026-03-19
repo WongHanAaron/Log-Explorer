@@ -1,0 +1,34 @@
+{
+    "schemaVersion": "2.0",
+    "scenarioId": "panel-webview-example",
+    "name": "Panel Webview Example",
+    "priority": "P1",
+    "tags": [
+        "panel",
+        "webview",
+        "smoke"
+    ],
+    "preconditions": [
+        "fixture:default-workspace"
+    ],
+    "steps": [
+        {
+            "index": 1,
+            "action": "panel.open",
+            "target": {
+                "panelType": "fileaccess-config"
+            },
+            "assertions": [
+                {
+                    "type": "host.outcome",
+                    "source": {
+                        "outcomeType": "panel_opened"
+                    },
+                    "expected": true
+                }
+            ],
+            "tracePolicy": "full",
+            "timeoutMs": 5000
+        }
+    ]
+}

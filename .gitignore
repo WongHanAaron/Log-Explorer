@@ -15,6 +15,7 @@ releases/
 
 # Test artifacts
 .vscode-test/
+test/e2e/ui/artifacts/
 
 # OS files
 .DS_Store

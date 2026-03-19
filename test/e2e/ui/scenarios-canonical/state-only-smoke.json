@@ -1,10 +1,11 @@
 {
   "schemaVersion": "2.0",
-  "scenarioId": "replace-with-scenario-id",
-  "name": "Replace with scenario name",
+  "scenarioId": "state-only-smoke",
+  "name": "State-only smoke",
   "priority": "P1",
   "tags": [
-    "smoke"
+    "smoke",
+    "state"
   ],
   "preconditions": [
     "fixture:default-workspace"
@@ -12,21 +13,21 @@
   "steps": [
     {
       "index": 1,
-      "action": "panel.open",
+      "action": "command.execute",
       "target": {
-        "panelType": "fileaccess-config"
+        "command": "setState",
+        "stateKey": "sessionReady"
       },
+      "input": true,
       "assertions": [
         {
           "type": "host.outcome",
           "source": {
-            "stateKey": "panelOpened"
+            "stateKey": "sessionReady"
           },
           "expected": true
         }
-      ],
-      "tracePolicy": "full",
-      "timeoutMs": 5000
+      ]
     }
   ]
 }

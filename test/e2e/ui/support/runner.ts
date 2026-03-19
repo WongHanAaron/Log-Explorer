@@ -4,7 +4,7 @@ import path from "node:path";
 import { collectEvents, writeRunArtifacts } from "./artifacts";
 import { ensureEnvironment, ensureScenarioDirectoryExists } from "./environment";
 import { UiE2EError } from "./errors";
-import { getExitCodeFromResults, summarizeResults } from "./results";
+import { getExitCodeFromResults, normalizeResultsForDeterminism, summarizeResults } from "./results";
 import { runAutomatedScenarios } from "./runner.automated";
 import { runDebugScenarios } from "./runner.debug";
 import { loadScenarioFile } from "./schema";
@@ -14,12 +14,35 @@ function collectScenarioFiles(scenariosRoot: string): string[] {
     ensureScenarioDirectoryExists(scenariosRoot);
     return fs
         .readdirSync(scenariosRoot)
-        .filter((name) => name.endsWith(".json"))
+        .filter((name) => name.endsWith(".json") && !name.endsWith(".profile.json"))
         .map((name) => path.join(scenariosRoot, name));
 }
 
-function filterScenarios(scenarios: UiE2ETestCase[], options: UiE2ERunnerOptions): UiE2ETestCase[] {
+function loadProfileScenarioIds(scenariosRoot: string, profile?: string): string[] | undefined {
+    if (!profile) {
+        return undefined;
+    }
+
+    const profilePath = path.join(scenariosRoot, `${profile}.profile.json`);
+    if (!fs.existsSync(profilePath)) {
+        return undefined;
+    }
+
+    const payload = JSON.parse(fs.readFileSync(profilePath, "utf8"));
+    if (!Array.isArray(payload.scenarios)) {
+        return undefined;
+    }
+
+    return payload.scenarios.filter((value: unknown) => typeof value === "string") as string[];
+}
+
+function filterScenarios(scenarios: UiE2ETestCase[], options: UiE2ERunnerOptions, profileScenarioIds?: string[]): UiE2ETestCase[] {
     let current = scenarios;
+
+    if (profileScenarioIds && profileScenarioIds.length > 0) {
+        const idSet = new Set(profileScenarioIds);
+        current = current.filter((scenario) => idSet.has(scenario.id));
+    }
 
     if (options.scenario) {
         current = current.filter((scenario) => scenario.id === options.scenario || scenario.name === options.scenario);
@@ -45,15 +68,25 @@ function toInternalMode(mode: UiE2EMode): UiE2ERunResult["mode"] {
     return "automated";
 }
 
+function resolveScenarioRoot(baseRoot: string, profile?: string): string {
+    if (profile === "panel-webview-integrated") {
+        return path.join(path.dirname(baseRoot), "scenarios-canonical");
+    }
+    return baseRoot;
+}
+
 export async function runScenarioSet(options: UiE2ERunnerOptions): Promise<{ exitCode: number; runResult: UiE2ERunResult }> {
     if (options.mode === "replay") {
         throw new UiE2EError("E2E_UNKNOWN", "Replay mode is not implemented in this task slice.", "Use run or debug mode.");
     }
 
     const env = ensureEnvironment(options.fixture);
-    const files = collectScenarioFiles(env.scenariosRoot);
+    const scenariosRoot = resolveScenarioRoot(env.scenariosRoot, options.profile);
+
+    const files = collectScenarioFiles(scenariosRoot);
     const scenarios = files.map((filePath) => loadScenarioFile(filePath));
-    const selectedScenarios = filterScenarios(scenarios, options);
+    const profileScenarioIds = loadProfileScenarioIds(scenariosRoot, options.profile);
+    const selectedScenarios = filterScenarios(scenarios, options, profileScenarioIds);
 
     if (selectedScenarios.length === 0) {
         throw new UiE2EError(
@@ -78,6 +111,8 @@ export async function runScenarioSet(options: UiE2ERunnerOptions): Promise<{ exi
                 fixturePath: env.fixturePath
             });
 
+    const normalizedResults = normalizeResultsForDeterminism(results);
+
     const runResult: UiE2ERunResult = {
         runId: env.runId,
         mode: toInternalMode(options.mode),
@@ -89,19 +124,19 @@ export async function runScenarioSet(options: UiE2ERunnerOptions): Promise<{ exi
             workspace: env.workspaceRoot,
             fixture: env.fixtureName
         },
-        results
+        results: normalizedResults
     };
 
     const scenarioRef = selectedScenarios.length === 1 ? selectedScenarios[0].id : "suite";
-    writeRunArtifacts(env, scenarioRef, runResult, collectEvents(results));
+    writeRunArtifacts(env, scenarioRef, runResult, collectEvents(normalizedResults));
 
-    const summary = summarizeResults(results);
+    const summary = summarizeResults(normalizedResults);
     console.log(
         `[ui-e2e] run=${env.runId} mode=${options.mode} passed=${summary.passed} failed=${summary.failed} skipped=${summary.skipped} error=${summary.error}`
     );
 
     return {
-        exitCode: getExitCodeFromResults(results),
+        exitCode: getExitCodeFromResults(normalizedResults),
         runResult
     };
 }
