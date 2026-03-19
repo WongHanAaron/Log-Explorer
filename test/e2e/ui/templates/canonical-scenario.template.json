@@ -1,14 +1,10 @@
 {
   "schemaVersion": "2.0",
-  "scenarioId": "replace-with-scenario-id",
-  "name": "Replace with scenario name",
+  "scenarioId": "panel-webview-example",
+  "name": "Panel Webview Example",
   "priority": "P1",
-  "tags": [
-    "smoke"
-  ],
-  "preconditions": [
-    "fixture:default-workspace"
-  ],
+  "tags": ["panel", "webview", "smoke"],
+  "preconditions": ["fixture:default-workspace"],
   "steps": [
     {
       "index": 1,
@@ -20,7 +16,7 @@
         {
           "type": "host.outcome",
           "source": {
-            "stateKey": "panelOpened"
+            "outcomeType": "panel_opened"
           },
           "expected": true
         }

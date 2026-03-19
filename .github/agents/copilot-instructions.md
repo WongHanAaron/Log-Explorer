@@ -28,6 +28,12 @@ Auto-generated from all feature plans. Last updated: 2026-02-28
 - file system accesses only; no database. (008-file-adapters)
 - TypeScript 5.x on Node.js 18+ + `@vscode/test-electron`, `@vscode/test-cli`, `mocha`, `chai`, `ts-node`, browser automation runner (`playwright` candidate) (001-ui-e2e-automation)
 - File-based test fixtures and run artifacts under `test/e2e/ui/fixtures` and `test/e2e/ui/artifacts` (001-ui-e2e-automation)
+- TypeScript 5.x, Node.js 18+ + Existing project modules (`vscode` extension host code, `ConfigStore`, `ConfigSaver`), Playwright, Mocha (001-panel-webview-e2e)
+- Fixture workspace files under `test/e2e/ui/fixtures/*`, config files under `.logex/fileaccess-configs/` in fixture/workspace (001-panel-webview-e2e)
+- TypeScript 5.x, Node.js 18+ + Playwright, Mocha, existing extension panel/webview modules, filesystem utilities for migration tooling (001-panel-webview-e2e)
+- Scenario definitions and artifacts under `test/e2e/ui/`, fixture workspace files under `test/e2e/ui/fixtures/`, migrated scenario corpus in new canonical format (001-panel-webview-e2e)
+- TypeScript 5.9.x (Node.js 18+, VS Code engine ^1.85.0) + Mocha, ts-node, @vscode/test-cli, @vscode/test-electron, Playwright (001-panel-webview-e2e)
+- File-based fixtures and JSON scenario/artifact files under `test/e2e/ui/` (001-panel-webview-e2e)
 
 - TypeScript 5.x, Node.js 18+ + @types/vscode (extension API types), esbuild (bundler) (001-vscode-extension-setup)
 
@@ -68,9 +74,9 @@ the codebase robust and self-documenting.
 When authoring UI code, consult the 'docs/react-ui-guidelines.md' for our conventions on webview structure, messaging, styling, and documentation.
 
 ## Recent Changes
-- 001-ui-e2e-automation: Added TypeScript 5.x on Node.js 18+ + `@vscode/test-electron`, `@vscode/test-cli`, `mocha`, `chai`, `ts-node`, browser automation runner (`playwright` candidate)
-- 008-file-adapters: Added TypeScript 5.x targeting ES2020/ES2022, Node.js 18+ (per project constraints) + built‑in Node modules (`fs`, `path`), `ssh2-sftp-client` for SFTP, `smb2` for SMB, occasionally `chai`/`mocha` for tests.
-- 001-logfile-path-ui: Added TypeScript 5.x targeting Node/ES2021 in a VSCode + vscode API (`@types/vscode`), React/tailwind libs used
+- 001-panel-webview-e2e: Added TypeScript 5.9.x (Node.js 18+, VS Code engine ^1.85.0) + Mocha, ts-node, @vscode/test-cli, @vscode/test-electron, Playwright
+- 001-panel-webview-e2e: Added TypeScript 5.x, Node.js 18+ + Playwright, Mocha, existing extension panel/webview modules, filesystem utilities for migration tooling
+- 001-panel-webview-e2e: Added TypeScript 5.x, Node.js 18+ + Existing project modules (`vscode` extension host code, `ConfigStore`, `ConfigSaver`), Playwright, Mocha
 
 
 <!-- MANUAL ADDITIONS START -->

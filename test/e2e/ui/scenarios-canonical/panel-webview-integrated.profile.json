@@ -1,0 +1,8 @@
+{
+  "profile": "panel-webview-integrated",
+  "description": "Canonical integrated panel/webview suite",
+  "scenarios": [
+    "panel-webview-lifecycle",
+    "panel-webview-messageflow"
+  ]
+}

@@ -1,9 +1,0 @@
-{
-  "manifestVersion": "1.0",
-  "runId": "20260318T184925328Z-8092e4",
-  "scenarioRef": "state-only-smoke",
-  "resultFile": "result.json",
-  "eventsFile": "events.json",
-  "screenshotsDir": "snapshots",
-  "createdAt": "2026-03-18T18:49:25.352Z"
-}

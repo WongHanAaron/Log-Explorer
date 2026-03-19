@@ -1,0 +1,13 @@
+{
+  "profile": "panel-webview-integrated",
+  "description": "Canonical CI profile for panel/webview integrated scenarios",
+  "scenarios": [
+    "panel-webview-lifecycle",
+    "panel-webview-messageflow"
+  ],
+  "artifactExpectations": [
+    "summary.json",
+    "events.json",
+    "trace.json"
+  ]
+}

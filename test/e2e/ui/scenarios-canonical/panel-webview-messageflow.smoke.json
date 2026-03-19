@@ -1,0 +1,58 @@
+{
+  "schemaVersion": "2.0",
+  "scenarioId": "panel-webview-messageflow",
+  "name": "Panel Webview Messageflow",
+  "priority": "P1",
+  "tags": ["panel", "webview", "messages"],
+  "preconditions": ["fixture:default-workspace"],
+  "steps": [
+    {
+      "index": 1,
+      "action": "panel.open",
+      "target": {
+        "panelType": "fileaccess-config"
+      },
+      "assertions": [
+        {
+          "type": "host.outcome",
+          "source": {
+            "stateKey": "panelOpened"
+          },
+          "expected": true
+        }
+      ]
+    },
+    {
+      "index": 2,
+      "action": "message.send",
+      "input": {
+        "type": "fileaccess-config:save"
+      },
+      "assertions": [
+        {
+          "type": "host.outcome",
+          "source": {
+            "stateKey": "lastSentMessageType"
+          },
+          "expected": "fileaccess-config:save"
+        }
+      ]
+    },
+    {
+      "index": 3,
+      "action": "message.wait",
+      "input": {
+        "type": "fileaccess-config:save-result"
+      },
+      "assertions": [
+        {
+          "type": "host.outcome",
+          "source": {
+            "stateKey": "lastReceivedMessageType"
+          },
+          "expected": "fileaccess-config:save-result"
+        }
+      ]
+    }
+  ]
+}

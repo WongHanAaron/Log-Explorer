@@ -4,8 +4,19 @@ const path = require("path");
 
 function parseArgs(argv) {
     const [modeArg, ...rest] = argv;
-    const mode = modeArg && !modeArg.startsWith("-") ? modeArg : "run";
+    let mode = modeArg && !modeArg.startsWith("-") ? modeArg : "run";
     const passthrough = modeArg && !modeArg.startsWith("-") ? rest : argv;
+
+    if (mode === "canonical") {
+        mode = "run";
+        passthrough.unshift("--profile", "panel-webview-integrated");
+    }
+
+    if (mode === "migrate") {
+        mode = "run";
+        passthrough.unshift("--migrate");
+    }
+
     return { mode, passthrough };
 }
 

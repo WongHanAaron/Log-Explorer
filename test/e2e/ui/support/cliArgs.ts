@@ -16,15 +16,19 @@ export function parseRunnerOptions(mode: UiE2EMode, argv: string[]): UiE2ERunner
     const grep = getValue(argv, "--grep");
     const scenario = getValue(argv, "--scenario");
     const fixture = getValue(argv, "--workspace");
+    const profile = getValue(argv, "--profile");
     const step = hasFlag(argv, "--step");
     const continueOnFail = hasFlag(argv, "--continue-on-fail");
+    const migrate = hasFlag(argv, "--migrate");
 
     return {
         mode,
         grep,
         scenario,
         fixture,
+        profile,
         step,
-        continueOnFail
+        continueOnFail,
+        migrate
     };
 }

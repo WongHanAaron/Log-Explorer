@@ -62,6 +62,10 @@ export async function executeStepAction(step: UiE2EStep, ctx: CommandExecutionCo
             const command = step.target.command;
             if (command) {
                 ctx.state.lastCommand = command;
+                if (command === "message.send") {
+                    const payload = (step.input as Record<string, unknown> | undefined) ?? {};
+                    ctx.state.lastDispatchedMessageType = String(payload.type ?? "unknown");
+                }
                 if (ctx.onCommand) {
                     await ctx.onCommand(command, step);
                 }

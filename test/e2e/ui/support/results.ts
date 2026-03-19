@@ -15,6 +15,10 @@ export function summarizeResults(results: UiE2EResult[]): RunSummary {
     return summary;
 }
 
+export function normalizeResultsForDeterminism(results: UiE2EResult[]): UiE2EResult[] {
+    return [...results].sort((a, b) => a.testCaseId.localeCompare(b.testCaseId));
+}
+
 export function getExitCodeFromResults(results: UiE2EResult[]): number {
     return results.some((result) => result.status === "failed" || result.status === "error") ? 1 : 0;
 }
