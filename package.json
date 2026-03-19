@@ -195,7 +195,6 @@
         "test:e2e:ui:debug": "node scripts/run-ui-e2e.js debug",
         "test:e2e:ui:canonical": "node scripts/run-ui-e2e.js run --profile panel-webview-integrated",
         "test:e2e:ui:canonical:debug": "node scripts/run-ui-e2e.js debug --profile panel-webview-integrated",
-        "test:e2e:ui:migrate": "node scripts/run-ui-e2e.js run --migrate",
         "test:e2e:ui:determinism": "node scripts/run-ui-e2e-determinism.js",
         "test:e2e:ui:replay": "node scripts/run-ui-e2e.js replay",
         "compose:up": "bash scripts/compose.sh up",

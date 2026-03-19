@@ -202,7 +202,6 @@ export interface UiE2ERunnerOptions {
     step?: boolean;
     continueOnFail?: boolean;
     profile?: string;
-    migrate?: boolean;
 }
 
 export interface UiE2EExecutionContext {

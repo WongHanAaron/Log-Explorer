@@ -4,7 +4,6 @@ import path from "node:path";
 import { collectEvents, writeRunArtifacts } from "./artifacts";
 import { ensureEnvironment, ensureScenarioDirectoryExists } from "./environment";
 import { UiE2EError } from "./errors";
-import { runMigration } from "./migration";
 import { getExitCodeFromResults, normalizeResultsForDeterminism, summarizeResults } from "./results";
 import { runAutomatedScenarios } from "./runner.automated";
 import { runDebugScenarios } from "./runner.debug";
@@ -83,37 +82,6 @@ export async function runScenarioSet(options: UiE2ERunnerOptions): Promise<{ exi
 
     const env = ensureEnvironment(options.fixture);
     const scenariosRoot = resolveScenarioRoot(env.scenariosRoot, options.profile);
-
-    if (options.migrate) {
-        const migrationRecords = runMigration({
-            sourceRoot: env.scenariosRoot,
-            destinationRoot: path.join(path.dirname(env.scenariosRoot), "scenarios-canonical")
-        });
-
-        const hasErrors = migrationRecords.some((record) => record.status === "failed");
-        const runResult: UiE2ERunResult = {
-            runId: env.runId,
-            mode: "automated",
-            startedAt: new Date().toISOString(),
-            endedAt: new Date().toISOString(),
-            environment: {
-                os: process.platform,
-                node: process.version,
-                workspace: env.workspaceRoot,
-                fixture: env.fixtureName
-            },
-            results: []
-        };
-
-        writeRunArtifacts(env, "migration", runResult, [], {
-            migrationRecords
-        });
-
-        return {
-            exitCode: hasErrors ? 1 : 0,
-            runResult
-        };
-    }
 
     const files = collectScenarioFiles(scenariosRoot);
     const scenarios = files.map((filePath) => loadScenarioFile(filePath));

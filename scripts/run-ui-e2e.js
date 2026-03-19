@@ -12,11 +12,6 @@ function parseArgs(argv) {
         passthrough.unshift("--profile", "panel-webview-integrated");
     }
 
-    if (mode === "migrate") {
-        mode = "run";
-        passthrough.unshift("--migrate");
-    }
-
     return { mode, passthrough };
 }
 

@@ -1,25 +1,27 @@
 # UI E2E Test Harness
 
+**Note**: All scenarios use the canonical schema (2.0) with in-process host runtime abstraction.
+
 For complete development guidance, see `docs/testing/ui-e2e.md`.
 
 ## Automated Run
 
-- Run all scenarios:
-
-```bash
-npm run test:e2e:ui
-```
-
-- Run canonical integrated profile:
+- Run canonical integrated profile (default):
 
 ```bash
 npm run test:e2e:ui:canonical
 ```
 
+- Run all scenarios including legacy and canonical:
+
+```bash
+npm run test:e2e:ui
+```
+
 - Filter scenarios:
 
 ```bash
-npm run test:e2e:ui:grep -- --grep "filepath config"
+npm run test:e2e:ui:grep -- --grep "lifecycle"
 ```
 
 ## Debug Run
@@ -27,7 +29,7 @@ npm run test:e2e:ui:grep -- --grep "filepath config"
 - Run a scenario in visible step mode:
 
 ```bash
-npm run test:e2e:ui:debug -- --scenario "filepath-config-smoke" --step
+npm run test:e2e:ui:debug -- --scenario "panel-webview-lifecycle" --step
 ```
 
 This opens a headed (visible) Chromium session and pauses at each step when `--step` is set.
@@ -38,34 +40,32 @@ This opens a headed (visible) Chromium session and pauses at each step when `--s
 npm run test:e2e:ui:canonical:debug -- --scenario "panel-webview-lifecycle"
 ```
 
-## Migration
+## Determinism Verification
 
-- Run one-time legacy to canonical scenario migration:
+- Run repeated passes to verify scenario stability:
 
 ```bash
-npm run test:e2e:ui:migrate
+npm run test:e2e:ui:determinism -- --scenario "panel-webview-lifecycle"
 ```
-
-This emits `migration-report.json` and fails fast on unsupported mappings.
 
 ## Artifacts
 
 Run output is written to:
 
-- `test/e2e/ui/artifacts/<scenario>/<runId>/result.json`
-- `test/e2e/ui/artifacts/<scenario>/<runId>/events.json`
-- `test/e2e/ui/artifacts/<scenario>/<runId>/replay-manifest.json`
-
-Canonical runs additionally write:
-
-- `test/e2e/ui/artifacts/<scenario>/<runId>/summary.json`
-- `test/e2e/ui/artifacts/<scenario>/<runId>/trace.json`
-- `test/e2e/ui/artifacts/<scenario>/<runId>/migration-report.json` (migration mode)
+```
+test/e2e/ui/artifacts/<scenario>/<runId>/
+  ├── result.json           # Detailed test results
+  ├── summary.json          # Run summary (canonical only)
+  ├── trace.json            # Ordered message trace (canonical only)
+  ├── events.json           # Step-by-step events
+  └── replay-manifest.json  # Manifest for replay
+```
 
 ## Troubleshooting
 
-- If migration fails, inspect `migration-report.json` for `fieldPath` and `suggestedFix` details.
 - If debug runs stall, confirm headed browser dependencies are installed and rerun with `--scenario` to narrow scope.
-- If messageflow assertions fail, check `trace.json` and look for `accepted=false` events indicating unsupported message types.
-- If lifecycle scenarios time out, inspect diagnostics for `E2E_INIT_TIMEOUT` and verify fixture readiness.
+- If assertions fail, check `trace.json` for event ordering and `accepted=false` indicators.
+- If lifecycle scenarios time out, inspect `result.json` diagnostics for `E2E_INIT_TIMEOUT` and verify fixture readiness.
+- For determinism issues, check `summary.json` totals across multiple runs.
+
 

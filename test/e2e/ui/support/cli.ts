@@ -11,9 +11,6 @@ interface MainInput {
 export async function main(input: MainInput): Promise<number> {
     try {
         const options = parseRunnerOptions(input.mode, input.argv);
-        if (options.migrate) {
-            console.log("[ui-e2e] running migration mode");
-        }
         const result = await runScenarioSet(options);
         return result.exitCode;
     } catch (error) {

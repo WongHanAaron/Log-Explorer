@@ -1,70 +1,77 @@
 import { expect } from "chai";
-import fs from "node:fs";
-import os from "node:os";
-import path from "node:path";
+import Ajv from "ajv";
+import canonicalScenarioSchema from "../templates/canonical-scenario.schema.json";
 
-import { runMigration } from "./migration";
+// Load the canonical schema for validation
+const ajv = new Ajv();
+const validateCanonical = ajv.compile(canonicalScenarioSchema);
 
-describe("ui-e2e migration", () => {
-    it("fails fast when legacy scenario is missing id", () => {
-        const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "ui-e2e-migrate-"));
-        const sourceRoot = path.join(tempRoot, "scenarios");
-        const destinationRoot = path.join(tempRoot, "scenarios-canonical");
-        fs.mkdirSync(sourceRoot, { recursive: true });
+describe("ui-e2e canonical schema validation", () => {
+    it("rejects scenario without schemaVersion", () => {
+        const invalid = {
+            scenarioId: "test",
+            name: "Test",
+            priority: "P1",
+            steps: []
+        };
 
-        fs.writeFileSync(
-            path.join(sourceRoot, "missing-id.json"),
-            JSON.stringify({ name: "Missing Id", steps: [{ index: 1, actionType: "command", expectedOutputs: [] }] }, null, 2),
-            "utf8"
-        );
-
-        const records = runMigration({ sourceRoot, destinationRoot });
-
-        expect(records).to.have.length(1);
-        expect(records[0].status).to.equal("failed");
-        expect(records[0].issues.some((issue) => issue.code === "MIGRATION_SCENARIO_ID_MISSING")).to.equal(true);
+        const valid = validateCanonical(invalid);
+        expect(valid).to.equal(false);
+        expect(validateCanonical.errors).to.be.an("array");
+        expect(validateCanonical.errors?.some((e) => e.keyword === "required")).to.equal(true);
     });
 
-    it("migrates valid legacy scenario to canonical format", () => {
-        const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "ui-e2e-migrate-"));
-        const sourceRoot = path.join(tempRoot, "scenarios");
-        const destinationRoot = path.join(tempRoot, "scenarios-canonical");
-        fs.mkdirSync(sourceRoot, { recursive: true });
+    it("rejects scenario without scenarioId", () => {
+        const invalid = {
+            schemaVersion: "2.0",
+            name: "Test",
+            priority: "P1",
+            steps: []
+        };
 
-        fs.writeFileSync(
-            path.join(sourceRoot, "valid.json"),
-            JSON.stringify(
+        const valid = validateCanonical(invalid);
+        expect(valid).to.equal(false);
+    });
+
+    it("accepts valid canonical scenario", () => {
+        const validScenario = {
+            schemaVersion: "2.0",
+            scenarioId: "valid-scenario",
+            name: "Valid Scenario",
+            priority: "P1",
+            tags: ["test"],
+            preconditions: ["fixture:default-workspace"],
+            steps: [
                 {
-                    id: "legacy-valid",
-                    name: "Legacy Valid",
-                    priority: "P1",
-                    steps: [
+                    index: 1,
+                    action: "command.execute",
+                    target: { command: "setState" },
+                    input: { stateKey: "ok" },
+                    assertions: [
                         {
-                            index: 1,
-                            actionType: "command",
-                            target: { command: "noop" },
-                            expectedOutputs: [
-                                {
-                                    type: "state",
-                                    source: { stateKey: "ok" },
-                                    expected: true
-                                }
-                            ]
+                            type: "host.outcome",
+                            source: { stateKey: "ok" },
+                            expected: true
                         }
                     ]
-                },
-                null,
-                2
-            ),
-            "utf8"
-        );
+                }
+            ]
+        };
 
-        const records = runMigration({ sourceRoot, destinationRoot });
+        const valid = validateCanonical(validScenario);
+        expect(valid).to.equal(true);
+    });
 
-        expect(records).to.have.length(1);
-        expect(records[0].status).to.equal("migrated");
+    it("enforces schemaVersion must be 2.0", () => {
+        const invalidVersion = {
+            schemaVersion: "1.0",
+            scenarioId: "test",
+            name: "Test",
+            priority: "P1",
+            steps: []
+        };
 
-        const migratedPath = path.join(destinationRoot, "legacy-valid.json");
-        expect(fs.existsSync(migratedPath)).to.equal(true);
+        const valid = validateCanonical(invalidVersion);
+        expect(valid).to.equal(false);
     });
 });
