@@ -80,7 +80,7 @@ export class InProcessHostRuntime implements HostRuntime {
         };
     }
 
-    public async sendWebviewMessage(input: { sessionId: string; message: { type: string; [k: string]: unknown } }): Promise<void> {
+    public async sendWebviewMessage(input: { sessionId: string; message: { type: string;[k: string]: unknown } }): Promise<void> {
         this.requireSession(input.sessionId);
 
         const type = String(input.message.type ?? "").trim();

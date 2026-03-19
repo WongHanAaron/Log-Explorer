@@ -1,46 +1,52 @@
 {
-  "schemaVersion": "2.0",
-  "scenarioId": "panel-webview-lifecycle",
-  "name": "Panel Webview Lifecycle",
-  "priority": "P1",
-  "tags": ["panel", "webview", "lifecycle"],
-  "preconditions": ["fixture:default-workspace"],
-  "steps": [
-    {
-      "index": 1,
-      "action": "panel.open",
-      "target": {
-        "panelType": "fileaccess-config"
-      },
-      "assertions": [
+    "schemaVersion": "2.0",
+    "scenarioId": "panel-webview-lifecycle",
+    "name": "Panel Webview Lifecycle",
+    "priority": "P1",
+    "tags": [
+        "panel",
+        "webview",
+        "lifecycle"
+    ],
+    "preconditions": [
+        "fixture:default-workspace"
+    ],
+    "steps": [
         {
-          "type": "host.outcome",
-          "source": {
-            "stateKey": "panelOpened"
-          },
-          "expected": true
-        }
-      ],
-      "timeoutMs": 5000,
-      "tracePolicy": "full"
-    },
-    {
-      "index": 2,
-      "action": "message.wait",
-      "target": {
-        "type": "init"
-      },
-      "assertions": [
+            "index": 1,
+            "action": "panel.open",
+            "target": {
+                "panelType": "fileaccess-config"
+            },
+            "assertions": [
+                {
+                    "type": "host.outcome",
+                    "source": {
+                        "stateKey": "panelOpened"
+                    },
+                    "expected": true
+                }
+            ],
+            "timeoutMs": 5000,
+            "tracePolicy": "full"
+        },
         {
-          "type": "host.outcome",
-          "source": {
-            "stateKey": "initMessageType"
-          },
-          "expected": "init"
+            "index": 2,
+            "action": "message.wait",
+            "target": {
+                "type": "init"
+            },
+            "assertions": [
+                {
+                    "type": "host.outcome",
+                    "source": {
+                        "stateKey": "initMessageType"
+                    },
+                    "expected": "init"
+                }
+            ],
+            "timeoutMs": 5000,
+            "tracePolicy": "full"
         }
-      ],
-      "timeoutMs": 5000,
-      "tracePolicy": "full"
-    }
-  ]
+    ]
 }

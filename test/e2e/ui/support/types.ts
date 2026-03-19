@@ -39,7 +39,7 @@ export interface CanonicalScenario {
 export interface HostRuntime {
     openPanel(input: { panelType: string; fixturePath: string; initialState?: Record<string, unknown> }): Promise<{ sessionId: string }>;
     executeCommand(input: { sessionId: string; command: string; args?: unknown[] }): Promise<{ success: boolean; details: Record<string, unknown> }>;
-    sendWebviewMessage(input: { sessionId: string; message: { type: string; [k: string]: unknown } }): Promise<void>;
+    sendWebviewMessage(input: { sessionId: string; message: { type: string;[k: string]: unknown } }): Promise<void>;
     waitForMessage(input: { sessionId: string; type: string; timeoutMs: number }): Promise<{ type: string; payload: unknown }>;
     getTrace(input: { sessionId: string }): Promise<MessageTraceEvent[]>;
     disposePanel(input: { sessionId: string }): Promise<void>;

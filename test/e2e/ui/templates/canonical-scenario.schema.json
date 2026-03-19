@@ -1,94 +1,114 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://logexplorer.dev/schemas/ui-e2e/canonical-scenario.schema.json",
-  "title": "Canonical UI E2E Scenario",
-  "type": "object",
-  "required": ["schemaVersion", "scenarioId", "name", "priority", "steps"],
-  "properties": {
-    "schemaVersion": {
-      "type": "string",
-      "const": "2.0"
-    },
-    "scenarioId": {
-      "type": "string",
-      "minLength": 1
-    },
-    "name": {
-      "type": "string",
-      "minLength": 1
-    },
-    "priority": {
-      "type": "string",
-      "enum": ["P1", "P2", "P3"]
-    },
-    "tags": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
-    },
-    "preconditions": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
-    },
-    "steps": {
-      "type": "array",
-      "minItems": 1,
-      "items": {
-        "type": "object",
-        "required": ["index", "action", "assertions"],
-        "properties": {
-          "index": {
-            "type": "integer",
-            "minimum": 1
-          },
-          "action": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://logexplorer.dev/schemas/ui-e2e/canonical-scenario.schema.json",
+    "title": "Canonical UI E2E Scenario",
+    "type": "object",
+    "required": [
+        "schemaVersion",
+        "scenarioId",
+        "name",
+        "priority",
+        "steps"
+    ],
+    "properties": {
+        "schemaVersion": {
+            "type": "string",
+            "const": "2.0"
+        },
+        "scenarioId": {
+            "type": "string",
+            "minLength": 1
+        },
+        "name": {
+            "type": "string",
+            "minLength": 1
+        },
+        "priority": {
             "type": "string",
             "enum": [
-              "panel.open",
-              "panel.dispose",
-              "command.execute",
-              "webview.interact",
-              "message.send",
-              "message.wait"
+                "P1",
+                "P2",
+                "P3"
             ]
-          },
-          "target": {
-            "type": "object"
-          },
-          "input": {},
-          "assertions": {
+        },
+        "tags": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            }
+        },
+        "preconditions": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            }
+        },
+        "steps": {
             "type": "array",
             "minItems": 1,
             "items": {
-              "type": "object",
-              "required": ["type", "expected"],
-              "properties": {
-                "type": {
-                  "type": "string"
+                "type": "object",
+                "required": [
+                    "index",
+                    "action",
+                    "assertions"
+                ],
+                "properties": {
+                    "index": {
+                        "type": "integer",
+                        "minimum": 1
+                    },
+                    "action": {
+                        "type": "string",
+                        "enum": [
+                            "panel.open",
+                            "panel.dispose",
+                            "command.execute",
+                            "webview.interact",
+                            "message.send",
+                            "message.wait"
+                        ]
+                    },
+                    "target": {
+                        "type": "object"
+                    },
+                    "input": {},
+                    "assertions": {
+                        "type": "array",
+                        "minItems": 1,
+                        "items": {
+                            "type": "object",
+                            "required": [
+                                "type",
+                                "expected"
+                            ],
+                            "properties": {
+                                "type": {
+                                    "type": "string"
+                                },
+                                "source": {
+                                    "type": "object"
+                                },
+                                "expected": {}
+                            },
+                            "additionalProperties": true
+                        }
+                    },
+                    "tracePolicy": {
+                        "type": "string",
+                        "enum": [
+                            "minimal",
+                            "full"
+                        ]
+                    },
+                    "timeoutMs": {
+                        "type": "integer",
+                        "minimum": 1
+                    }
                 },
-                "source": {
-                  "type": "object"
-                },
-                "expected": {}
-              },
-              "additionalProperties": true
+                "additionalProperties": true
             }
-          },
-          "tracePolicy": {
-            "type": "string",
-            "enum": ["minimal", "full"]
-          },
-          "timeoutMs": {
-            "type": "integer",
-            "minimum": 1
-          }
-        },
-        "additionalProperties": true
-      }
-    }
-  },
-  "additionalProperties": true
+        }
+    },
+    "additionalProperties": true
 }
