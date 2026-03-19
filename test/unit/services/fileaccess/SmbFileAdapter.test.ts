@@ -1,4 +1,5 @@
 import { expect } from 'chai';
+import * as assert from 'assert';
 import { SmbFileAdapter } from '../../../../services/fileaccess/SmbFileAdapter.ts';
 import type { SmbConfig } from '../../../../domain/config/fileaccess/types.ts';
 
@@ -42,7 +43,7 @@ describe('SmbFileAdapter (stub)', () => {
     });
 
     it('propagates not found error', async () => {
-        await expect(adapter.readFile('missing')).to.be.rejectedWith(Error);
+        await assert.rejects(() => adapter.readFile('missing'));
     });
 
     it('lists recursively', async () => {

@@ -1,4 +1,5 @@
 import { expect } from 'chai';
+import * as assert from 'assert';
 import { FileAccessAdapter } from '../../../../services/fileaccess/FileAccessAdapter.ts';
 // types only
 import type { FileSourceConfig, ListDirOptions } from '../../../../domain/config/fileaccess/types.ts';
@@ -30,6 +31,6 @@ describe('FileAccessAdapter base class', () => {
     it('readFile forwards to subclass and error propagates', async () => {
         const data = await adapter.readFile('exists.txt');
         expect(data.toString()).to.equal('hello');
-        await expect(adapter.readFile('missing')).to.be.rejectedWith('not found');
+        await assert.rejects(() => adapter.readFile('missing'), /not found/);
     });
 });

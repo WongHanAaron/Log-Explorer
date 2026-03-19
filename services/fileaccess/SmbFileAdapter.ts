@@ -31,23 +31,25 @@ type Smb2Constructor = new (options: {
 }) => Smb2Client;
 
 export class SmbFileAdapter extends FileAccessAdapter {
-    private client: Smb2Client;
+    private client: Smb2Client | undefined;
 
     protected readonly config: SmbConfig;
 
     constructor(config: SmbConfig) {
         super(config);
         this.config = config;
-        this.client = new SMB2({
-            share: this.config.share,
-            username: this.config.username,
-            password: this.config.password,
-            domain: this.config.domain,
-        });
     }
 
     private async ensureReady() {
-        // SMB2 client is ready immediately; nothing to do
+        if (!this.client) {
+            this.client = new SMB2({
+                share: this.config.share,
+                username: this.config.username,
+                password: this.config.password,
+                domain: this.config.domain,
+            });
+        }
+        // SMB2 client is ready immediately after construction.
         return;
     }
 
@@ -55,7 +57,7 @@ export class SmbFileAdapter extends FileAccessAdapter {
         await this.ensureReady();
         const normalized = this.normalizePath(p);
         return new Promise<Buffer>((resolve, reject) => {
-            this.client.readFile(normalized, (err: Smb2CallbackError, data: Buffer) => {
+            this.client!.readFile(normalized, (err: Smb2CallbackError, data: Buffer) => {
                 if (err) return reject(err);
                 resolve(data);
             });
@@ -67,14 +69,14 @@ export class SmbFileAdapter extends FileAccessAdapter {
         const normalized = this.normalizePath(p) || '';
         const readdir = (path: string) =>
             new Promise<any[]>((resolve, reject) => {
-                this.client.readdir(path, (err: Smb2CallbackError, files: string[]) => {
+                this.client!.readdir(path, (err: Smb2CallbackError, files: string[]) => {
                     if (err) return reject(err);
                     resolve(files);
                 });
             });
         const statFn = (path: string) =>
             new Promise<{ isDirectory: boolean }>((resolve, reject) => {
-                this.client.stat(path, (err: Smb2CallbackError, stats: Smb2Stats) => {
+                this.client!.stat(path, (err: Smb2CallbackError, stats: Smb2Stats) => {
                     if (err) return reject(err);
                     resolve({ isDirectory: stats.isDirectory() });
                 });
@@ -85,7 +87,7 @@ export class SmbFileAdapter extends FileAccessAdapter {
     async stat(p: string) {
         await this.ensureReady();
         return new Promise<any>((resolve, reject) => {
-            this.client.stat(this.normalizePath(p), (err: Smb2CallbackError, stats: Smb2Stats) => {
+            this.client!.stat(this.normalizePath(p), (err: Smb2CallbackError, stats: Smb2Stats) => {
                 if (err) return reject(err);
                 resolve(stats);
             });
@@ -95,7 +97,7 @@ export class SmbFileAdapter extends FileAccessAdapter {
     async delete(p: string): Promise<void> {
         await this.ensureReady();
         return new Promise<void>((resolve, reject) => {
-            this.client.unlink(this.normalizePath(p), (err: Smb2CallbackError) => {
+            this.client!.unlink(this.normalizePath(p), (err: Smb2CallbackError) => {
                 if (err) return reject(err);
                 resolve();
             });

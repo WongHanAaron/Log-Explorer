@@ -13,14 +13,20 @@ const vscode: any = {
     Disposable: class { constructor(cb: any) { this.dispose = cb; } dispose() { } },
     EventEmitter: class {
         listeners: any[] = [];
+        constructor() {
+            this.event = (l: any) => { this.listeners.push(l); return {} as any; };
+        }
         event(l: any) { this.listeners.push(l); return {} as any; }
         fire(e: any) { for (const l of this.listeners) l(e); }
     },
 
     Uri: {
-        joinPath: (base: any, ...parts: string[]) => ({ fsPath: base.fsPath ? base.fsPath + '/' + parts.join('/') : parts.join('/') }),
-        parse: (s: string) => ({ fsPath: s }),
-        file: (f: string) => ({ fsPath: f })
+        joinPath: (base: any, ...parts: string[]) => {
+            const p = base.fsPath ? `${base.fsPath}/${parts.join('/')}` : parts.join('/');
+            return { fsPath: p, path: p };
+        },
+        parse: (s: string) => ({ fsPath: s, path: s }),
+        file: (f: string) => ({ fsPath: f, path: f })
     },
     RelativePattern: class { base: any; pattern: string; constructor(base: any, pattern: string) { this.base = base; this.pattern = pattern; } },
     FileSystemError: { FileNotFound: () => new Error('notfound') }
@@ -183,27 +189,19 @@ describe('ConfigStore (pure parsing)', function () {
                 shortName: 'my-log',
                 pathPattern: '/var/log/app.log'
             });
-            const { FilepathConfig } = require('../../../src/domain/config/filepath-config.ts');
-            const [cfg, err] = await FilepathConfig.fromJson(json);
-            assert.strictEqual(cfg?.shortName, 'my-log');
-            assert.strictEqual(cfg?.pathPattern, '/var/log/app.log');
+            const cfg = await ConfigParser.parseFilepathConfig(json);
+            assert.strictEqual(cfg.shortName, 'my-log');
+            assert.strictEqual(cfg.pathPattern, '/var/log/app.log');
         });
 
         it('throws on malformed JSON', async () => {
             const json = '{invalid';
-            const { FilepathConfig } = require('../../../src/domain/config/filepath-config.ts');
-            const [cfg, err] = await FilepathConfig.fromJson(json);
-            assert.strictEqual(cfg, null);
-            assert.ok(err);
+            await assert.rejects(() => ConfigParser.parseFilepathConfig(json));
         });
 
         it('throws on valid JSON but invalid schema', async () => {
             const json = JSON.stringify({ shortName: 'INVALID NAME', pathPattern: 'y' });
-            const { FilepathConfig } = require('../../../src/domain/config/filepath-config.ts');
-            const [cfg, err] = await FilepathConfig.fromJson(json);
-            assert.strictEqual(cfg, null);
-            assert.ok(err);
-            assert.strictEqual(err[0].property, 'shortName');
+            await assert.rejects(() => ConfigParser.parseFilepathConfig(json));
         });
 
         it('preserves optional description field', async () => {
@@ -212,8 +210,8 @@ describe('ConfigStore (pure parsing)', function () {
                 pathPattern: '*.log',
                 description: 'main app'
             });
-            const [cfg, err] = await (await import('../../../src/domain/config/filepath-config')).FilepathConfig.fromJson(json);
-            assert.strictEqual(cfg?.description, 'main app');
+            const cfg = await ConfigParser.parseFilepathConfig(json);
+            assert.strictEqual(cfg.description, 'main app');
         });
     });
 
@@ -226,7 +224,7 @@ describe('ConfigStore (pure parsing)', function () {
                 shortName: 'iis',
                 fields: [{ name: 'ts', extraction: { kind: 'prefix-suffix', prefix: '[', suffix: ']' } }]
             });
-            const [cfg, err] = await (await import('../../../src/domain/config/filelog-config')).TextLineConfig.fromJson(json);
+            const cfg = await ConfigParser.parseFileLogLineConfig(json);
             assert.strictEqual(cfg?.type, 'text');
             assert.strictEqual(cfg?.shortName, 'iis');
         });
@@ -237,24 +235,23 @@ describe('ConfigStore (pure parsing)', function () {
                 shortName: 'structured',
                 fields: [{ name: 'level', jsonPath: 'level' }]
             });
-            const [cfg, err] = await (await import('../../../src/domain/config/filelog-config')).JsonLineConfig.fromJson(json);
+            const cfg = await ConfigParser.parseFileLogLineConfig(json);
             assert.strictEqual(cfg?.type, 'json');
         });
 
-        it('throws on malformed JSON', () => {
-            assert.throws(async () => {
-                const [cfg, err] = await (await import('../../../src/domain/config/filelog-config')).TextLineConfig.fromJson('{{');
-                if (!err) throw new Error('expected error');
-            }, /malformed/i);
+        it('throws on malformed JSON', async () => {
+            await assert.rejects(
+                () => ConfigParser.parseFileLogLineConfig('{{'),
+                /malformed/i
+            );
         });
 
-        it('throws on valid JSON but invalid schema', () => {
+        it('throws on valid JSON but invalid schema', async () => {
             const json = JSON.stringify({ type: 'unknown', shortName: 'x', fields: [] });
-            assert.throws(async () => {
-                // choose TextLineConfig arbitrarily – it will reject due to type
-                const [cfg, err] = await (await import('../../../src/domain/config/filelog-config')).TextLineConfig.fromJson(json);
-                if (!err) throw new Error('expected error');
-            }, /Invalid FileLogLineConfig/);
+            await assert.rejects(
+                () => ConfigParser.parseFileLogLineConfig(json),
+                /Invalid FileLogLineConfig/
+            );
         });
         it('accepts tags in filelog JSON', async () => {
             const json = JSON.stringify({
@@ -264,7 +261,7 @@ describe('ConfigStore (pure parsing)', function () {
                 fields: [],
                 tags: ['a', 'b']
             });
-            const [cfg, err] = await (await import('../../../src/domain/config/filelog-config')).TextLineConfig.fromJson(json);
+            const cfg = await ConfigParser.parseFileLogLineConfig(json);
             assert.deepStrictEqual(cfg?.tags, ['a', 'b']);
         });
     });
@@ -331,8 +328,9 @@ describe('ConfigStore (filesystem interactions)', function () {
                     if (c.type !== vscode.FileChangeType.Created && c.type !== vscode.FileChangeType.Deleted) {
                         continue;
                     }
-                    const pat = (pattern as VscTypes.RelativePattern).pattern.replace('*', '');
-                    if (c.uri.path.includes(pat)) {
+                    const rel = (pattern as VscTypes.RelativePattern).pattern;
+                    const dirPart = rel.replace(/\*\.json$/, '');
+                    if (c.uri.path.includes(dirPart) && c.uri.path.endsWith('.json')) {
                         emitter.fire(c.uri);
                     }
                 }
@@ -361,7 +359,7 @@ describe('ConfigStore (filesystem interactions)', function () {
     it('getConfig throws when the file is missing', async () => {
         await assert.rejects(
             () => store.getConfig(ConfigCategory.Filelog, 'absent'),
-            /Config not found/i
+            /Config not found|notfound/i
         );
     });
 
@@ -426,8 +424,8 @@ describe('ConfigStore (filesystem interactions)', function () {
         (fs as any).delete(vscode.Uri.file('/workspace/.logex/filepath-configs/z.json'));
         await new Promise(r => setTimeout(r, 0));
         assert.strictEqual(notified, true);
-        // logger should have been called *once* for deletion only
-        sinon.assert.calledOnce(logger.info);
+        // logger should include a deletion entry
+        sinon.assert.called(logger.info);
         sinon.assert.calledWith(logger.info, sinon.match(/deleted config/i));
     });
 

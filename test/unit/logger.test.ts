@@ -64,7 +64,7 @@ describe('OutputLogger', function () {
         const chan = (logger as any).channel as FakeChannel;
         expect(chan).to.exist;
         expect(chan.lines).to.have.length(1);
-        expect(chan.lines[0]).to.match(/\[info\]\[A\] hello$/);
+        expect(chan.lines[0]).to.match(/\[info\]\s+\[A\]\s+hello$/);
     });
 
     it('convenience helpers map to correct level', () => {
@@ -75,9 +75,9 @@ describe('OutputLogger', function () {
         logger.error('e');
         const lines = ((logger as any).channel as FakeChannel).lines;
         expect(lines.some(l => l.includes('[debug]'))).to.be.true;
-        expect(lines.some(l => l.includes('[info] i'))).to.be.true;
-        expect(lines.some(l => l.includes('[warn] w'))).to.be.true;
-        expect(lines.some(l => l.includes('[error] e'))).to.be.true;
+        expect(lines.some(l => l.includes('[info] [other] i'))).to.be.true;
+        expect(lines.some(l => l.includes('[warn] [scope] w'))).to.be.true;
+        expect(lines.some(l => l.includes('[error] [scope] e'))).to.be.true;
     });
 
     it('allows adhoc override of level and scope', () => {
@@ -85,7 +85,7 @@ describe('OutputLogger', function () {
         // use generic log to override both level and scope
         logger.log(LogLevel.Warn, 'warned', 'B');
         const chan = (logger as any).channel as FakeChannel;
-        expect(chan.lines[0]).to.match(/\[warn\]\[B\] warned$/);
+        expect(chan.lines[0]).to.match(/\[warn\]\s+\[B\]\s+warned$/);
     });
 
     it('logs error objects with stack', () => {

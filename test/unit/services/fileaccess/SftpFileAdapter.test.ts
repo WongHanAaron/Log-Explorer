@@ -1,4 +1,5 @@
 import { expect } from 'chai';
+import * as assert from 'assert';
 import { SftpFileAdapter } from '../../../../services/fileaccess/SftpFileAdapter.ts';
 import type { SftpConfig } from '../../../../domain/config/fileaccess/types.ts';
 
@@ -6,8 +7,8 @@ import type { SftpConfig } from '../../../../domain/config/fileaccess/types.ts';
 class FakeSftp {
     private tree: Record<string, any[]> = {
         '.': [{ name: 'file1', type: '-' }, { name: 'dirA', type: 'd' }],
-        './dirA': [{ name: 'file2', type: '-' }, { name: 'dirB', type: 'd' }],
-        './dirA/dirB': [{ name: 'file3', type: '-' }],
+        'dirA': [{ name: 'file2', type: '-' }, { name: 'dirB', type: 'd' }],
+        'dirA/dirB': [{ name: 'file3', type: '-' }],
     };
     sftp: boolean = true;
     async connect(opts: any) { return; }
@@ -42,12 +43,12 @@ describe('SftpFileAdapter (stub)', () => {
     });
 
     it('propagates not found error', async () => {
-        await expect(adapter.readFile('missing')).to.be.rejectedWith(Error);
+        await assert.rejects(() => adapter.readFile('missing'));
     });
 
     it('lists recursively', async () => {
         const list = await adapter.listDir('.', { recursive: true, maxDepth: 2 });
         expect(list).to.include('file1');
-        expect(list).to.include('./dirA/file2');
+        expect(list).to.include('dirA/file2');
     });
 });

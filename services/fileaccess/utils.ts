@@ -20,9 +20,10 @@ export async function walkDir(
     }
 
     const entries = await readdir(path);
+    const basePath = path.replace(/\\/g, '/').replace(/^\.\/?/, '');
     for (const entry of entries) {
         const name = entry.name || entry.filename || entry;
-        const full = `${path.replace(/\\/g, '/')}/${name}`;
+        const full = basePath ? `${basePath}/${name}` : `${name}`;
         let isDir = false;
         if (typeof entry.isDirectory === 'function') {
             isDir = entry.isDirectory();

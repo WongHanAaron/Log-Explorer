@@ -298,16 +298,7 @@ export class ConfigStore {
         const uri = (vscodeRuntime.Uri as any).joinPath(dir, ConfigStore.configFilename(shortName));
         const bytes = await this.fs.readFile(uri);
         const json = Buffer.from(bytes).toString(ENCODING);
-        // dynamically import the model class to break potential cycles
-        const { FilepathConfig } = await import('../domain/config/filepath-config');
-        const [cfg, err] = await FilepathConfig.fromJson(json);
-        if (err) {
-            if (err instanceof SyntaxError) {
-                throw new Error(`Malformed JSON: could not parse filepath config`);
-            }
-            throw err;
-        }
-        return cfg as FilepathConfig;
+        return ConfigParser.parseFilepathConfig(json);
     }
 
     private async readFileAccessConfig(
@@ -317,14 +308,7 @@ export class ConfigStore {
         const uri = (vscodeRuntime.Uri as any).joinPath(dir, ConfigStore.configFilename(shortName));
         const bytes = await this.fs.readFile(uri);
         const json = Buffer.from(bytes).toString(ENCODING);
-        const [cfg, err] = await (ConfigParser.parseFileAccessConfig as any)(json);
-        if (err) {
-            if (err instanceof SyntaxError) {
-                throw new Error(`Malformed JSON: could not parse fileaccess config`);
-            }
-            throw err;
-        }
-        return cfg;
+        return ConfigParser.parseFileAccessConfig(json);
     }
 
     private async readFileLogLineConfig(
@@ -334,35 +318,7 @@ export class ConfigStore {
         const uri = (vscodeRuntime.Uri as any).joinPath(dir, ConfigStore.configFilename(shortName));
         const bytes = await this.fs.readFile(uri);
         const json = Buffer.from(bytes).toString(ENCODING);
-
-        // mirror the dispatch logic from the old parser
-        let plain: any;
-        try {
-            plain = JSON.parse(json);
-        } catch {
-            throw new Error(`Malformed JSON: could not parse filelog config`);
-        }
-
-        let tuple: [FileLogLineConfig | null, any | null];
-        switch (plain.type) {
-            case 'text':
-                tuple = await (require('../domain/config/filelog-config').TextLineConfig as any).fromJson(json);
-                break;
-            case 'xml':
-                tuple = await (require('../domain/config/filelog-config').XmlLineConfig as any).fromJson(json);
-                break;
-            case 'json':
-                tuple = await (require('../domain/config/filelog-config').JsonLineConfig as any).fromJson(json);
-                break;
-            default:
-                throw new Error(`Invalid FileLogLineConfig: unknown type`);
-        }
-
-        const [cfg, err] = tuple;
-        if (err) {
-            throw err;
-        }
-        return cfg as FileLogLineConfig;
+        return ConfigParser.parseFileLogLineConfig(json);
     }
 
     private async writeConfigInternal(
@@ -496,56 +452,72 @@ export const ConfigParser = {
     configFilename: ConfigStore.configFilename,
 
     async parseFilepathConfig(json: string): Promise<FilepathConfig> {
-        // use require instead of dynamic import to avoid ESM loader errors with
-        // decorators in the module; ts-node/register handles the transpilation.
-        // include the ".ts" extension so the module is resolved correctly under
-        // our test configuration.
-        const { FilepathConfig } = require('../domain/config/filepath-config.ts');
-        const [cfg, err] = await FilepathConfig.fromJson(json);
-        if (err) {
-            throw err;
-        }
-        return cfg as FilepathConfig;
-    },
-
-    async parseFileLogLineConfig(json: string): Promise<FileLogLineConfig> {
-        // reuse logic from the class method in store
-        // the ConfigStore.getConfig path already handles dispatch but we
-        // replicate the parsing here for convenience
         let plain: any;
         try {
             plain = JSON.parse(json);
-        } catch (e) {
+        } catch {
+            throw new Error('Malformed JSON: could not parse filepath config');
+        }
+
+        if (typeof plain.shortName !== 'string' || !/^[a-z0-9]+(-[a-z0-9]+)*$/.test(plain.shortName)) {
+            throw new Error('Invalid filepath config: shortName must be kebab-case');
+        }
+        if (typeof plain.pathPattern !== 'string') {
+            throw new Error('Invalid filepath config: pathPattern must be a string');
+        }
+        if (plain.description !== undefined && typeof plain.description !== 'string') {
+            throw new Error('Invalid filepath config: description must be a string when provided');
+        }
+        if (plain.tags !== undefined && (!Array.isArray(plain.tags) || plain.tags.some((t: unknown) => typeof t !== 'string'))) {
+            throw new Error('Invalid filepath config: tags must be a string array when provided');
+        }
+
+        return plain as FilepathConfig;
+    },
+
+    async parseFileLogLineConfig(json: string): Promise<FileLogLineConfig> {
+        let plain: any;
+        try {
+            plain = JSON.parse(json);
+        } catch {
             throw new Error('Malformed JSON: could not parse filelog config');
         }
-        let tuple: [FileLogLineConfig | null, any | null];
-        switch (plain.type) {
-            case 'text':
-                tuple = await (require('../domain/config/filelog-config').TextLineConfig as any).fromJson(json);
-                break;
-            case 'xml':
-                tuple = await (require('../domain/config/filelog-config').XmlLineConfig as any).fromJson(json);
-                break;
-            case 'json':
-                tuple = await (require('../domain/config/filelog-config').JsonLineConfig as any).fromJson(json);
-                break;
-            default:
-                throw new Error('Invalid FileLogLineConfig: unknown type');
+
+        if (!['text', 'xml', 'json'].includes(plain.type)) {
+            throw new Error('Invalid FileLogLineConfig: unknown type');
         }
-        const [cfg, err] = tuple;
-        if (err) {
-            throw err;
+        if (typeof plain.shortName !== 'string') {
+            throw new Error('Invalid FileLogLineConfig: shortName is required');
         }
-        return cfg as FileLogLineConfig;
+        if (!Array.isArray(plain.fields)) {
+            throw new Error('Invalid FileLogLineConfig: fields must be an array');
+        }
+        if (plain.tags !== undefined && (!Array.isArray(plain.tags) || plain.tags.some((t: unknown) => typeof t !== 'string'))) {
+            throw new Error('Invalid FileLogLineConfig: tags must be a string array when provided');
+        }
+
+        return plain as FileLogLineConfig;
     },
 
     async parseFileAccessConfig(json: string): Promise<FileAccessConfig> {
-        const { FileAccessConfig } = require('../domain/config/fileaccess-config.ts');
-        const [cfg, err] = await FileAccessConfig.fromJson(json);
-        if (err) {
-            throw err;
+        let plain: any;
+        try {
+            plain = JSON.parse(json);
+        } catch {
+            throw new Error('Malformed JSON: could not parse fileaccess config');
         }
-        return cfg as FileAccessConfig;
+
+        if (typeof plain.shortName !== 'string' || plain.shortName.trim().length === 0) {
+            throw new Error('Invalid FileAccessConfig: shortName is required');
+        }
+        if (!['local', 'sftp', 'smb'].includes(plain.adapterType)) {
+            throw new Error('Invalid FileAccessConfig: adapterType must be one of local|sftp|smb');
+        }
+        if (!plain.settings || typeof plain.settings !== 'object' || Array.isArray(plain.settings)) {
+            throw new Error('Invalid FileAccessConfig: settings must be an object');
+        }
+
+        return plain as FileAccessConfig;
     }
 };
 

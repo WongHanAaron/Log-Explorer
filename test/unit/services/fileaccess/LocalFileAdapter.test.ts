@@ -1,4 +1,5 @@
 import { expect } from 'chai';
+import * as assert from 'assert';
 import { LocalFileAdapter } from '../../../../services/fileaccess/LocalFileAdapter.ts';
 import { promises as fs } from 'fs';
 import * as path from 'path';
@@ -28,7 +29,7 @@ describe('LocalFileAdapter', () => {
     });
 
     it('throws when file does not exist', async () => {
-        await expect(adapter.readFile('not-there.txt')).to.be.rejectedWith(Error);
+        await assert.rejects(() => adapter.readFile('not-there.txt'));
     });
 
     it('lists directory contents', async () => {

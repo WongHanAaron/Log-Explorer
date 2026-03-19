@@ -6,7 +6,7 @@ import {
     IsNumber,
     IsObject,
 } from 'class-validator';
-import { IsSerializable } from '../serializable';
+import { IsSerializable } from '../serializable.ts';
 
 /**
  * Configuration for a file access adapter. Stored at

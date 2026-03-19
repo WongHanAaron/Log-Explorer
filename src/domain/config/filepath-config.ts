@@ -1,6 +1,6 @@
 import { Expose } from 'class-transformer';
 import { IsString, IsOptional, IsArray, Matches } from 'class-validator';
-import { IsSerializable } from '../serializable';
+import { IsSerializable } from '../serializable.ts';
 
 /**
  * FilepathConfig domain object.
