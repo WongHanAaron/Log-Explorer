@@ -2,7 +2,7 @@
 
 ## Goal
 
-Migrate legacy UI scenarios once, then execute canonical integrated panel+webview scenarios using the rewritten host runtime abstraction.
+Execute canonical integrated panel+webview scenarios using the rewritten host runtime abstraction.
 
 ## Prerequisites
 
@@ -10,9 +10,9 @@ Migrate legacy UI scenarios once, then execute canonical integrated panel+webvie
 - Install browser runtime for UI harness: `npx playwright install chromium`
 - Ensure fixture workspace exists: `test/e2e/ui/fixtures/default-workspace`
 
-## 1. Run Existing UI E2E Harness Baseline
+## 1. Run Integrated Canonical Suite (Automated)
 
-Use the current harness entrypoint to confirm baseline execution mode:
+Use the default harness entrypoint:
 
 ```bash
 npm run test:e2e:ui
@@ -20,35 +20,10 @@ npm run test:e2e:ui
 
 Expected:
 - harness starts through `scripts/run-ui-e2e.js`
-- scenarios run from `test/e2e/ui/scenarios/`
+- scenarios run from `test/e2e/ui/scenarios/` via integrated profile
 - artifacts written under `test/e2e/ui/artifacts/`
 
-## 2. Run One-Time Migration to Canonical Schema
-
-Execute migration tooling for legacy scenario conversion:
-
-```bash
-npm run test:e2e:ui -- --migrate
-```
-
-Expected:
-- canonical scenarios generated in `test/e2e/ui/scenarios-canonical/`
-- `migration-report.json` generated
-- process exits non-zero on unsupported or ambiguous mappings
-
-## 3. Run Canonical Integrated Suite (Automated)
-
-Run integrated panel+webview scenarios in non-interactive mode:
-
-```bash
-npm run test:e2e:ui -- --profile panel-webview-integrated
-```
-
-CI convenience command:
-
-```bash
-npm run test:e2e:ui:canonical
-```
+## 2. Validate Canonical Integrated Suite Results
 
 Expected checks:
 - panel lifecycle actions pass
@@ -60,7 +35,7 @@ Expected checks:
 Run only the lifecycle scenario:
 
 ```bash
-npm run test:e2e:ui:canonical -- --scenario "panel-webview-lifecycle"
+npm run test:e2e:ui -- --scenario "panel-webview-lifecycle"
 ```
 
 Expected:
@@ -68,12 +43,12 @@ Expected:
 - init message is observed
 - scenario passes with canonical artifacts
 
-## 4. Run Canonical Integrated Debug Mode
+## 3. Run Canonical Integrated Debug Mode
 
 Use existing debug entrypoint with a scenario selector:
 
 ```bash
-npm run test:e2e:ui:debug -- --scenario "panel-webview-fileaccess-smoke"
+npm run test:e2e:ui:debug -- --scenario "panel-webview-lifecycle"
 ```
 
 Use debug mode for:
@@ -81,12 +56,12 @@ Use debug mode for:
 - message ordering inspection
 - host runtime outcome verification
 
-## 5. Validate Determinism
+## 4. Validate Determinism
 
 Run the same integrated scenario three times with the same fixture:
 
 ```bash
-npm run test:e2e:ui -- --scenario "panel-webview-fileaccess-smoke"
+npm run test:e2e:ui -- --scenario "panel-webview-lifecycle"
 ```
 
 Or use the deterministic triple-run helper:
@@ -99,16 +74,13 @@ Acceptance:
 - identical pass/fail outcome classification across runs
 - stable ordered trace events for equivalent flow
 
-## 6. Cutover Verification
+## 5. Cutover Verification
 
 Before declaring canonical runner default:
-- all in-scope legacy smoke scenarios migrate successfully
-- migration report contains no unresolved errors
 - migrated scenarios pass under integrated canonical runner
 
 ## Validation Evidence
 
 Validated on 2026-03-19 with:
-- `npm run test:e2e:ui:migrate`
-- `npm run test:e2e:ui:canonical`
+- `npm run test:e2e:ui`
 - `npm run test:e2e:ui:determinism -- --scenario "panel-webview-lifecycle"`

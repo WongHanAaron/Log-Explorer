@@ -38,6 +38,9 @@ export class WebviewDriver {
     private page?: PageLike;
 
     public async openBrowser(headless: boolean, slowMo = 0): Promise<void> {
+        if (this.browser) {
+            await this.close();
+        }
         const chromium = await resolveChromium();
         this.browser = await chromium.launch({ headless, slowMo });
         this.page = await this.browser.newPage();

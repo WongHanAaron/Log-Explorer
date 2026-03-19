@@ -1,34 +1,33 @@
 {
-    "id": "state-only-smoke",
-    "name": "State-only smoke",
-    "priority": "P1",
-    "tags": [
-        "smoke",
-        "state"
-    ],
-    "replayEnabled": true,
-    "preconditions": [
-        "fixture:default-workspace"
-    ],
-    "steps": [
+  "schemaVersion": "2.0",
+  "scenarioId": "state-only-smoke",
+  "name": "State-only smoke",
+  "priority": "P1",
+  "tags": [
+    "smoke",
+    "state"
+  ],
+  "preconditions": [
+    "fixture:default-workspace"
+  ],
+  "steps": [
+    {
+      "index": 1,
+      "action": "command.execute",
+      "target": {
+        "command": "setState",
+        "stateKey": "sessionReady"
+      },
+      "input": true,
+      "assertions": [
         {
-            "index": 1,
-            "actionType": "command",
-            "target": {
-                "command": "setState",
-                "stateKey": "sessionReady"
-            },
-            "input": true,
-            "expectedOutputs": [
-                {
-                    "type": "state",
-                    "source": {
-                        "stateKey": "sessionReady"
-                    },
-                    "expected": true,
-                    "comparator": "equals"
-                }
-            ]
+          "type": "host.outcome",
+          "source": {
+            "stateKey": "sessionReady"
+          },
+          "expected": true
         }
-    ]
+      ]
+    }
+  ]
 }

@@ -68,10 +68,7 @@ function toInternalMode(mode: UiE2EMode): UiE2ERunResult["mode"] {
     return "automated";
 }
 
-function resolveScenarioRoot(baseRoot: string, profile?: string): string {
-    if (profile === "panel-webview-integrated") {
-        return path.join(path.dirname(baseRoot), "scenarios-canonical");
-    }
+function resolveScenarioRoot(baseRoot: string, _profile?: string): string {
     return baseRoot;
 }
 

@@ -4,15 +4,14 @@
 
 For complete development guidance, see `docs/testing/ui-e2e.md`.
 
+## Folder Layout
+
+- JSON scenario definitions: `test/e2e/ui/scenarios/`
+- TypeScript integration specs: `test/e2e/ui/integration/`
+
 ## Automated Run
 
-- Run canonical integrated profile (default):
-
-```bash
-npm run test:e2e:ui:canonical
-```
-
-- Run all scenarios including legacy and canonical:
+- Run integrated profile (default):
 
 ```bash
 npm run test:e2e:ui
@@ -34,10 +33,10 @@ npm run test:e2e:ui:debug -- --scenario "panel-webview-lifecycle" --step
 
 This opens a headed (visible) Chromium session and pauses at each step when `--step` is set.
 
-- Run canonical profile in debug mode:
+- Run debug mode for integrated profile:
 
 ```bash
-npm run test:e2e:ui:canonical:debug -- --scenario "panel-webview-lifecycle"
+npm run test:e2e:ui:debug -- --scenario "panel-webview-lifecycle"
 ```
 
 ## Determinism Verification

@@ -9,7 +9,8 @@ The UI E2E harness currently supports:
 - Automated scenario execution
 - Scenario filtering by grep
 - Visible debug runs with step-through pauses
-- Artifact output for result and event inspection
+- Determinism checks
+- Artifact output for result, summary, trace, and event inspection
 
 ## Prerequisites
 
@@ -23,7 +24,7 @@ npx playwright install chromium
 ```
 
 - A valid fixture folder (default: `test/e2e/ui/fixtures/default-workspace`)
-- At least one scenario JSON in `test/e2e/ui/scenarios`
+- At least one canonical scenario JSON in `test/e2e/ui/scenarios`
 
 ## Quick Start
 
@@ -39,10 +40,12 @@ Run all UI E2E scenarios:
 npm run test:e2e:ui
 ```
 
+This command runs the integrated canonical profile by default.
+
 Run only matching scenarios:
 
 ```bash
-npm run test:e2e:ui:grep -- --grep "filepath config"
+npm run test:e2e:ui:grep -- --grep "lifecycle"
 ```
 
 ## Debugging and Step-Through
@@ -50,7 +53,7 @@ npm run test:e2e:ui:grep -- --grep "filepath config"
 Run a single scenario in visible debug mode with explicit step pauses:
 
 ```bash
-npm run test:e2e:ui:debug -- --scenario "filepath-config-smoke" --step
+npm run test:e2e:ui:debug -- --scenario "panel-webview-lifecycle" --step
 ```
 
 What to expect:
@@ -70,13 +73,13 @@ Important:
 Debug one scenario without forcing pause at every step:
 
 ```bash
-npm run test:e2e:ui:debug -- --scenario "filepath-config-smoke"
+npm run test:e2e:ui:debug -- --scenario "panel-webview-messageflow"
 ```
 
 Continue execution after failed assertions (for full timeline capture):
 
 ```bash
-npm run test:e2e:ui:debug -- --scenario "filepath-config-smoke" --continue-on-fail
+npm run test:e2e:ui:debug -- --scenario "panel-webview-messageflow" --continue-on-fail
 ```
 
 Use a non-default fixture workspace:
@@ -88,12 +91,12 @@ npm run test:e2e:ui -- --workspace "default-workspace"
 ## Scenario Authoring Notes
 
 Scenario files live in `test/e2e/ui/scenarios`.
-Use `test/e2e/ui/templates/scenario.template.json` as a starting point.
+Use `test/e2e/ui/templates/canonical-scenario.template.json` as a starting point.
 
 Current high-value examples:
 
-- `filepath-config.smoke.json`
-- `output-verification.smoke.json`
+- `panel-webview-lifecycle.smoke.json`
+- `panel-webview-messageflow.smoke.json`
 
 Recommended loop when building a new scenario:
 
@@ -108,6 +111,8 @@ Recommended loop when building a new scenario:
 Artifacts are written to:
 
 - `test/e2e/ui/artifacts/<scenario>/<runId>/result.json`
+- `test/e2e/ui/artifacts/<scenario>/<runId>/summary.json`
+- `test/e2e/ui/artifacts/<scenario>/<runId>/trace.json`
 - `test/e2e/ui/artifacts/<scenario>/<runId>/events.json`
 - `test/e2e/ui/artifacts/<scenario>/<runId>/replay-manifest.json`
 
@@ -126,6 +131,16 @@ Artifacts are written to:
 
 - References artifact files for replay workflows
 - Useful for tooling that needs stable run metadata
+
+`summary.json`:
+
+- Compact pass/fail totals for the run
+- Fast CI-friendly status checks
+
+`trace.json`:
+
+- Ordered event trace for message path and lifecycle diagnosis
+- Useful when classifying failure origin
 
 ## Troubleshooting
 
@@ -162,7 +177,7 @@ Symptom:
 Fix:
 
 - Verify `--scenario` and/or `--grep` values
-- Check file names and `id` fields in scenario JSON
+- Check file names and `scenarioId` fields in canonical scenario JSON
 
 ### Debug pauses are skipped unexpectedly
 
@@ -190,10 +205,11 @@ Fixes:
 ## Suggested Daily Development Workflow
 
 1. `npm run typecheck:tests`
-2. `npm run test:e2e:ui:debug -- --scenario "filepath-config-smoke" --step`
+2. `npm run test:e2e:ui:debug -- --scenario "panel-webview-lifecycle" --step`
 3. Iterate on scenario/assertions until stable
 4. `npm run test:e2e:ui` for broader verification
-5. Inspect artifacts for traceability
+5. `npm run test:e2e:ui:determinism -- --scenario "panel-webview-lifecycle"`
+6. Inspect artifacts for traceability
 
 ## Related Files
 

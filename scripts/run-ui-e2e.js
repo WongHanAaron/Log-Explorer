@@ -7,11 +7,6 @@ function parseArgs(argv) {
     let mode = modeArg && !modeArg.startsWith("-") ? modeArg : "run";
     const passthrough = modeArg && !modeArg.startsWith("-") ? rest : argv;
 
-    if (mode === "canonical") {
-        mode = "run";
-        passthrough.unshift("--profile", "panel-webview-integrated");
-    }
-
     return { mode, passthrough };
 }
 

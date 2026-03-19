@@ -17,7 +17,7 @@ Input requirements:
 ## 2. Migration Outputs
 
 Primary output:
-- canonical scenarios written to `test/e2e/ui/scenarios-canonical/`
+- canonical scenarios written to `test/e2e/ui/scenarios/`
 
 Reporting outputs:
 - `migration-report.json` containing per-scenario status and issue list
